@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en-GB">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Booking Received — Airport Transfers Liverpool</title>
+    <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg" />
+    <link rel="alternate icon" type="image/png" href="../assets/logo.png" />
+    <link rel="apple-touch-icon" href="../assets/logo.png" />
+    <meta name="theme-color" content="#0B1E37" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Source+Sans+3:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet" />
+    <style>
+        :root {
+            --navy: #0E2747;
+            --navy-2: #14345c;
+            --navy-ink: #0B1E37;
+            --amber: #E6B24B;
+            --amber-deep: #C7932F;
+            --cream: #FAF7F2;
+            --cream-2: #F3EEE4;
+            --line: #E8E2D4;
+            --ink: #1a1d24;
+            --muted: #5b6472;
+            --white: #ffffff;
+            --ok: #1f7a4c;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0
+        }
+
+        body {
+            font-family: 'Source Sans 3', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--ink);
+            background: var(--white);
+            -webkit-font-smoothing: antialiased;
+            font-feature-settings: "ss01", "cv11";
+            line-height: 1.5;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace
+        }
+
+        /* Display font — Lexend */
+        .h1, .h2, .brand, h3,
+        .authority-item .big, .reviews-head .score .num,
+        .form-summary .total, .price-card .amt,
+        .faq summary {
+            font-family: 'Lexend', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .wrap {
+            max-width: 1240px;
+            margin: 0 auto;
+            padding: 0 20px
+        }
+
+        @media (min-width:700px) {
+            .wrap {
+                padding: 0 32px
+            }
+        }
+
+        a {
+            color: inherit
+        }
+
+        /* ---------- NAV ---------- */
+        .nav {
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            background: rgba(255, 255, 255, .88);
+            backdrop-filter: saturate(140%) blur(10px);
+            -webkit-backdrop-filter: saturate(140%) blur(10px);
+            border-bottom: 1px solid rgba(14, 39, 71, .08);
+        }
+
+        .nav-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 72px
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none
+        }
+
+        /* ---------- MAIN CONTENT ---------- */
+        .main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 64px 0;
+            background: var(--cream);
+        }
+
+        .thank-you-card {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            padding: 48px 32px;
+            max-width: 540px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 40px -15px rgba(14, 39, 71, .1);
+        }
+
+        .check-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: #dff5e6;
+            color: #1f7a4c;
+            display: grid;
+            place-items: center;
+            margin: 0 auto 24px;
+        }
+
+        .check-icon svg {
+            width: 36px;
+            height: 36px;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--navy-ink);
+            margin: 0 0 16px;
+            font-family: 'Lexend', sans-serif;
+        }
+
+        p {
+            font-size: 16px;
+            color: #364050;
+            margin: 0 0 24px;
+            line-height: 1.6;
+        }
+
+        .booking-details {
+            background: var(--cream);
+            border: 1px dashed var(--line);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 32px;
+            display: inline-block;
+            text-align: left;
+        }
+
+        .booking-details .row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 14px;
+            color: var(--navy-ink);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .booking-details .row + .row {
+            margin-top: 8px;
+        }
+
+        .btn-home {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            height: 52px;
+            padding: 0 24px;
+            border-radius: 10px;
+            background: var(--navy);
+            color: #fff;
+            font-weight: 600;
+            font-size: 15px;
+            text-decoration: none;
+            transition: background .2s ease;
+        }
+
+        .btn-home:hover {
+            background: var(--navy-2);
+        }
+
+        .support-text {
+            margin-top: 32px;
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        /* ---------- FOOTER ---------- */
+        footer {
+            padding: 48px 0;
+            background: #fff;
+            border-top: 1px solid var(--line)
+        }
+
+        .foot-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: flex-start
+        }
+
+        @media (min-width:700px) {
+            .foot-grid {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center
+            }
+        }
+
+        .foot-links {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            font-size: 14px;
+            color: #364050
+        }
+
+        .foot-links a {
+            text-decoration: none
+        }
+
+        .foot-links a:hover {
+            color: var(--amber-deep)
+        }
+
+        .foot-copy {
+            font-size: 13px;
+            color: var(--muted)
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="nav">
+        <div class="wrap nav-inner">
+            <a href="/" class="brand" aria-label="Airport Transfers Liverpool home">
+                <img src="../assets/logo.png" alt="airport transfers Liverpool by RM Transfers" style="height: 56px; width: auto; object-fit: contain;" />
+            </a>
+            <div class="nav-links" style="display: flex; gap: 28px; font-size: 14px; color: var(--navy); font-weight: 500;">
+                <a href="/#how" style="text-decoration: none;">How it works</a>
+                <a href="/#prices" style="text-decoration: none;">Prices</a>
+                <a href="/#faq" style="text-decoration: none;">FAQ</a>
+            </div>
+            <div class="nav-cta">
+                <a href="tel:+441511234567" style="font-weight: 600; color: var(--navy); text-decoration: none; font-size: 14px;">0151 123 4567</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main">
+        <div class="thank-you-card">
+            <div class="check-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 12l4.5 4.5L19 7" />
+                </svg>
+            </div>
+            <h1>Booking request received</h1>
+            <p id="dynamic-text">We'll text you within 10 minutes with your driver's name and the minibus details. If you've booked for today, we'll call within 5.</p>
+            
+            <div class="booking-details" id="booking-details" style="display: none;">
+                <div class="row">
+                    <span style="color: var(--muted); width: 60px;">Ref:</span>
+                    <strong id="ref-val"></strong>
+                </div>
+                <div class="row">
+                    <span style="color: var(--muted); width: 60px;">Price:</span>
+                    <strong id="price-val"></strong>
+                </div>
+            </div>
+
+            <div>
+                <a href="/" class="btn-home">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    </svg>
+                    Return to Homepage
+                </a>
+            </div>
+            
+            <div class="support-text">
+                Need to change something? Call us on <a href="tel:+441511234567" style="color: var(--navy-ink); font-weight: 600; text-decoration: none;">0151 123 4567</a>.
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="wrap foot-grid">
+            <div>
+                <div class="brand" style="margin-bottom: 12px;">
+                    <img src="../assets/logo.png" alt="airport transfers Liverpool by RM Transfers" style="height: 56px; width: auto; object-fit: contain;" />
+                </div>
+                <div class="foot-copy">Fixed-price airport transfers. Door to terminal, both ways. Licensed private hire · Est. 2011</div>
+            </div>
+            <div class="foot-links">
+                <a href="/#how">How it works</a>
+                <a href="/#faq">FAQ</a>
+                <a href="/#reviews">Reviews</a>
+                <a href="tel:+441511234567">0151 123 4567</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const ref = params.get('ref');
+            const price = params.get('price');
+            const type = params.get('type');
+            
+            if (ref && price) {
+                document.getElementById('booking-details').style.display = 'inline-block';
+                document.getElementById('ref-val').textContent = ref;
+                document.getElementById('price-val').textContent = '£' + price + ' fixed ' + (type === 'return' ? 'return' : 'one-way');
+                
+                if (type === 'return') {
+                    document.getElementById('dynamic-text').innerHTML = "We'll text you within 10 minutes with your driver's name and the minibus details for both legs. If you've booked for today, we'll call within 5.";
+                }
+            }
+        });
+    </script>
+</body>
+</html>

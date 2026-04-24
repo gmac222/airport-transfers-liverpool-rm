@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "activeInstanceId": "instance-66938cd2",
+  "instances": [
+    {
+      "id": "instance-66938cd2",
+      "name": "gmac222.app.n8n.cloud",
+      "host": "https://gmac222.app.n8n.cloud/workflow/E0sHFHX850tQffIk?projectId=trBQBbx05zTHquzM&uiContext=workflow_list",
+      "syncFolder": "workflows",
+      "verification": {
+        "status": "failed",
+        "lastCheckedAt": "2026-04-24T17:12:26.768Z",
+        "lastError": "Unable to resolve the authenticated n8n user."
+      }
+    }
+  ],
+  "host": "https://gmac222.app.n8n.cloud/workflow/E0sHFHX850tQffIk?projectId=trBQBbx05zTHquzM&uiContext=workflow_list",
+  "syncFolder": "workflows"
+}

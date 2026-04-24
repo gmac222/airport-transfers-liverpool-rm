@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Airport Transfers Liverpool — Logo exploration</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet" />
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<style>
+  :root{
+    --navy:#0E2747;
+    --navy-ink:#0B1E37;
+    --amber:#E6B24B;
+    --amber-deep:#C7932F;
+    --cream:#FAF7F2;
+    --cream-2:#F3EEE4;
+    --ink:#1a1d24;
+    --muted:#5b6472;
+  }
+  html,body{margin:0;padding:0;font-family:'Inter',system-ui,sans-serif;color:var(--ink);background:#e9e5db}
+  .mono{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace}
+
+  /* card layouts shared by artboards */
+  .lg-frame{
+    width:100%;height:100%;
+    display:flex;flex-direction:column;
+    background:var(--cream);
+    border-radius:0;
+    overflow:hidden;
+  }
+  .lg-stage{
+    flex:1;display:flex;align-items:center;justify-content:center;
+    padding:40px;
+    background:var(--cream);
+  }
+  .lg-stage.dark{background:var(--navy-ink);color:#fff}
+  .lg-meta{
+    padding:14px 18px;background:#fff;border-top:1px solid #eadfc9;
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    font-size:11px;font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;
+    color:#6b6553;letter-spacing:0.02em;
+  }
+  .lg-meta b{color:var(--navy);font-weight:600;font-family:'Inter',sans-serif;font-size:12px;letter-spacing:-0.005em}
+
+  .lockup-row{
+    display:flex;gap:48px;align-items:center;justify-content:center;
+  }
+  .lockup-stack{display:flex;flex-direction:column;gap:18px;align-items:flex-start}
+  .chip{display:inline-block;padding:4px 10px;border-radius:999px;background:#eadfc9;color:#6b5d3a;font-size:10px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase}
+  .chip.dark{background:rgba(255,255,255,.1);color:#e6d9b8}
+</style>
+</head>
+<body>
+
+<!-- thumbnail for bundler -->
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#0E2747"/>
+    <text x="50" y="58" text-anchor="middle" font-family="Inter,sans-serif" font-weight="800" font-size="32" fill="#E6B24B">ATL</text>
+  </svg>
+</template>
+
+<div id="root"></div>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+/* ------------------------------------------------------------------
+   Logo building blocks — each is pure SVG, scales losslessly.
+   All variants share: deep navy (#0E2747), amber (#E6B24B), cream.
+   ------------------------------------------------------------------ */
+
+/* --- OPTION 1: ATL monogram inside a rounded badge + wordmark --- */
+function LogoBadgeMono({ dark=false, size=1 }) {
+  const navy = "#0E2747";
+  const amber = "#E6B24B";
+  const fg = dark ? "#fff" : navy;
+  const muted = dark ? '#b7c3d5' : '#6b6553';
+  const s = size;
+  return (
+    <div style={{ display:'flex', alignItems:'center', gap: 18*s }}>
+      <svg width={64*s} height={64*s} viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ flexShrink:0 }}>
+        <rect x="0" y="0" width="64" height="64" rx="14" fill={navy}/>
+        <text x="32" y="42" textAnchor="middle"
+          fontFamily="Inter, sans-serif" fontWeight="800" fontSize="22"
+          fill={amber} letterSpacing="-0.02em">ATL</text>
+        <rect x="14" y="48" width="36" height="2" rx="1" fill={amber} opacity="0.85"/>
+      </svg>
+      <div style={{ display:'flex', flexDirection:'column', lineHeight:1 }}>
+        <div style={{ fontWeight:800, fontSize:24*s, letterSpacing:'-0.02em', color: fg, whiteSpace:'nowrap' }}>
+          Airport Transfers
+        </div>
+        <div style={{ fontWeight:800, fontSize:24*s, letterSpacing:'-0.02em', color: amber, whiteSpace:'nowrap', marginTop:3*s }}>
+          Liverpool
+        </div>
+        <div style={{ fontSize:10*s, letterSpacing:'0.18em', textTransform:'uppercase',
+          color: muted, marginTop:9*s, fontWeight:600, whiteSpace:'nowrap' }}>
+          Fixed price · both ways
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* --- OPTION 2: circular "signal" mark — runway lights / arrival beacon --- */
+function LogoSignal({ dark=false, size=1 }) {
+  const navy = "#0E2747";
+  const amber = "#E6B24B";
+  const fg = dark ? "#fff" : navy;
+  const s = size;
+  return (
+    <div style={{ display:'flex', alignItems:'center', gap: 18*s }}>
+      <svg width={64*s} height={64*s} viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        {/* outer ring */}
+        <circle cx="32" cy="32" r="30" fill="none" stroke={navy} strokeWidth="2.5"/>
+        {/* amber beacon dot */}
+        <circle cx="32" cy="32" r="8" fill={amber}/>
+        {/* soft amber halo */}
+        <circle cx="32" cy="32" r="14" fill="none" stroke={amber} strokeWidth="1.5" opacity="0.55"/>
+        {/* 4 compass ticks (airport-waypoint feel) */}
+        <rect x="31" y="4"  width="2" height="7" fill={navy}/>
+        <rect x="31" y="53" width="2" height="7" fill={navy}/>
+        <rect x="4"  y="31" width="7" height="2" fill={navy}/>
+        <rect x="53" y="31" width="7" height="2" fill={navy}/>
+      </svg>
+      <div style={{ lineHeight:1.05 }}>
+        <div style={{ fontWeight:800, fontSize:28*s, letterSpacing:'-0.02em', color: fg }}>
+          Airport Transfers
+        </div>
+        <div style={{ fontWeight:800, fontSize:28*s, letterSpacing:'-0.02em', color: amber, marginTop:-2*s }}>
+          Liverpool
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* --- OPTION 3: runway chevron / directional — "door → terminal" --- */
+function LogoRunway({ dark=false, size=1 }) {
+  const navy = "#0E2747";
+  const amber = "#E6B24B";
+  const fg = dark ? "#fff" : navy;
+  const muted = dark ? '#b7c3d5' : '#6b6553';
+  const s = size;
+  return (
+    <div style={{ display:'flex', alignItems:'center', gap: 16*s }}>
+      <svg width={72*s} height={64*s} viewBox="0 0 72 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ flexShrink:0 }}>
+        {/* runway trapezoid (perspective) */}
+        <path d="M8 52 L28 12 L44 12 L64 52 Z" fill={navy}/>
+        {/* centre dashed line */}
+        <rect x="35" y="18" width="2" height="6" fill={amber}/>
+        <rect x="35" y="28" width="2" height="6" fill={amber}/>
+        <rect x="35" y="38" width="2" height="6" fill={amber}/>
+        {/* runway threshold markers at the far end */}
+        <rect x="30" y="9"  width="3" height="4" fill={amber}/>
+        <rect x="39" y="9"  width="3" height="4" fill={amber}/>
+      </svg>
+      <div style={{ display:'flex', flexDirection:'column', lineHeight:1 }}>
+        <div style={{ fontWeight:800, fontSize:24*s, letterSpacing:'-0.02em', color: fg, whiteSpace:'nowrap' }}>
+          Airport Transfers
+        </div>
+        <div style={{ fontWeight:800, fontSize:24*s, letterSpacing:'-0.02em', color: amber, whiteSpace:'nowrap', marginTop:3*s }}>
+          Liverpool
+        </div>
+        <div style={{ fontSize:10*s, letterSpacing:'0.16em', textTransform:'uppercase',
+          color: muted, marginTop:9*s, fontWeight:600, whiteSpace:'nowrap' }}>
+          Door to terminal · both ways
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* --- OPTION 4: typographic lockup only — no symbol, quiet confidence --- */
+function LogoTypeOnly({ dark=false, size=1 }) {
+  const navy = "#0E2747";
+  const amber = "#E6B24B";
+  const fg = dark ? "#fff" : navy;
+  const muted = dark ? '#b7c3d5' : '#6b6553';
+  const s = size;
+  return (
+    <div style={{ lineHeight:1, display:'flex', flexDirection:'column', gap:8*s }}>
+      <div style={{ display:'flex', alignItems:'baseline', gap:14*s }}>
+        <div style={{ fontFamily:"'Fraunces', serif", fontWeight:600,
+            fontSize:48*s, letterSpacing:'-0.03em', color:fg, fontStyle:'normal' }}>
+          Airport Transfers
+        </div>
+      </div>
+      <div style={{ display:'flex', alignItems:'baseline', gap:14*s }}>
+        <div style={{ fontFamily:"'Fraunces', serif", fontWeight:600, fontStyle:'italic',
+            fontSize:48*s, letterSpacing:'-0.02em', color:amber }}>
+          Liverpool
+        </div>
+        <div style={{ height:1, flex:'0 0 90px', background: dark?'rgba(255,255,255,.25)':'rgba(14,39,71,.25)' }}></div>
+        <div style={{ fontSize:11*s, letterSpacing:'0.18em', textTransform:'uppercase',
+          color: muted, fontWeight:600 }}>
+          Est. 2011
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* --- OPTION 5: pin + plane combined mark --- */
+function LogoPinPlane({ dark=false, size=1 }) {
+  const navy = "#0E2747";
+  const amber = "#E6B24B";
+  const fg = dark ? "#fff" : navy;
+  const muted = dark ? '#b7c3d5' : '#6b6553';
+  const s = size;
+  return (
+    <div style={{ display:'flex', alignItems:'center', gap: 16*s }}>
+      <svg width={56*s} height={72*s} viewBox="0 0 56 72" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        {/* map pin silhouette */}
+        <path d="M28 4 C14 4 4 14 4 28 C4 44 20 58 28 68 C36 58 52 44 52 28 C52 14 42 4 28 4 Z"
+          fill={navy}/>
+        {/* amber inner circle */}
+        <circle cx="28" cy="26" r="14" fill={amber}/>
+        {/* simple plane glyph */}
+        <path d="M20 27 L36 22 L32 26 L37 30 L31 29 L20 30 Z" fill={navy}/>
+      </svg>
+      <div style={{ lineHeight:1.05 }}>
+        <div style={{ fontWeight:800, fontSize:24*s, letterSpacing:'-0.02em', color: fg }}>
+          Airport Transfers
+        </div>
+        <div style={{ fontWeight:800, fontSize:24*s, letterSpacing:'-0.02em', color: amber, marginTop:-1*s }}>
+          Liverpool
+        </div>
+        <div style={{ fontSize:10*s, letterSpacing:'0.16em', textTransform:'uppercase',
+          color: muted, marginTop:6*s, fontWeight:600 }}>
+          Fixed-price · licensed private hire
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* --- OPTION 6: horizontal boarding-pass / ticket style --- */
+function LogoTicket({ dark=false, size=1 }) {
+  const navy = "#0E2747";
+  const amber = "#E6B24B";
+  const cream = "#FAF7F2";
+  const fg = dark ? "#fff" : navy;
+  const s = size;
+  return (
+    <div style={{ display:'flex', alignItems:'stretch',
+        border:`2px solid ${navy}`, borderRadius:10*s, overflow:'hidden',
+        background: dark ? 'rgba(255,255,255,.04)' : cream }}>
+      <div style={{ background: amber, padding:`${12*s}px ${14*s}px`, display:'flex', alignItems:'center',
+          fontFamily:"'Inter',sans-serif", fontWeight:800, fontSize:20*s,
+          letterSpacing:'-0.01em', color:navy }}>
+        ATL
+      </div>
+      <div style={{ position:'relative', padding:`${10*s}px ${18*s}px`,
+          display:'flex', flexDirection:'column', justifyContent:'center' }}>
+        <div style={{ fontSize:10*s, letterSpacing:'0.16em', textTransform:'uppercase',
+          color: dark?'#b7c3d5':'#6b6553', fontWeight:600 }}>
+          Airport Transfers
+        </div>
+        <div style={{ fontWeight:800, fontSize:22*s, letterSpacing:'-0.015em', color: fg, lineHeight:1.05, marginTop:2*s }}>
+          Liverpool <span style={{ color:'#8b99b0', fontWeight:500 }}>/</span> John Lennon
+        </div>
+        {/* perforation */}
+        <div style={{ position:'absolute', left:-6*s, top:'50%', transform:'translateY(-50%)',
+            width:12*s, height:12*s, borderRadius:'50%',
+            background: dark ? '#0B1E37' : '#e9e5db' }}></div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------
+   Artboard framing: one big display + small corner chips + dark variant
+   ------------------------------------------------------------------ */
+function Stage({ dark, children, label, use }) {
+  return (
+    <div className="lg-frame">
+      <div className={"lg-stage" + (dark?" dark":"")}>
+        {children}
+      </div>
+      <div className="lg-meta">
+        <span><b>{label}</b></span>
+        <span>{use}</span>
+      </div>
+    </div>
+  );
+}
+
+/* Variations of a single logo on one artboard: large + small + dark */
+function LogoArtboard({ Logo, label, notes }) {
+  return (
+    <div style={{ width:'100%', height:'100%', display:'flex', flexDirection:'column', background:'#fff' }}>
+      {/* LIGHT — large */}
+      <div style={{ flex:1, minHeight:0, display:'flex', alignItems:'center', justifyContent:'center',
+          background:'var(--cream)', borderBottom:'1px solid #eadfc9' }}>
+        <Logo size={1.1} />
+      </div>
+      {/* LIGHT small + DARK small */}
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', borderBottom:'1px solid #eadfc9' }}>
+        <div style={{ padding:'28px 20px', display:'flex', alignItems:'center', justifyContent:'center',
+            background:'#fff', borderRight:'1px solid #eadfc9' }}>
+          <Logo size={0.7} />
+        </div>
+        <div style={{ padding:'28px 20px', display:'flex', alignItems:'center', justifyContent:'center',
+            background:'var(--navy-ink)', color:'#fff' }}>
+          <Logo size={0.7} dark />
+        </div>
+      </div>
+      {/* Meta */}
+      <div style={{ padding:'14px 20px', background:'#fff',
+          display:'flex', alignItems:'center', justifyContent:'space-between', gap:12,
+          fontSize:11, fontFamily:"'JetBrains Mono',ui-monospace,Menlo,monospace",
+          color:'#6b6553', letterSpacing:'0.02em' }}>
+        <span style={{ color:'var(--navy)', fontWeight:600, fontFamily:"'Inter',sans-serif",
+            fontSize:12, letterSpacing:'-0.005em' }}>{label}</span>
+        <span>{notes}</span>
+      </div>
+    </div>
+  );
+}
+
+/* Favicon-style lockup: 3 small sizes to check legibility */
+function FaviconArtboard() {
+  const navy = "#0B1E37";
+  const amber = "#E6B24B";
+  return (
+    <div style={{ width:'100%', height:'100%', display:'flex', flexDirection:'column', background:'#fff' }}>
+      <div style={{ flex:1, minHeight:0, display:'flex', alignItems:'center', justifyContent:'center',
+          gap:56, background:'var(--cream)', borderBottom:'1px solid #eadfc9' }}>
+        {[128, 64, 32, 16].map(px => {
+          // render the pin+plane mark at the requested px, preserving 56:72 ratio, capped to px.
+          const w = Math.round(px * 56 / 72);
+          return (
+            <div key={px} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:12 }}>
+              <svg width={w} height={px} viewBox="0 0 56 72" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M28 4 C14 4 4 14 4 28 C4 44 20 58 28 68 C36 58 52 44 52 28 C52 14 42 4 28 4 Z" fill={navy}/>
+                <circle cx="28" cy="26" r="14" fill={amber}/>
+                <path d="M20 27 L36 22 L32 26 L37 30 L31 29 L20 30 Z" fill={navy}/>
+              </svg>
+              <div style={{ fontSize:11, fontFamily:"'JetBrains Mono',ui-monospace,Menlo,monospace", color:'#6b6553' }}>
+                {px}px
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ padding:'14px 20px', background:'#fff',
+          display:'flex', alignItems:'center', justifyContent:'space-between', gap:12,
+          fontSize:11, fontFamily:"'JetBrains Mono',ui-monospace,Menlo,monospace",
+          color:'#6b6553' }}>
+        <span style={{ color:'var(--navy)', fontWeight:600, fontFamily:"'Inter',sans-serif",
+            fontSize:12, letterSpacing:'-0.005em' }}>App icon / favicon · pin + plane</span>
+        <span>128 · 64 · 32 · 16</span>
+      </div>
+    </div>
+  );
+}
+
+/* Palette reference artboard */
+function PaletteArtboard() {
+  const swatches = [
+    { hex:'#0E2747', name:'Navy', role:'Primary' },
+    { hex:'#0B1E37', name:'Navy Ink', role:'Deep fills' },
+    { hex:'#E6B24B', name:'Amber', role:'Accent' },
+    { hex:'#C7932F', name:'Amber Deep', role:'Hover' },
+    { hex:'#FAF7F2', name:'Cream', role:'Background' },
+    { hex:'#FFFFFF', name:'White', role:'Base' },
+  ];
+  return (
+    <div style={{ width:'100%', height:'100%', display:'flex', flexDirection:'column', background:'#fff' }}>
+      <div style={{ flex:1, minHeight:0, display:'grid', gridTemplateColumns:'repeat(3, 1fr)' }}>
+        {swatches.map(s => (
+          <div key={s.hex} style={{ position:'relative', background:s.hex,
+              display:'flex', flexDirection:'column', justifyContent:'flex-end',
+              padding:'16px 16px 14px',
+              color: ['#FAF7F2','#FFFFFF','#E6B24B'].includes(s.hex) ? '#0E2747' : '#fff',
+              borderRight:'1px solid rgba(0,0,0,0.05)', borderBottom:'1px solid rgba(0,0,0,0.05)' }}>
+            <div style={{ fontSize:10, letterSpacing:'0.1em', textTransform:'uppercase',
+                opacity:0.7, fontWeight:600 }}>{s.role}</div>
+            <div style={{ fontSize:15, fontWeight:700, letterSpacing:'-0.01em' }}>{s.name}</div>
+            <div style={{ fontSize:11, fontFamily:"'JetBrains Mono',ui-monospace,Menlo,monospace",
+                opacity:0.7, marginTop:2 }}>{s.hex}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ padding:'14px 20px', background:'#fff',
+          display:'flex', alignItems:'center', justifyContent:'space-between',
+          fontSize:11, fontFamily:"'JetBrains Mono',ui-monospace,Menlo,monospace",
+          color:'#6b6553' }}>
+        <span style={{ color:'var(--navy)', fontWeight:600, fontFamily:"'Inter',sans-serif",
+            fontSize:12, letterSpacing:'-0.005em' }}>Palette reference</span>
+        <span>Shared across all lockups</span>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------
+   Canvas
+   ------------------------------------------------------------------ */
+function App() {
+  return (
+    <DesignCanvas title="Airport Transfers Liverpool — Logo exploration">
+      <DCSection id="chosen" title="Locked · Option 5 · Pin + plane" subtitle="This is the mark being rolled out across the site. Large on cream, small on white, small on navy — all read.">
+        <DCArtboard id="lg-5" label="★ LOCKED · Pin + plane" width={760} height={560}>
+          <LogoArtboard Logo={LogoPinPlane} label="Pin + plane — locked" notes="Friendly, literal, legible at small sizes" />
+        </DCArtboard>
+        <DCArtboard id="fav" label="Favicon / app icon sizes" width={1160} height={420}>
+          <FaviconArtboard />
+        </DCArtboard>
+        <DCArtboard id="pal" label="Palette reference" width={760} height={420}>
+          <PaletteArtboard />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="alts" title="Alternatives (not used)" subtitle="Kept here for reference — the other five directions I explored.">
+
+        <DCArtboard id="lg-1" label="01 · ATL badge monogram" width={760} height={560}>
+          <LogoArtboard Logo={LogoBadgeMono} label="Badge monogram" notes="Confident, reads well small" />
+        </DCArtboard>
+
+        <DCArtboard id="lg-2" label="02 · Signal / beacon" width={760} height={560}>
+          <LogoArtboard Logo={LogoSignal} label="Beacon mark" notes="Runway-light metaphor · more abstract" />
+        </DCArtboard>
+
+        <DCArtboard id="lg-3" label="03 · Runway chevron" width={760} height={560}>
+          <LogoArtboard Logo={LogoRunway} label="Runway chevron" notes="Directional, transport-y" />
+        </DCArtboard>
+
+        <DCArtboard id="lg-4" label="04 · Type only (Fraunces)" width={760} height={560}>
+          <LogoArtboard Logo={LogoTypeOnly} label="Wordmark only" notes="Warmer, editorial · no symbol" />
+        </DCArtboard>
+
+        <DCArtboard id="lg-6" label="06 · Boarding pass" width={760} height={560}>
+          <LogoArtboard Logo={LogoTicket} label="Boarding pass" notes="Distinctive horizontal lockup" />
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+
+</body>
+</html>
