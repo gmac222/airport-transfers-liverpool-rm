@@ -290,8 +290,35 @@ function Reviews() {
     { name: "Julie Quinn", init: "JQ", when: "5 months ago", text: "Great as always, even when our flight was cancelled Roy was great and it was no issue to collect us at the new time 👌 booked again for August 2026" },
     { name: "Pete Mort", init: "PM", when: "6 months ago", text: "Excellent service. Roy is always on time, very helpful with luggage and a very smooth driver. Vehicles are clean and comfortable. Used RM Transfers for years and wouldn't use anyone else." }
   ];
+
+  const observerRef = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("bento-visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: "0px 0px -50px 0px" }
+    );
+    
+    if (observerRef.current) {
+      const elements = observerRef.current.querySelectorAll('.bento-item');
+      elements.forEach((el, index) => {
+        el.style.transitionDelay = `${index * 0.1}s`;
+        observer.observe(el);
+      });
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <section id="reviews">
+    <section id="reviews" ref={observerRef}>
       <div className="wrap">
         <div className="section-head reviews-head">
           <span className="section-kicker">What our customers say</span>
@@ -304,21 +331,102 @@ function Reviews() {
             </div>
           </div>
         </div>
-        <div className="reviews">
-          {items.map((r, k) => (
-            <div className="review" key={k}>
-              <div className="stars">★★★★★</div>
-              <p>"{r.text}"</p>
-              <div className="review-by">
-                <div className="av">{r.init}</div>
-                <div className="meta">
-                  <b>{r.name}</b>
-                  <span>{r.when}</span>
+        
+        <div className="bento-grid">
+          {/* Column 1 */}
+          <div className="bento-col">
+            <div className="bento-item bento-item-large bento-bg-cream">
+              <div className="bento-content">
+                <div className="stars" style={{ marginBottom: 16 }}>★★★★★</div>
+                <p style={{ flex: 1, fontSize: 16 }}>"{items[0].text}"</p>
+                <div className="review-by" style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div className="av" style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--amber)', color: 'var(--navy-ink)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600 }}>{items[0].init}</div>
+                  <div className="meta" style={{ display: 'flex', flexDirection: 'column' }}>
+                    <b style={{ color: 'var(--navy-ink)', fontSize: 15 }}>{items[0].name}</b>
+                    <span style={{ fontSize: 13, color: 'var(--muted)' }}>{items[0].when}</span>
+                  </div>
                 </div>
               </div>
             </div>
-          ))}
+            <div className="bento-item bento-item-small bento-bg-navy">
+              <div className="bento-dot-pattern"></div>
+              <div className="bento-content">
+                <div className="stars" style={{ marginBottom: 16, color: 'var(--amber)' }}>★★★★★</div>
+                <p style={{ flex: 1, color: 'rgba(255,255,255,0.95)', fontSize: 15 }}>"{items[1].text}"</p>
+                <div className="review-by" style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div className="av" style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600 }}>{items[1].init}</div>
+                  <div className="meta" style={{ display: 'flex', flexDirection: 'column' }}>
+                    <b style={{ color: '#fff', fontSize: 15 }}>{items[1].name}</b>
+                    <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>{items[1].when}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Column 2 */}
+          <div className="bento-col">
+            <div className="bento-item bento-item-small bento-bg-white">
+              <div className="bento-content">
+                <div className="stars" style={{ marginBottom: 16, color: 'var(--amber-deep)' }}>★★★★★</div>
+                <p style={{ flex: 1, fontSize: 15 }}>"{items[2].text}"</p>
+                <div className="review-by" style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div className="av" style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--cream)', color: 'var(--navy-ink)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600 }}>{items[2].init}</div>
+                  <div className="meta" style={{ display: 'flex', flexDirection: 'column' }}>
+                    <b style={{ color: 'var(--navy-ink)', fontSize: 15 }}>{items[2].name}</b>
+                    <span style={{ fontSize: 13, color: 'var(--muted)' }}>{items[2].when}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="bento-item bento-item-large bento-bg-amber">
+              <div className="bento-dot-pattern" style={{ backgroundImage: 'radial-gradient(rgba(14, 39, 71, 0.08) 2px, transparent 2px)' }}></div>
+              <div className="bento-content">
+                <div className="stars" style={{ marginBottom: 16, color: 'var(--navy-ink)' }}>★★★★★</div>
+                <p style={{ flex: 1, color: 'var(--navy-ink)', fontWeight: 500, fontSize: 16 }}>"{items[3].text}"</p>
+                <div className="review-by" style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div className="av" style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--navy-ink)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600 }}>{items[3].init}</div>
+                  <div className="meta" style={{ display: 'flex', flexDirection: 'column' }}>
+                    <b style={{ color: 'var(--navy-ink)', fontSize: 15 }}>{items[3].name}</b>
+                    <span style={{ fontSize: 13, color: 'rgba(14, 39, 71, 0.7)' }}>{items[3].when}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Column 3 */}
+          <div className="bento-col">
+            <div className="bento-item bento-item-large bento-bg-navy">
+              <div className="bento-dot-pattern"></div>
+              <div className="bento-content">
+                <div className="stars" style={{ marginBottom: 16, color: 'var(--amber)' }}>★★★★★</div>
+                <p style={{ flex: 1, color: 'rgba(255,255,255,0.95)', fontSize: 16 }}>"{items[4].text}"</p>
+                <div className="review-by" style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div className="av" style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600 }}>{items[4].init}</div>
+                  <div className="meta" style={{ display: 'flex', flexDirection: 'column' }}>
+                    <b style={{ color: '#fff', fontSize: 15 }}>{items[4].name}</b>
+                    <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>{items[4].when}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="bento-item bento-item-small bento-bg-cream">
+              <div className="bento-content">
+                <div className="stars" style={{ marginBottom: 16 }}>★★★★★</div>
+                <p style={{ flex: 1, fontSize: 15 }}>"{items[5].text}"</p>
+                <div className="review-by" style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div className="av" style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--amber)', color: 'var(--navy-ink)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600 }}>{items[5].init}</div>
+                  <div className="meta" style={{ display: 'flex', flexDirection: 'column' }}>
+                    <b style={{ color: 'var(--navy-ink)', fontSize: 15 }}>{items[5].name}</b>
+                    <span style={{ fontSize: 13, color: 'var(--muted)' }}>{items[5].when}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+
       </div>
     </section>
   );

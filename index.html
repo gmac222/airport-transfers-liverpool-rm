@@ -1111,86 +1111,126 @@
             font-weight: 600
         }
 
-        .reviews {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px
+        .bento-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
         }
-
-        @media (min-width:700px) {
-            .reviews {
-                grid-template-columns: 1fr 1fr
+        @media (min-width: 1050px) {
+            .bento-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 12px;
             }
         }
 
-        @media (min-width:1050px) {
-            .reviews {
-                grid-template-columns: repeat(3, 1fr)
-            }
+        .bento-col {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            height: 100%;
         }
 
-        .review {
-            background: #fff;
-            border: 1px solid var(--line);
+        .bento-item {
+            position: relative;
+            overflow: hidden;
             border-radius: 16px;
+            border: 1px solid var(--line);
             padding: 28px;
             display: flex;
             flex-direction: column;
-            gap: 14px;
-            transition: border-color .2s ease, box-shadow .2s ease;
+            justify-content: space-between;
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            opacity: 0;
+            filter: blur(10px);
+            transform: translateY(20px);
         }
 
-        .review:hover {
-            border-color: rgba(230, 178, 75, .5);
-            box-shadow: 0 10px 30px -12px rgba(14, 39, 71, .12);
+        .bento-item.bento-visible {
+            opacity: 1;
+            filter: blur(0px);
+            transform: translateY(0);
         }
 
-        .review .stars {
-            font-size: 15px;
-            letter-spacing: 2px
+        .bento-item-large { flex: 7; min-height: 320px; }
+        .bento-item-small { flex: 4; min-height: 240px; }
+
+        .bento-bg-amber {
+            background-color: var(--amber);
+            color: var(--navy-ink);
+            border-color: rgba(230, 178, 75, 0.5);
+        }
+        .bento-bg-navy {
+            background-color: var(--navy-ink);
+            color: #fff;
+            border-color: rgba(14, 39, 71, 0.8);
+        }
+        .bento-bg-white {
+            background-color: #fff;
+            color: var(--navy-ink);
+        }
+        .bento-bg-cream {
+            background-color: var(--cream);
+            color: var(--navy-ink);
         }
 
-        .review p {
-            margin: 0;
-            color: #1a1d24;
-            font-size: 15px;
-            line-height: 1.6
+        .bento-dot-pattern {
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(rgba(14, 39, 71, 0.12) 2px, transparent 2px);
+            background-size: 24px 24px;
+            mask-image: radial-gradient(ellipse 80% 50% at 50% 0%, #000 70%, transparent 110%);
+            -webkit-mask-image: radial-gradient(ellipse 80% 50% at 50% 0%, #000 70%, transparent 110%);
+            z-index: 0;
+            pointer-events: none;
         }
 
-        .review-by {
+        .bento-content {
+            position: relative;
+            z-index: 1;
             display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-top: auto;
-            padding-top: 16px;
-            border-top: 1px solid var(--line)
+            flex-direction: column;
+            height: 100%;
         }
 
-        .review-by .av {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: var(--cream-2);
-            display: grid;
-            place-items: center;
-            font-weight: 700;
-            color: var(--navy-ink);
-            font-size: 13px
+        .bento-content p {
+            margin: 0;
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: auto;
+        }
+        .bento-bg-navy p {
+            color: rgba(255, 255, 255, 0.85);
         }
 
-        .review-by .meta {
-            font-size: 13px
+        .bento-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-top: 32px;
+            gap: 16px;
         }
 
-        .review-by .meta b {
-            color: var(--navy-ink);
+        .bento-author h3 {
+            font-family: 'Lexend', sans-serif;
+            font-size: 17px;
             font-weight: 600;
-            display: block
+            margin: 0 0 4px 0;
+        }
+        .bento-author span {
+            font-size: 13px;
+            opacity: 0.8;
+            font-weight: 500;
         }
 
-        .review-by .meta span {
-            color: var(--muted);
-            font-size: 12px
+        .bento-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            object-fit: cover;
+            background: rgba(0,0,0,0.05);
+            flex-shrink: 0;
         }
 
         /* ---------- FAQ ---------- */
