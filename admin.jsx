@@ -336,6 +336,7 @@ function AdminApp() {
         if (action === 'driver-on-way') confirmText = "Send 'Driver On Way' SMS to Customer?";
         if (action === 'driver-arrived') confirmText = "Send 'Driver Arrived' SMS to Customer?";
         if (action === 'resend-driver') confirmText = "Resend Job SMS & Portal Link to Driver?";
+        if (action === 'send-review-invite') confirmText = "Send Review Invite SMS to Customer?";
 
         if (!window.confirm(confirmText)) return;
         
@@ -627,6 +628,9 @@ function AdminApp() {
                                                 </button>
                                                 <button onClick={() => handleDirectSMS(record, 'driver-arrived')} style={{ flex: 1, padding: '8px 4px', background: 'white', border: '1px solid #10b981', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', color: '#10b981', fontWeight: 'bold' }}>
                                                     Backup: Send 'Arrived'
+                                                </button>
+                                                <button onClick={() => handleDirectSMS(record, 'send-review-invite')} style={{ flex: 1, padding: '8px 4px', background: 'white', border: '1px solid #3b82f6', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', color: '#3b82f6', fontWeight: 'bold' }}>
+                                                    Send Review Invite
                                                 </button>
                                             </div>
                                         </div>
