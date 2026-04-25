@@ -53,16 +53,11 @@ function AdminApp() {
             .then(data => {
                 if (data.error) throw new Error(data.error);
                 
-                // Sort bookings by date and time
+                // Sort bookings by Submitted At (latest first)
                 const sorted = data.bookings.sort((a, b) => {
-                    const dateA = a.fields['Outbound Date'] || '9999-12-31';
-                    const timeA = a.fields['Outbound Time'] || '23:59';
-                    const dateB = b.fields['Outbound Date'] || '9999-12-31';
-                    const timeB = b.fields['Outbound Time'] || '23:59';
-                    
-                    const dateTimeA = new Date(`${dateA}T${timeA}`);
-                    const dateTimeB = new Date(`${dateB}T${timeB}`);
-                    return dateTimeB - dateTimeA; // Descending date order
+                    const dateA = new Date(a.fields['Submitted At'] || 0);
+                    const dateB = new Date(b.fields['Submitted At'] || 0);
+                    return dateB - dateA;
                 });
                 
                 setBookings(sorted);
@@ -272,12 +267,17 @@ function AdminApp() {
                     <h1>Operator Dispatch Dashboard</h1>
                     <div style={{fontSize: '14px'}}>Logged in as Admin</div>
                 </div>
-                <button 
-                    onClick={handleLogout}
-                    style={{ background: 'transparent', border: '1px solid white', color: 'white', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}
-                >
-                    Log Out
-                </button>
+                <div style={{ display: 'flex', gap: '15px' }}>
+                    <a href="/#book" target="_blank" className="btn" style={{ background: 'var(--amber)', color: 'var(--navy-ink)', textDecoration: 'none', padding: '6px 12px', borderRadius: '6px', fontWeight: 'bold', fontSize: '14px', display: 'flex', alignItems: 'center' }}>
+                        + New Manual Booking
+                    </a>
+                    <button 
+                        onClick={handleLogout}
+                        style={{ background: 'transparent', border: '1px solid white', color: 'white', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}
+                    >
+                        Log Out
+                    </button>
+                </div>
             </div>
             
             <div className="wrap">

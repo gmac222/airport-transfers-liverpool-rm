@@ -25,7 +25,7 @@ module.exports = async (req, res) => {
 
     const AIRTABLE_API_KEY = process.env.AIRTABLE_PERSONAL_ACCESS_TOKEN || process.env.AIRTABLE_API_KEY;
     const BASE_ID = 'appzmLNDAsk6m06Ae';
-    const TABLE_ID = 'tblgM0WSDVJUbbjS2'; // Drivers table (formerly Admins)
+    const TABLE_ID = 'Admins'; // Use table name instead of ID so user can easily create it
 
     if (!AIRTABLE_API_KEY) {
         return res.status(500).json({ error: 'Airtable API key is not configured.' });
