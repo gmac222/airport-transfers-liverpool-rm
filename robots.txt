@@ -1,0 +1,9 @@
+User-agent: *
+Disallow: /admin.html
+Disallow: /stats.html
+Disallow: /portal.html
+Disallow: /driver-action.html
+Disallow: /api/
+
+Allow: /
+Sitemap: https://airporttaxitransfersliverpool.co.uk/sitemap.xml
