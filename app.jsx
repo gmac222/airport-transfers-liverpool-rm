@@ -1202,11 +1202,11 @@ function App() {
       <HowItWorks />
       <FixedPricePromise />
       <YourVehicle />
+      <AppPromo />
       <MeetAndGreet />
       <FAQ />
       <Reviews />
       <BookSection />
-      <AppPromo />
       <Footer />
       <StickyBar enabled={t.showStickyBar} />
 
