@@ -462,7 +462,7 @@ function FAQ() {
     { q: "What if I'm not ready when you arrive at home?", a: "Fine. We build a few minutes' grace into every pickup, and we'd rather be early than late. Just tell us what time you want to leave the house and we'll plan back from that." },
     { q: "Are your drivers licensed and insured?", a: "Yes — every driver is fully licensed by the local council for private hire, DBS checked, and the business carries full public liability and hire & reward insurance. Happy to show you the paperwork before booking if you'd like." },
     { q: "Will my luggage fit?", a: "We allocate vehicles based on your passenger count and luggage needs — ranging from standard cars to spacious 8-seat minibuses. We make sure there's plenty of room for everyone and everything." },
-    { q: "Can I pay in cash?", a: "Cash or card, whichever suits. Card payment is taken by the driver at the end of the journey via contactless. No booking fee either way." },
+    { q: "How do I pay?", a: "Payment is taken securely online via a payment link in your customer portal once your driver is assigned. You don't need a card to reserve your booking." },
     { q: "How far ahead do I need to book?", a: "Ideally 24 hours for guaranteed availability. We often take same-day bookings when a driver's free — call 0151 123 4567 and we'll tell you straight." }
   ];
   return (
