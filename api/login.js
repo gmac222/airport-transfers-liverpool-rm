@@ -32,7 +32,8 @@ module.exports = async (req, res) => {
     }
 
     try {
-        const url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}?filterByFormula=AND(LOWER({Name})='${cleanUsername.toLowerCase()}', {Password}='${cleanPassword}')`;
+        const formula = `AND(LOWER({Name})='${cleanUsername.toLowerCase()}', {Password}='${cleanPassword}')`;
+        const url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}?filterByFormula=` + encodeURIComponent(formula);
         const response = await fetch(url, {
             headers: {
                 'Authorization': `Bearer ${AIRTABLE_API_KEY}`
