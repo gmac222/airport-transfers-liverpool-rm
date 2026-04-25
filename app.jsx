@@ -216,7 +216,7 @@ function FixedPricePromise() {
 function YourVehicle() {
   return (
     <section>
-      <div className="wrap" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '64px', alignItems: 'center' }}>
+      <div className="wrap mng-grid">
         <div>
           <span className="section-kicker">Your vehicle</span>
           <h2 className="h2">Private airport transfers. <em>Fixed pricing.</em></h2>
@@ -237,11 +237,16 @@ function YourVehicle() {
           </ul>
           <a href="#book" className="btn btn-primary" style={{ marginTop: '24px' }}>Book Your Transfer <Icon name="arrow" size={16} /></a>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           <img 
             src="./assets/airport-transfers-fleet.jpg" 
             alt="RM Transfers fleet of private airport transfer vehicles" 
-            style={{ maxWidth: '100%', height: 'auto', borderRadius: '16px', boxShadow: '0 20px 40px rgba(14, 39, 71, 0.15)', border: '1px solid rgba(0,0,0,0.05)' }}
+            style={{ width: '100%', height: 'auto', borderRadius: '16px', boxShadow: '0 20px 40px rgba(14, 39, 71, 0.15)', border: '1px solid rgba(0,0,0,0.05)' }}
+          />
+          <img 
+            src="./assets/8-seater-minibus.png" 
+            alt="RM Transfers 8-seater minibus" 
+            style={{ width: '100%', height: 'auto', borderRadius: '16px', boxShadow: '0 20px 40px rgba(14, 39, 71, 0.15)', border: '1px solid rgba(0,0,0,0.05)' }}
           />
         </div>
       </div>
