@@ -132,6 +132,12 @@ function PortalApp() {
                             <div>
                                 <span style={{fontSize: '13px', color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase'}}>Your Driver</span>
                                 <strong style={{display: 'block', fontSize: '18px', color: 'var(--navy-ink)'}}>{driverName}</strong>
+                                {fields['Driver Phone'] && (
+                                    <div style={{fontSize: '14px', color: 'var(--muted)', marginTop: '4px'}}>
+                                        📞 <a href={`tel:${fields['Driver Phone']}`} style={{color: 'var(--navy-ink)', textDecoration: 'none', fontWeight: 500}}>{fields['Driver Phone']}</a>
+                                        <span style={{display: 'block', fontSize: '12px', marginTop: '2px'}}>(For emergencies only)</span>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
