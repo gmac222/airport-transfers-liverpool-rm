@@ -7,7 +7,25 @@
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://airporttaxitransfersliverpool.co.uk/privacy/</loc>
+    <loc>https://airporttaxitransfersliverpool.co.uk/privacy.html</loc>
+    <lastmod>2026-04-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://airporttaxitransfersliverpool.co.uk/about-us.html</loc>
+    <lastmod>2026-04-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://airporttaxitransfersliverpool.co.uk/contact.html</loc>
+    <lastmod>2026-04-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://airporttaxitransfersliverpool.co.uk/terms.html</loc>
     <lastmod>2026-04-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>

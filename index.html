@@ -1182,14 +1182,11 @@
 
         .mng-list .ic {
             flex-shrink: 0;
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            background: var(--cream);
-            color: var(--navy-ink);
+            width: 32px;
+            height: 32px;
+            color: var(--amber-deep);
             display: grid;
             place-items: center;
-            border: 1px solid var(--line);
         }
 
         .mng-list b {
@@ -2013,20 +2010,20 @@
         }
 
         .aurora-effect {
-            --aurora: repeating-linear-gradient(100deg, #FFE066 10%, #FFB067 15%, #FF9B9B 20%, #FDD85D 25%, #FFE066 30%);
+            --aurora: repeating-linear-gradient(100deg, var(--cream) 10%, #eaf0f6 15%, #dce6f0 20%, var(--cream-2) 25%, var(--cream) 30%);
             --white-gradient: repeating-linear-gradient(100deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.8) 7%, transparent 10%, transparent 12%, rgba(255,255,255,0.8) 16%);
             
             background-image: var(--white-gradient), var(--aurora);
             background-size: 300% 300%;
             background-position: 50% 50%, 50% 50%;
-            filter: blur(20px);
+            filter: blur(25px);
             
             position: absolute;
             top: -15px;
             right: -15px;
             bottom: -15px;
             left: -15px;
-            opacity: 0.15;
+            opacity: 0.4;
             will-change: transform;
         }
 
@@ -2038,7 +2035,7 @@
             background-size: 200% 200%;
             background-attachment: fixed;
             mix-blend-mode: overlay;
-            animation: aurora-anim 120s linear infinite;
+            animation: aurora-anim 180s linear infinite;
         }
 
         .aurora-effect.radial {
