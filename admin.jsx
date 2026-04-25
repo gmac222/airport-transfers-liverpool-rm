@@ -12,6 +12,7 @@ function AdminApp() {
     const [error, setError] = useState(null);
     const [assigningId, setAssigningId] = useState(null);
     const [driverNames, setDriverNames] = useState({});
+    const [driverPhones, setDriverPhones] = useState({});
     const [paymentLinks, setPaymentLinks] = useState({});
 
     const handleLogin = (e) => {
@@ -76,14 +77,20 @@ function AdminApp() {
         setDriverNames(prev => ({ ...prev, [id]: name }));
     };
 
+    const handleDriverPhoneChange = (id, phone) => {
+        setDriverPhones(prev => ({ ...prev, [id]: phone }));
+    };
+
     const handlePaymentLinkChange = (id, link) => {
         setPaymentLinks(prev => ({ ...prev, [id]: link }));
     };
 
     const handleAssignDriver = (id) => {
         const driverName = driverNames[id];
+        const driverPhone = driverPhones[id];
         const paymentLink = paymentLinks[id];
         if (!driverName || driverName.trim() === '') return alert('Please enter a driver name');
+        if (!driverPhone || driverPhone.trim() === '') return alert('Please enter a driver phone number');
         if (!paymentLink || paymentLink.trim() === '') return alert('Please enter a payment link');
 
         setAssigningId(id);
@@ -96,6 +103,7 @@ function AdminApp() {
                 fields: {
                     'Status': 'Accepted',
                     'Driver Name': driverName.trim(),
+                    'Driver Phone': driverPhone.trim(),
                     'Payment Link': paymentLink.trim()
                 }
             })
@@ -113,8 +121,12 @@ function AdminApp() {
                         customerPhone: record.fields['Customer Phone'],
                         bookingRef: record.fields['Booking Ref'],
                         driverName: driverName.trim(),
+                        driverPhone: driverPhone.trim(),
+                        pickupAddress: record.fields['Home Address'],
+                        outboundDate: record.fields['Outbound Date'],
+                        outboundTime: record.fields['Outbound Time'],
                         paymentLink: paymentLink.trim(),
-                        portalLink: paymentLink.trim() // Mapping for existing SMS template
+                        portalLink: `https://airporttaxitransfersliverpool.co.uk/portal.html?ref=${record.fields['Booking Ref']}`
                     })
                 }).catch(err => console.error('Error triggering webhook:', err));
             }
@@ -247,6 +259,13 @@ function AdminApp() {
                                                     style={{ flex: '1 1 200px' }}
                                                 />
                                                 <input 
+                                                    type="tel" 
+                                                    placeholder="Driver Phone..." 
+                                                    value={driverPhones[id] || ''}
+                                                    onChange={e => handleDriverPhoneChange(id, e.target.value)}
+                                                    style={{ flex: '1 1 150px' }}
+                                                />
+                                                <input 
                                                     type="url" 
                                                     placeholder="Paste Revolut Payment Link..." 
                                                     value={paymentLinks[id] || ''}
@@ -264,7 +283,7 @@ function AdminApp() {
                                         </div>
                                     ) : (
                                         <div className="job-actions" style={{background: 'var(--cream)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--line)', display: 'flex', flexDirection: 'column', gap: '4px'}}>
-                                            <span style={{fontSize: '14px', fontWeight: 600}}>Driver: {fields['Driver Name']}</span>
+                                            <span style={{fontSize: '14px', fontWeight: 600}}>Driver: {fields['Driver Name']} {fields['Driver Phone'] ? `(${fields['Driver Phone']})` : ''}</span>
                                             {fields['Payment Link'] && <span style={{fontSize: '14px', color: 'var(--muted)'}}>Payment Link: <a href={fields['Payment Link']} target="_blank" rel="noreferrer" style={{color: 'var(--navy)'}}>{fields['Payment Link']}</a></span>}
                                         </div>
                                     )}

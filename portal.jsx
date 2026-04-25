@@ -136,6 +136,17 @@ function PortalApp() {
                         </div>
                     )}
 
+                    {status === 'Accepted' && fields['Payment Link'] && (
+                        <div style={{marginTop: '20px'}}>
+                            <a href={fields['Payment Link']} target="_blank" className="btn btn-primary" style={{width: '100%', textAlign: 'center', display: 'block'}}>
+                                Pay to Confirm Booking
+                            </a>
+                            <p style={{fontSize: '13px', color: 'var(--muted)', textAlign: 'center', marginTop: '10px'}}>
+                                Secure payment via Revolut
+                            </p>
+                        </div>
+                    )}
+
                     {status === 'Pending' && (
                         <div style={{marginTop: '20px', padding: '16px', background: 'rgba(14, 39, 71, 0.04)', borderRadius: '12px', fontSize: '14px', color: 'var(--muted)'}}>
                             We have received your booking and are currently matching you with one of our professional drivers. You will receive an SMS as soon as a driver is confirmed!

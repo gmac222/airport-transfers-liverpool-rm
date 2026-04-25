@@ -396,16 +396,34 @@ function BookingForm() {
     if (!form.phone.trim()) errs.phone = "So we can text you the driver's details";
     if (!form.address.trim()) errs.address = "Home address please — where we pick up & drop off";
 
+    const minNoticeMs = 12 * 60 * 60 * 1000;
+    const now = new Date();
+
+    const validateDate = (dateStr, timeStr, dateField, timeField) => {
+      if (dateStr && timeStr) {
+        const tripDate = new Date(`${dateStr}T${timeStr}`);
+        if (tripDate.getTime() - now.getTime() < minNoticeMs) {
+          errs[dateField] = "Minimum 12 hours notice required";
+          errs[timeField] = "Call 0151 123 4567 for last-minute jobs";
+        }
+      }
+    };
+
     if (tripType === "return") {
       if (!form.outDate) errs.outDate = "Outbound date";
       if (!form.outTime) errs.outTime = "Pickup time";
       if (!form.retDate) errs.retDate = "Return date";
       if (!form.retTime) errs.retTime = "Landing time";
       if (!form.retFlight.trim()) errs.retFlight = "So we can track your return flight";
+      
+      validateDate(form.outDate, form.outTime, "outDate", "outTime");
+      validateDate(form.retDate, form.retTime, "retDate", "retTime");
     } else {
       if (!form.legDate) errs.legDate = "Pick a date";
       if (!form.legTime) errs.legTime = "Pick a time";
       if (onewayDir === "from" && !form.legFlight.trim()) errs.legFlight = "So we can track it";
+
+      validateDate(form.legDate, form.legTime, "legDate", "legTime");
     }
 
     if (Object.keys(errs).length) {
@@ -532,7 +550,7 @@ function BookingForm() {
             <div className="row2">
               <div className={"field" + (errors.outDate ? " error" : "")}>
                 <label>Pickup date <span className="req">*</span></label>
-                <input type="date" value={form.outDate} onChange={e => upd("outDate", e.target.value)} />
+                <input type="date" value={form.outDate} min={new Date().toISOString().split('T')[0]} onChange={e => upd("outDate", e.target.value)} />
                 {errors.outDate && <div className="err-msg">{errors.outDate}</div>}
               </div>
               <div className={"field" + (errors.outTime ? " error" : "")}>
@@ -552,7 +570,7 @@ function BookingForm() {
             <div className="row2">
               <div className={"field" + (errors.retDate ? " error" : "")}>
                 <label>Landing date <span className="req">*</span></label>
-                <input type="date" value={form.retDate} onChange={e => upd("retDate", e.target.value)} />
+                <input type="date" value={form.retDate} min={new Date().toISOString().split('T')[0]} onChange={e => upd("retDate", e.target.value)} />
                 {errors.retDate && <div className="err-msg">{errors.retDate}</div>}
               </div>
               <div className={"field" + (errors.retTime ? " error" : "")}>
@@ -574,7 +592,7 @@ function BookingForm() {
           <div className="row2">
             <div className={"field" + (errors.legDate ? " error" : "")}>
               <label>{onewayDir === "to" ? "Pickup date" : "Landing date"} <span className="req">*</span></label>
-              <input type="date" value={form.legDate} onChange={e => upd("legDate", e.target.value)} />
+              <input type="date" value={form.legDate} min={new Date().toISOString().split('T')[0]} onChange={e => upd("legDate", e.target.value)} />
               {errors.legDate && <div className="err-msg">{errors.legDate}</div>}
             </div>
             <div className={"field" + (errors.legTime ? " error" : "")}>
