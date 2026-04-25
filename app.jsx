@@ -178,7 +178,7 @@ function HowItWorks() {
   const steps = [
     { n: 1, title: "Book both legs at once", body: "Tell us your pickup address and flight times — out and back. One booking, one fixed price, one minibus. Confirmation text arrives within 10 minutes.", time: "~2 min to book" },
     { n: 2, title: "Your private minibus arrives", body: "Driver rings the bell at the agreed time. Bags in the boot of our spacious 8-seat minibus, straight on the M53, dropped at the terminal door. No airport parking to find.", time: "Direct to the terminal door" },
-    { n: 3, title: "We meet you when you land", body: "Driver waits inside Arrivals with a sign showing your name. We track your flight so they're there whether you're early, late or delayed. Same minibus, same driver.", time: "inside the terminal" }
+    { n: 3, title: "We meet you when you land", body: "Your driver waits inside Arrivals with a sign showing your name. We track your flight so they're there whether you're early, late or delayed.", time: "inside the terminal" }
   ];
   return (
     <section id="how">
@@ -264,7 +264,7 @@ function YourVehicle() {
       <div className="wrap" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '64px', alignItems: 'center' }}>
         <div>
           <span className="section-kicker">Your vehicle</span>
-          <h2 className="h2">One vehicle. <em>One fixed price.</em></h2>
+          <h2 className="h2">Private 8-seat minibus. <em>One fixed price.</em></h2>
           <p className="section-sub" style={{ marginBottom: '24px' }}>Every booking travels in our private 8-seat minibus — whether there's one of you or eight. It's not shared. It's not a cramped saloon. It's your own spacious, air-conditioned minibus with room for everyone and everything.</p>
           <ul className="mng-list">
             <li>
@@ -312,13 +312,13 @@ function MeetAndGreet() {
           </div>
         </div>
         <div className="mng-text">
-          <span className="section-kicker">Both ways, one driver</span>
+          <span className="section-kicker">Both ways, fully managed</span>
           <h2 className="h2">We pick you up at home. <em>We meet you in Arrivals.</em></h2>
-          <p className="section-sub">Most of our bookings are returns — same driver, same minibus, both legs, so you're never explaining yourself twice. Door to terminal on the way out. Terminal to door on the way back.</p>
+          <p className="section-sub">Most of our bookings are returns — both legs managed by our team so you're never explaining yourself twice. Door to terminal on the way out. Terminal to door on the way back.</p>
           <ul className="mng-list">
             <li>
               <div className="ic"><Icon name="track" size={20} /></div>
-              <div><b>Live flight tracking on the return</b><span>We check your flight the night before and the hour you land. Early, late or delayed — the driver is already there with your minibus.</span></div>
+              <div><b>Live flight tracking on the return</b><span>We check your flight the night before and the hour you land. Early, late or delayed — your driver is already there waiting.</span></div>
             </li>
             <li>
               <div className="ic"><Icon name="meet" size={20} /></div>
@@ -490,7 +490,7 @@ function Reviews() {
 /* ---------- FAQ ---------- */
 function FAQ() {
   const items = [
-    { q: "Can I book the outbound and return together?", a: "Yes — and honestly, most people do. One booking, one fixed price for both legs, and where possible the same driver takes you out and picks you up. You only need to give us your flight numbers; we'll work the rest out." },
+    { q: "Can I book the outbound and return together?", a: "Yes — and honestly, most people do. One booking, one fixed price for both legs. You only need to give us your flight numbers and we'll take care of the rest." },
     { q: "How do I know the driver will actually turn up?", a: "Every booking gets a confirmation text within 10 minutes with your driver's name, the minibus, and the plate. The night before pickup we send a reminder. The morning of, your driver messages you directly. If that sounds like a lot of texts — it's deliberate. It's the bit Uber doesn't do." },
     { q: "What happens if my flight is delayed?", a: "We check your flight number before leaving to collect you. If you're delayed, we delay. There's no extra charge — the fixed price covers up to 60 minutes of waiting in Arrivals, and honestly we've waited longer without ever billing for it. Fixed price means fixed price." },
     { q: "What if I'm not ready when you arrive at home?", a: "Fine. We build a few minutes' grace into every pickup, and we'd rather be early than late. Just tell us what time you want to leave the house and we'll plan back from that." },
