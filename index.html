@@ -2026,8 +2026,8 @@
         }
 
         .aurora-effect {
-            --aurora: repeating-linear-gradient(100deg, var(--cream) 10%, #eaf0f6 15%, #dce6f0 20%, var(--cream-2) 25%, var(--cream) 30%);
-            --white-gradient: repeating-linear-gradient(100deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.8) 7%, transparent 10%, transparent 12%, rgba(255,255,255,0.8) 16%);
+            --aurora: repeating-linear-gradient(100deg, rgba(230,178,75,0.4) 10%, rgba(14,39,71,0.15) 15%, rgba(230,178,75,0.2) 20%, rgba(14,39,71,0.15) 25%, rgba(230,178,75,0.4) 30%);
+            --white-gradient: repeating-linear-gradient(100deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.4) 7%, transparent 10%, transparent 12%, rgba(255,255,255,0.4) 16%);
             
             background-image: var(--white-gradient), var(--aurora);
             background-size: 300% 300%;
@@ -2035,11 +2035,8 @@
             filter: blur(25px);
             
             position: absolute;
-            top: -15px;
-            right: -15px;
-            bottom: -15px;
-            left: -15px;
-            opacity: 0.8;
+            inset: -15px;
+            opacity: 1;
             will-change: transform;
         }
 
@@ -2050,12 +2047,12 @@
             background-image: var(--white-gradient), var(--aurora);
             background-size: 200% 200%;
             mix-blend-mode: overlay;
-            animation: aurora-anim 180s linear infinite;
+            animation: aurora-anim 60s linear infinite;
         }
 
         .aurora-effect.radial {
-            -webkit-mask-image: radial-gradient(ellipse at 50% 0%, black 10%, transparent 100%);
-            mask-image: radial-gradient(ellipse at 50% 0%, black 10%, transparent 100%);
+            -webkit-mask-image: radial-gradient(ellipse at 50% 50%, black 10%, transparent 80%);
+            mask-image: radial-gradient(ellipse at 50% 50%, black 10%, transparent 80%);
         }
 
         @keyframes aurora-anim {

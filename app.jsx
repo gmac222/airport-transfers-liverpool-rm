@@ -153,9 +153,9 @@ function HowItWorks() {
     { n: 3, title: "We meet you when you land", body: "Your driver waits inside Arrivals with a sign showing your name. We track your flight so they're there whether you're early, late or delayed.", time: "inside the terminal" }
   ];
   return (
-    <section id="how" style={{ position: 'relative', overflow: 'hidden' }}>
+    <section id="how" style={{ position: 'relative', overflow: 'hidden', padding: 0 }}>
       <AuroraBackground>
-        <div className="wrap">
+        <div className="wrap" style={{ paddingTop: '64px', paddingBottom: '64px' }}>
           <div className="section-head">
             <span className="section-kicker">From your door to the terminal. And back.</span>
             <h2 className="h2">Three steps. <em>No faff.</em></h2>
