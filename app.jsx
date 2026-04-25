@@ -869,9 +869,9 @@ function AppPromo() {
         
         <div style={{ flex: 1, maxWidth: '500px' }}>
           <span className="section-kicker" style={{ color: 'var(--amber)' }}>Go Mobile</span>
-          <h2 className="h2" style={{ color: '#fff', margin: '0 0 20px 0' }}>Install the RM Transfers <em>mobile app.</em></h2>
+          <h2 className="h2" style={{ color: '#fff', margin: '0 0 20px 0' }}>Keep track with our <em>booking portal.</em></h2>
           <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.8)', marginBottom: '30px', lineHeight: 1.5 }}>
-            Get instant status updates when your driver is en route, manage your bookings, and communicate directly — right from your home screen. No App Store required.
+            Once you've booked, you can add our booking portal to your phone's home screen. Get instant status updates when your driver is en route, manage your bookings, and communicate directly. No App Store required.
           </p>
           <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 40px 0', display: 'flex', flexDirection: 'column', gap: '15px' }}>
             <li style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -891,7 +891,7 @@ function AppPromo() {
           <div style={{ background: 'rgba(255,255,255,0.05)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
             {installPrompt ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                <div style={{ fontWeight: 'bold' }}>Install the App</div>
+                <div style={{ fontWeight: 'bold' }}>Install for Booking Updates</div>
                 <button 
                   onClick={handleInstallClick}
                   style={{ background: 'var(--amber)', color: '#000', border: 'none', padding: '12px 24px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
