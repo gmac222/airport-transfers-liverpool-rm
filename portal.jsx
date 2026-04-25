@@ -189,21 +189,41 @@ function PortalApp() {
                     )}
 
                     {status === 'Accepted' && fields['Payment Link'] && (
-                        <div style={{
-                            marginTop: '30px', 
-                            padding: '24px', 
-                            background: 'linear-gradient(145deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.02))', 
-                            borderRadius: '20px', 
-                            border: '1px solid rgba(16, 185, 129, 0.2)',
-                            boxShadow: '0 10px 30px -10px rgba(16, 185, 129, 0.15)',
-                            textAlign: 'center'
+                        <div className="payment-card" style={{
+                            marginTop: '32px', 
+                            padding: '32px 24px', 
+                            background: 'linear-gradient(145deg, rgba(230, 178, 75, 0.15), rgba(230, 178, 75, 0.05))', 
+                            borderRadius: '24px', 
+                            border: '1px solid rgba(230, 178, 75, 0.3)',
+                            boxShadow: '0 20px 40px -10px rgba(230, 178, 75, 0.15), inset 0 1px 0 rgba(255,255,255,0.1)',
+                            textAlign: 'center',
+                            position: 'relative',
+                            overflow: 'hidden'
                         }}>
-                            <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', color: '#fff', fontWeight: '600' }}>Complete Your Booking</h3>
-                            <a href={fields['Payment Link']} target="_blank" className="btn btn-primary" style={{width: '100%', textAlign: 'center', display: 'flex', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', boxShadow: '0 10px 20px -10px rgba(16, 185, 129, 0.5)'}}>
-                                Pay to Confirm Booking
+                            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', background: 'var(--amber)' }}></div>
+                            <h3 style={{ margin: '0 0 8px 0', fontSize: '20px', color: '#fff', fontWeight: '700' }}>Driver Assigned</h3>
+                            <p style={{ margin: '0 0 24px 0', fontSize: '15px', color: 'rgba(255,255,255,0.8)', lineHeight: 1.5 }}>
+                                Please secure your booking by completing the fixed-price payment below.
+                            </p>
+                            <a href={fields['Payment Link']} target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{
+                                width: '100%', 
+                                textAlign: 'center', 
+                                display: 'flex', 
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                background: 'var(--amber)', 
+                                color: 'var(--navy-ink)', 
+                                fontSize: '16px',
+                                padding: '16px',
+                                borderRadius: '12px',
+                                fontWeight: '700',
+                                boxShadow: '0 10px 20px -5px rgba(230, 178, 75, 0.4)',
+                                transition: 'all 0.3s ease'
+                            }}>
+                                Complete Payment Now
                             </a>
-                            <p style={{fontSize: '13px', color: 'var(--muted)', textAlign: 'center', marginTop: '16px', marginBottom: '0'}}>
-                                Secure payment via Revolut
+                            <p style={{fontSize: '13px', color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginTop: '16px', marginBottom: '0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'}}>
+                                <span style={{opacity: 0.7}}>🔒</span> Secure, encrypted checkout
                             </p>
                         </div>
                     )}

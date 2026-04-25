@@ -21,7 +21,7 @@ export default async function handler(req, res) {
         if (!formattedCustomerPhone) return res.status(400).json({ error: 'Missing customer phone' });
         messages.push({
             to: formattedCustomerPhone,
-            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nA driver has been assigned to your RM Transfers booking (${fields['Booking Ref']}).\n\nPlease complete your payment securely via your booking portal to confirm:\nhttps://airporttaxitransfersliverpool.co.uk/portal.html?ref=${fields['Booking Ref']}\n\n(Please do not reply to this automated text.)`
+            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nA driver has been assigned to your RM Transfers booking (${fields['Booking Ref']}).\n\nPlease go to airporttaxitransfersliverpool.co.uk and click 'Manage Booking' to securely pay and confirm.\n\n(Please do not reply to this text)`
         });
     }
 
@@ -29,7 +29,7 @@ export default async function handler(req, res) {
         if (!formattedCustomerPhone) return res.status(400).json({ error: 'Missing customer phone' });
         messages.push({
             to: formattedCustomerPhone,
-            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nPayment received! Your RM Transfers booking (${fields['Booking Ref']}) is now confirmed.\n\nYour driver is ${fields['Driver Name']} (${fields['Driver Phone']}).\n\nTrack your booking here: https://airporttaxitransfersliverpool.co.uk/portal.html?ref=${fields['Booking Ref']}\n\n(Please do not reply to this automated text. Text your driver directly.)`
+            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nPayment received! Your RM Transfers booking (${fields['Booking Ref']}) is confirmed.\n\nYour driver is ${fields['Driver Name']} (${fields['Driver Phone']}).\n\n(Please do not reply to this text. Text your driver directly.)`
         });
     }
 
@@ -37,7 +37,7 @@ export default async function handler(req, res) {
         if (!formattedCustomerPhone) return res.status(400).json({ error: 'Missing customer phone' });
         messages.push({
             to: formattedCustomerPhone,
-            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nThis is a resent confirmation for your RM Transfers booking (${fields['Booking Ref']}).\n\nYour driver is ${fields['Driver Name'] || 'not yet assigned'}.\n\nTrack your booking here: https://airporttaxitransfersliverpool.co.uk/portal.html?ref=${fields['Booking Ref']}\n\n(Please do not reply to this automated text. Text your driver directly.)`
+            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nThis is a resent confirmation for RM Transfers booking (${fields['Booking Ref']}).\n\nYour driver is ${fields['Driver Name'] || 'not yet assigned'}.\n\nGo to airporttaxitransfersliverpool.co.uk and click 'Manage Booking' to view details.\n\n(Please do not reply to this text)`
         });
     }
 
@@ -45,7 +45,31 @@ export default async function handler(req, res) {
         if (!formattedDriverPhone) return res.status(400).json({ error: 'Missing driver phone' });
         messages.push({
             to: formattedDriverPhone,
-            body: `RESEND JOB DETAILS: ${fields['Trip Type'] === 'return' ? 'RETURN' : 'ONE WAY'} for ${fields['Customer Name']}\nPickup: ${fields['Home Address']}\nDate: ${fields['Outbound Date']} @ ${fields['Outbound Time']}\nFlight: ${fields['Outbound Flight'] || 'N/A'}\nCustomer Phone: ${fields['Customer Phone']}\nPrice: £${fields['Total Price']}\nPortal: https://airporttaxitransfersliverpool.co.uk/driver-action.html?ref=${fields['Booking Ref']}`
+            body: `RESEND JOB: ${fields['Trip Type'] === 'return' ? 'RETURN' : 'ONE WAY'} for ${fields['Customer Name']}\nPickup: ${fields['Home Address']}\nDate: ${fields['Outbound Date']} @ ${fields['Outbound Time']}\nFlight: ${fields['Outbound Flight'] || 'N/A'}\nCustomer: ${fields['Customer Phone']}\nPrice: £${fields['Total Price']}\nPortal: airporttaxitransfersliverpool.co.uk/driver-action.html?ref=${fields['Booking Ref']}`
+        });
+    }
+
+    if (action === 'driver-on-way') {
+        if (!formattedCustomerPhone) return res.status(400).json({ error: 'Missing customer phone' });
+        messages.push({
+            to: formattedCustomerPhone,
+            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nYour RM Transfers driver, ${fields['Driver Name']}, is on the way for your booking (${fields['Booking Ref']})!\n\nYou can contact them directly on ${fields['Driver Phone']}.`
+        });
+    }
+
+    if (action === 'driver-arrived') {
+        if (!formattedCustomerPhone) return res.status(400).json({ error: 'Missing customer phone' });
+        messages.push({
+            to: formattedCustomerPhone,
+            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nYour RM Transfers driver, ${fields['Driver Name']}, is waiting outside.\n\nPlease come out when you are ready.`
+        });
+    }
+
+    if (action === 'reminder') {
+        if (!formattedCustomerPhone) return res.status(400).json({ error: 'Missing customer phone' });
+        messages.push({
+            to: formattedCustomerPhone,
+            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nFriendly reminder from RM Transfers!\n\nYour booking (${fields['Booking Ref']}) is scheduled for ${fields['Outbound Date']} at ${fields['Outbound Time']}.\n\nYour driver will be ${fields['Driver Name'] || 'assigned shortly'}.`
         });
     }
 
