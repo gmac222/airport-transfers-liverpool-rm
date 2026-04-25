@@ -729,6 +729,40 @@ function BookingForm() {
 
 /* ---------- APP PROMO ---------- */
 function AppPromo() {
+  const [installPrompt, setInstallPrompt] = React.useState(null);
+  const [isIOS, setIsIOS] = React.useState(false);
+
+  React.useEffect(() => {
+    // Check if the user is on an iOS device
+    const checkIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    setIsIOS(checkIOS);
+
+    const handler = (e) => {
+      // Prevent the mini-infobar from appearing on mobile
+      e.preventDefault();
+      // Stash the event so it can be triggered later
+      setInstallPrompt(e);
+    };
+    
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!installPrompt) return;
+    
+    // Show the install prompt
+    installPrompt.prompt();
+    
+    // Wait for the user to respond to the prompt
+    const { outcome } = await installPrompt.userChoice;
+    
+    // We've used the prompt, and can't use it again, throw it away
+    if (outcome === 'accepted') {
+      setInstallPrompt(null);
+    }
+  };
+
   return (
     <section className="app-promo-section" style={{ background: 'var(--navy-ink)', color: '#fff', padding: '80px 20px', overflow: 'hidden', position: 'relative' }}>
       <style>{`
@@ -768,8 +802,31 @@ function AppPromo() {
           </ul>
           
           <div style={{ background: 'rgba(255,255,255,0.05)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
-            <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>How to install:</div>
-            <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '15px' }}>Open this website on Safari (iPhone) or Chrome (Android), tap the Share icon, and select <strong>"Add to Home Screen"</strong>.</div>
+            {installPrompt ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                <div style={{ fontWeight: 'bold' }}>Install the App</div>
+                <button 
+                  onClick={handleInstallClick}
+                  style={{ background: 'var(--amber)', color: '#000', border: 'none', padding: '12px 24px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                >
+                  Add to Home Screen
+                </button>
+              </div>
+            ) : isIOS ? (
+              <>
+                <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>How to install on iPhone:</div>
+                <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '15px', lineHeight: 1.5 }}>
+                  Apple blocks automatic install buttons. To install, tap the <strong>Share</strong> icon at the bottom of Safari, then select <strong>"Add to Home Screen"</strong>.
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>How to install:</div>
+                <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '15px', lineHeight: 1.5 }}>
+                  Open this website on Safari (iPhone) or Chrome (Android), tap the Share icon, and select <strong>"Add to Home Screen"</strong>.
+                </div>
+              </>
+            )}
           </div>
         </div>
 
