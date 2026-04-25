@@ -813,11 +813,16 @@ function BookingForm() {
 function AppPromo() {
   const [installPrompt, setInstallPrompt] = React.useState(null);
   const [isIOS, setIsIOS] = React.useState(false);
+  const [isMobile, setIsMobile] = React.useState(false);
 
   React.useEffect(() => {
     // Check if the user is on an iOS device
     const checkIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     setIsIOS(checkIOS);
+    
+    // Check if mobile device
+    const checkMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 1024;
+    setIsMobile(checkMobile);
 
     const handler = (e) => {
       // Prevent the mini-infobar from appearing on mobile
@@ -827,7 +832,18 @@ function AppPromo() {
     };
     
     window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
+    
+    // Also add listener for resize to update isMobile
+    const handleResize = () => {
+      const isMob = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 1024;
+      setIsMobile(isMob);
+    };
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler);
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   const handleInstallClick = async () => {
@@ -884,7 +900,14 @@ function AppPromo() {
           </ul>
           
           <div style={{ background: 'rgba(255,255,255,0.05)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
-            {installPrompt ? (
+            {!isMobile ? (
+              <>
+                <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>Access on your phone:</div>
+                <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '15px', lineHeight: 1.5 }}>
+                  Once you book, you'll receive a link via SMS. Open it on your phone to add the booking portal to your home screen and keep a tab on your driver.
+                </div>
+              </>
+            ) : installPrompt ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                 <div style={{ fontWeight: 'bold' }}>Install for Booking Updates</div>
                 <button 
