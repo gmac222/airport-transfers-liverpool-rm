@@ -363,9 +363,13 @@ function AdminApp() {
     return (
         <div>
             <div className="header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                    <h1>Operator Dispatch Dashboard</h1>
-                    <div style={{fontSize: '14px'}}>Logged in as Admin</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <img src="./assets/logo.png" alt="RM Transfers" style={{ height: '40px' }} />
+                    <div>
+                        <h1 style={{ margin: 0, fontSize: '20px' }}>Operator Dispatch Dashboard</h1>
+                        <div style={{fontSize: '14px', marginTop: '2px'}}>Logged in as Admin</div>
+                    </div>
+                </div>
                 </div>
                 <div style={{ display: 'flex', gap: '15px' }}>
                     <a href="/stats.html" className="btn" style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', textDecoration: 'none', padding: '6px 12px', borderRadius: '6px', fontWeight: 'bold', fontSize: '14px', display: 'flex', alignItems: 'center' }}>

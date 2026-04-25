@@ -36,16 +36,8 @@ function PortalApp() {
     if (loading) {
         return (
             <div className="wrap">
-                <a href="/" className="brand">
-                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect width="40" height="40" rx="12" fill="#0E2747"/>
-                        <path d="M12 28L20 12L28 28" stroke="#E6B24B" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M15 22H25" stroke="#E6B24B" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    <div className="brand-text">
-                        <span className="rm">Airport Transfers</span>
-                        <span className="tf">Liverpool</span>
-                    </div>
+                <a href="/" className="brand" style={{ display: 'flex', justifyContent: 'center' }}>
+                    <img src="./assets/logo.png" alt="RM Transfers" style={{ height: '60px', width: 'auto' }} />
                 </a>
                 <div className="portal-card">
                     <div className="loading">Loading your booking details...</div>
@@ -76,16 +68,8 @@ function PortalApp() {
 
     return (
         <div className="wrap">
-            <a href="/" className="brand">
-                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="40" height="40" rx="12" fill="#0E2747"/>
-                    <path d="M12 28L20 12L28 28" stroke="#E6B24B" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M15 22H25" stroke="#E6B24B" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                <div className="brand-text">
-                    <span className="rm">Airport Transfers</span>
-                    <span className="tf">Liverpool</span>
-                </div>
+            <a href="/" className="brand" style={{ display: 'flex', justifyContent: 'center' }}>
+                <img src="./assets/logo.png" alt="RM Transfers" style={{ height: '60px', width: 'auto' }} />
             </a>
             
             <div className="portal-card">
