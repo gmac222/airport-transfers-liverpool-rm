@@ -4,23 +4,33 @@ function PortalApp() {
     const [booking, setBooking] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [inputRef, setInputRef] = useState('');
 
     useEffect(() => {
         // Extract 'ref' from URL query string
         const urlParams = new URLSearchParams(window.location.search);
-        const ref = urlParams.get('ref');
+        let ref = urlParams.get('ref');
 
+        // If no ref in URL, check localStorage
         if (!ref) {
-            setError("No booking reference provided in the URL.");
+            ref = localStorage.getItem('bookingRef');
+        }
+
+        // If still no ref, show the lookup form
+        if (!ref) {
             setLoading(false);
             return;
         }
+
+        // Save ref to localStorage for future visits (so the PWA "remembers" them)
+        localStorage.setItem('bookingRef', ref);
 
         // Fetch booking from our new Vercel Serverless Function
         fetch(`/api/booking?ref=${ref}`)
             .then(res => res.json())
             .then(data => {
                 if (data.error) {
+                    localStorage.removeItem('bookingRef'); // Clear invalid ref
                     setError(data.error);
                 } else {
                     setBooking(data.booking);
@@ -61,7 +71,53 @@ function PortalApp() {
                     </div>
                     <div className="portal-content" style={{textAlign: 'center'}}>
                         <p style={{color: '#ef4444', marginBottom: '20px', fontWeight: 500}}>{error}</p>
-                        <a href="/" className="btn btn-primary">Return to Homepage</a>
+                        <a href="/portal.html" className="btn btn-primary">Try Another Reference</a>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // If no loading, no error, and no booking, we show the lookup form
+    if (!loading && !booking && !error) {
+        return (
+            <div className="wrap">
+                <a href="/" className="brand" style={{ display: 'flex', justifyContent: 'center' }}>
+                    <img src="./assets/logo.png" alt="RM Transfers" style={{ height: '60px', width: 'auto', filter: 'brightness(0) invert(1)' }} />
+                </a>
+                <div className="portal-card">
+                    <div className="portal-header">
+                        <h1>Track Your Booking</h1>
+                        <p>Enter your booking reference to view details</p>
+                    </div>
+                    <div className="portal-content" style={{textAlign: 'center'}}>
+                        <form onSubmit={(e) => {
+                            e.preventDefault();
+                            if (inputRef.trim()) {
+                                window.location.href = `?ref=${inputRef.trim().toUpperCase()}`;
+                            }
+                        }}>
+                            <input 
+                                type="text" 
+                                placeholder="e.g. B-123456" 
+                                value={inputRef}
+                                onChange={(e) => setInputRef(e.target.value)}
+                                style={{
+                                    width: '100%', 
+                                    padding: '14px', 
+                                    borderRadius: '8px', 
+                                    border: '1px solid rgba(255,255,255,0.1)', 
+                                    background: 'rgba(255,255,255,0.05)',
+                                    color: '#fff',
+                                    marginBottom: '20px',
+                                    fontSize: '16px',
+                                    textAlign: 'center',
+                                    textTransform: 'uppercase'
+                                }}
+                                required
+                            />
+                            <button type="submit" className="btn btn-primary" style={{width: '100%'}}>Look Up Booking</button>
+                        </form>
                     </div>
                 </div>
             </div>
