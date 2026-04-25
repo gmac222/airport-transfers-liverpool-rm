@@ -280,6 +280,22 @@ function AdminApp() {
         }
     };
 
+    const handleResendSMS = (action) => {
+        if (!window.confirm(`Are you sure you want to resend the ${action === 'resend-customer' ? 'Customer' : 'Driver'} SMS?`)) return;
+        
+        fetch('/api/sms', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action, fields: editForm })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) throw new Error(data.error);
+            alert('SMS sent successfully!');
+        })
+        .catch(err => alert('Error sending SMS: ' + err.message));
+    };
+
     if (!isLoggedIn) {
         return (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'var(--cream)' }}>
@@ -615,6 +631,22 @@ function AdminApp() {
                                     <input type="number" value={editForm['Total Price'] || 0} onChange={e => setEditForm({...editForm, 'Total Price': parseInt(e.target.value)})} required style={{width:'100%', padding:'8px'}} />
                                 </div>
                             </div>
+
+
+
+                            {editingJob !== 'new' && (
+                                <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0', marginTop: '10px' }}>
+                                    <h4 style={{ margin: '0 0 10px 0', color: 'var(--navy-ink)' }}>Communication</h4>
+                                    <div style={{ display: 'flex', gap: '10px' }}>
+                                        <button type="button" onClick={() => handleResendSMS('resend-customer')} style={{ flex: 1, padding: '8px', background: 'white', border: '1px solid var(--line)', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
+                                            Resend Customer SMS
+                                        </button>
+                                        <button type="button" onClick={() => handleResendSMS('resend-driver')} style={{ flex: 1, padding: '8px', background: 'white', border: '1px solid var(--line)', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
+                                            Resend Driver SMS
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
 
                             <div style={{ display: 'flex', gap: '10px', marginTop: '10px', justifyContent: 'flex-end' }}>
                                 <button type="button" onClick={() => setEditingJob(null)} style={{ padding: '10px 20px', background: 'transparent', border: '1px solid var(--line)', borderRadius: '6px', cursor: 'pointer' }}>Cancel</button>
