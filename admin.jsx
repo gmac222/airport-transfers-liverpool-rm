@@ -82,6 +82,21 @@ function AdminApp() {
         .then(res => res.json())
         .then(data => {
             if (data.error) throw new Error(data.error);
+            
+            const record = bookings.find(b => b.id === id);
+            if (record) {
+                fetch('https://gmac222.app.n8n.cloud/webhook/accept-booking-webhook', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        customerPhone: record.fields['Customer Phone'],
+                        bookingRef: record.fields['Booking Ref'],
+                        driverName: driverName.trim(),
+                        portalLink: 'https://airporttaxitransfersliverpool.co.uk/'
+                    })
+                }).catch(err => console.error('Error triggering webhook:', err));
+            }
+
             // Refresh list
             fetchBookings();
         })
