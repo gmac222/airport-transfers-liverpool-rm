@@ -12,13 +12,11 @@ function AdminApp() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [assigningId, setAssigningId] = useState(null);
+    const [driversList, setDriversList] = useState([{ name: "Select a driver...", phone: "" }, { name: "Custom Driver", phone: "" }]);
 
-    const PREDEFINED_DRIVERS = [
-        { name: "Select a driver...", phone: "" },
-        { name: "Roy Medlam", phone: "+447746899644" },
-        { name: "Test Driver (Graham)", phone: "+447398233859" },
-        { name: "Custom Driver", phone: "" } // Allows manual entry if needed
-    ];
+    const [newDriverName, setNewDriverName] = useState('');
+    const [newDriverPhone, setNewDriverPhone] = useState('');
+    const [isAddingDriver, setIsAddingDriver] = useState(false);
 
     const [driverNames, setDriverNames] = useState({});
     const [driverPhones, setDriverPhones] = useState({});
@@ -79,14 +77,60 @@ function AdminApp() {
     useEffect(() => {
         if (isLoggedIn) {
             fetchBookings();
+            
+            // Fetch dynamic drivers list from Airtable
+            fetch('/api/drivers')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.drivers && data.drivers.length > 0) {
+                        setDriversList([
+                            { name: "Select a driver...", phone: "" },
+                            ...data.drivers,
+                            { name: "Custom Driver", phone: "" }
+                        ]);
+                    }
+                })
+                .catch(err => console.error("Failed to fetch drivers:", err));
         }
     }, [isLoggedIn]);
+
+    const handleAddDriver = async (e) => {
+        e.preventDefault();
+        if (!newDriverName.trim()) return alert("Driver name is required.");
+        
+        setIsAddingDriver(true);
+        try {
+            const res = await fetch('/api/drivers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: newDriverName.trim(), phone: newDriverPhone.trim() })
+            });
+            const data = await res.json();
+            
+            if (data.error) throw new Error(data.error);
+
+            // Add the new driver to the list locally or refetch
+            setDriversList(prev => [
+                ...prev.slice(0, prev.length - 1), // all except custom driver
+                { name: data.driver.fields['Name'], phone: data.driver.fields['Phone'] || '' },
+                { name: "Custom Driver", phone: "" } // put custom driver back at the end
+            ]);
+
+            setNewDriverName('');
+            setNewDriverPhone('');
+            alert('Driver added successfully!');
+        } catch (err) {
+            alert('Error adding driver: ' + err.message);
+        } finally {
+            setIsAddingDriver(false);
+        }
+    };
 
     const handleDriverSelection = (id, e) => {
         const selectedName = e.target.value;
         setDriverNames(prev => ({ ...prev, [id]: selectedName }));
         
-        const foundDriver = PREDEFINED_DRIVERS.find(d => d.name === selectedName);
+        const foundDriver = driversList.find(d => d.name === selectedName);
         if (foundDriver && foundDriver.phone) {
             setDriverPhones(prev => ({ ...prev, [id]: foundDriver.phone }));
         }
@@ -237,14 +281,37 @@ function AdminApp() {
             </div>
             
             <div className="wrap">
-                <div style={{ marginBottom: '20px' }}>
-                    <input 
-                        type="text" 
-                        placeholder="Search by ref, name, or phone..." 
-                        value={searchQuery}
-                        onChange={e => setSearchQuery(e.target.value)}
-                        style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--line)', fontFamily: 'inherit', fontSize: '15px' }}
-                    />
+                <div style={{ marginBottom: '20px', display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+                    <div style={{ flex: '1 1 400px' }}>
+                        <input 
+                            type="text" 
+                            placeholder="Search by ref, name, or phone..." 
+                            value={searchQuery}
+                            onChange={e => setSearchQuery(e.target.value)}
+                            style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--line)', fontFamily: 'inherit', fontSize: '15px' }}
+                        />
+                    </div>
+                    
+                    <form onSubmit={handleAddDriver} style={{ flex: '1 1 400px', display: 'flex', gap: '10px', background: 'var(--cream)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--line)' }}>
+                        <input 
+                            type="text" 
+                            placeholder="New Driver Name" 
+                            value={newDriverName}
+                            onChange={e => setNewDriverName(e.target.value)}
+                            style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--line)' }}
+                            required
+                        />
+                        <input 
+                            type="tel" 
+                            placeholder="Phone Number" 
+                            value={newDriverPhone}
+                            onChange={e => setNewDriverPhone(e.target.value)}
+                            style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--line)' }}
+                        />
+                        <button type="submit" disabled={isAddingDriver} className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '14px' }}>
+                            {isAddingDriver ? 'Adding...' : 'Add Driver'}
+                        </button>
+                    </form>
                 </div>
 
                 {error && <div style={{color: 'red', marginBottom: '20px'}}>{error}</div>}
@@ -294,8 +361,8 @@ function AdminApp() {
                                                     onChange={e => handleDriverSelection(id, e)}
                                                     style={{ flex: '1 1 200px', padding: '10px', borderRadius: '6px', border: '1px solid var(--line)', fontFamily: 'inherit' }}
                                                 >
-                                                    {PREDEFINED_DRIVERS.map(d => (
-                                                        <option key={d.name} value={d.name === 'Select a driver...' ? '' : d.name}>
+                                                    {driversList.map((d, index) => (
+                                                        <option key={index} value={d.name === 'Select a driver...' ? '' : d.name}>
                                                             {d.name}
                                                         </option>
                                                     ))}
