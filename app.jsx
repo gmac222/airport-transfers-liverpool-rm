@@ -122,13 +122,6 @@ function Hero({ headline }) {
 
         <div style={{ position: "relative" }}>
           <div className="hero-media" role="img" aria-label="8-seater minibus" style={{ backgroundImage: "url('./assets/airport-transfers-wirral.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}>
-            <div className="overlay-badge">
-              <div className="av">ATL</div>
-              <div>
-                <div style={{ fontSize: 12, color: "var(--muted)", fontWeight: 500 }}>Driver today</div>
-                <div>Local driver · 18 yrs</div>
-              </div>
-            </div>
           </div>
           <div className="floating-card">
             <div className="ic"><Icon name="check" size={18} /></div>
@@ -781,52 +774,143 @@ function AppPromo() {
           </div>
         </div>
 
-        <div style={{ flex: 1, display: 'flex', justifyContent: 'center', position: 'relative' }}>
+        <div style={{ flex: 1, display: 'flex', justifyContent: 'center', position: 'relative', perspective: '1000px' }}>
           {/* Decorative glow */}
-          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '300px', height: '300px', background: 'var(--amber)', filter: 'blur(100px)', opacity: 0.15, borderRadius: '50%' }}></div>
+          <div className="glow-pulse" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '300px', height: '500px', background: 'var(--amber)', filter: 'blur(100px)', opacity: 0.15, borderRadius: '50%' }}></div>
           
-          {/* CSS iPhone Frame */}
-          <div style={{ 
-            width: '280px', 
-            height: '580px', 
-            background: '#fff', 
-            borderRadius: '40px', 
-            padding: '12px',
-            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5), inset 0 0 0 2px #e2e8f0, inset 0 0 0 6px #f8fafc',
+          {/* CSS iPhone Mockup */}
+          <div className="iphone-mockup" style={{
+            width: '320px',
+            height: '650px',
+            background: '#091321',
+            borderRadius: '44px',
+            border: '12px solid #111',
+            boxShadow: '0 30px 60px -12px rgba(0,0,0,0.6), inset 0 0 0 2px #333, inset 0 0 20px rgba(0,0,0,0.8)',
             position: 'relative',
-            zIndex: 10
+            overflow: 'hidden',
+            zIndex: 10,
+            transform: 'rotateY(-10deg) rotateX(5deg)',
+            transformStyle: 'preserve-3d',
+            transition: 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
           }}>
-            {/* Notch */}
-            <div style={{ position: 'absolute', top: '12px', left: '50%', transform: 'translateX(-50%)', width: '100px', height: '25px', background: '#f8fafc', borderBottomLeftRadius: '16px', borderBottomRightRadius: '16px', zIndex: 20 }}></div>
-            
-            {/* Screen content */}
-            <div style={{ width: '100%', height: '100%', background: 'var(--cream)', borderRadius: '30px', overflow: 'hidden', position: 'relative' }}>
-              <div style={{ background: 'var(--navy)', height: '140px', padding: '30px 20px', color: 'white', textAlign: 'center', borderBottomLeftRadius: '20px', borderBottomRightRadius: '20px' }}>
-                <div style={{ marginTop: '15px', fontWeight: 'bold', fontSize: '18px' }}>Booking ATL-2X4V</div>
-                <div style={{ opacity: 0.7, fontSize: '13px' }}>Passenger: Graham</div>
-              </div>
-              <div style={{ padding: '20px' }}>
-                <div style={{ background: 'rgba(31, 122, 76, .1)', color: 'var(--ok)', padding: '8px 16px', borderRadius: '99px', fontSize: '12px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '15px' }}>
-                  <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--ok)' }}></div>
-                  Driver Assigned
-                </div>
-                <div style={{ background: '#fff', padding: '15px', borderRadius: '12px', border: '1px solid var(--line)', marginBottom: '15px' }}>
-                  <div style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px', fontWeight: 'bold' }}>Driver</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'var(--amber)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 'bold' }}>R</div>
-                    <div style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--navy-ink)' }}>Roy <span style={{ color: 'var(--muted)', fontWeight: 'normal' }}>(07700 900 123)</span></div>
-                  </div>
-                </div>
-                <div style={{ background: '#fff', padding: '15px', borderRadius: '12px', border: '1px solid var(--line)' }}>
-                  <div style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px', fontWeight: 'bold' }}>Payment</div>
-                  <div style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--navy-ink)', marginBottom: '10px' }}>£150 Total</div>
-                  <div style={{ background: 'var(--navy)', color: '#fff', padding: '8px', borderRadius: '6px', textAlign: 'center', fontSize: '12px', fontWeight: 'bold' }}>Pay via Revolut</div>
-                </div>
-              </div>
-              
-              {/* Home indicator */}
-              <div style={{ position: 'absolute', bottom: '8px', left: '50%', transform: 'translateX(-50%)', width: '100px', height: '4px', background: '#000', borderRadius: '4px', opacity: 0.2 }}></div>
+            <style>{`
+              .iphone-mockup:hover {
+                transform: rotateY(0deg) rotateX(0deg) translateY(-10px);
+              }
+              .iphone-mockup::before {
+                content: '';
+                position: absolute;
+                top: 0; left: -100%; width: 50%; height: 100%;
+                background: linear-gradient(to right, transparent, rgba(255,255,255,0.05), transparent);
+                transform: skewX(-20deg);
+                animation: shimmer 6s infinite;
+                z-index: 30;
+                pointer-events: none;
+              }
+              @keyframes shimmer {
+                0% { left: -100%; }
+                20% { left: 200%; }
+                100% { left: 200%; }
+              }
+              .app-screen {
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                background-image: radial-gradient(circle at 15% 0%, rgba(230, 178, 75, 0.15), transparent 40%), radial-gradient(circle at 85% 100%, rgba(14, 39, 71, 0.8), transparent 50%);
+              }
+            `}</style>
+
+            {/* Dynamic Island */}
+            <div style={{
+              position: 'absolute',
+              top: '12px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: '110px',
+              height: '32px',
+              background: '#000',
+              borderRadius: '20px',
+              zIndex: 20,
+              boxShadow: 'inset 0 0 4px rgba(255,255,255,0.1)'
+            }}>
+              {/* Camera dot */}
+              <div style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', width: '10px', height: '10px', background: '#0a0a0a', borderRadius: '50%', border: '1px solid #1a1a1a', boxShadow: 'inset 0 0 2px rgba(255,255,255,0.2)' }}></div>
             </div>
+
+            {/* Screen Content */}
+            <div className="app-screen" style={{ padding: '60px 20px 30px', position: 'relative', zIndex: 10 }}>
+              
+              <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+                  <LogoMark size={32} />
+                </div>
+                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#fff', fontFamily: 'Lexend, sans-serif' }}>Your Booking</h3>
+                <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '4px' }}>Ref: ATL-7K9M2P</div>
+              </div>
+
+              {/* Status Pill */}
+              <div style={{
+                background: 'rgba(230, 178, 75, 0.1)',
+                color: 'var(--amber)',
+                border: '1px solid rgba(230, 178, 75, 0.2)',
+                borderRadius: '99px',
+                padding: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                fontSize: '13px',
+                fontWeight: 600,
+                marginBottom: '24px',
+                boxShadow: '0 0 20px rgba(230, 178, 75, 0.1)'
+              }}>
+                <div style={{ position: 'relative', width: '10px', height: '10px' }}>
+                  <div style={{ position: 'absolute', inset: 0, background: 'var(--amber)', borderRadius: '50%' }}></div>
+                  <div style={{ position: 'absolute', top: '-4px', left: '-4px', right: '-4px', bottom: '-4px', border: '2px solid var(--amber)', borderRadius: '50%', animation: 'pulse 2s infinite' }}></div>
+                </div>
+                Driver En Route
+              </div>
+
+              {/* Details Cards */}
+              <div style={{ display: 'grid', gap: '12px', marginBottom: '24px' }}>
+                <div style={{ background: 'rgba(0,0,0,0.3)', padding: '16px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', backdropFilter: 'blur(10px)' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px', fontWeight: 600 }}>Pickup • 14:30</div>
+                  <div style={{ fontSize: '15px', color: '#fff', fontWeight: 500 }}>14 Wellington Rd, CH60</div>
+                </div>
+                <div style={{ background: 'rgba(0,0,0,0.3)', padding: '16px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', backdropFilter: 'blur(10px)' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px', fontWeight: 600 }}>Dropoff</div>
+                  <div style={{ fontSize: '15px', color: '#fff', fontWeight: 500 }}>Liverpool John Lennon</div>
+                </div>
+              </div>
+
+              {/* Driver Card */}
+              <div style={{
+                background: 'linear-gradient(145deg, rgba(230, 178, 75, 0.15), rgba(230, 178, 75, 0.02))',
+                padding: '20px',
+                borderRadius: '20px',
+                border: '1px solid rgba(230, 178, 75, 0.3)',
+                marginTop: 'auto',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '16px',
+                boxShadow: '0 10px 30px -10px rgba(230, 178, 75, 0.15)'
+              }}>
+                <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.2)', fontSize: '24px', boxShadow: '0 4px 10px rgba(0,0,0,0.2)' }}>
+                  👨‍✈️
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '16px', fontWeight: 600, color: '#fff', marginBottom: '2px' }}>Roy</div>
+                  <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>Silver Mercedes Vito</div>
+                </div>
+                <div style={{ background: 'rgba(255,255,255,0.1)', width: 36, height: 36, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                  <Icon name="phone" size={16} />
+                </div>
+              </div>
+
+            </div>
+
+            {/* Home Indicator */}
+            <div style={{ position: 'absolute', bottom: '8px', left: '50%', transform: 'translateX(-50%)', width: '120px', height: '4px', background: 'rgba(255,255,255,0.3)', borderRadius: '2px', zIndex: 20 }}></div>
           </div>
         </div>
 
