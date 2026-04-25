@@ -148,7 +148,7 @@ function Hero({ headline }) {
 function HowItWorks() {
   const steps = [
     { n: 1, title: "Book both legs at once", body: "Tell us your pickup address and flight times — out and back. One booking, one fixed price for your vehicle. Confirmation text arrives shortly.", time: "~2 min to book" },
-    { n: 2, title: "Your private vehicle arrives", body: "Driver rings the bell at the agreed time. Bags in the boot, straight on the M53, dropped at the terminal door. No airport parking to find.", time: "Direct to the terminal door" },
+    { n: 2, title: "Your private vehicle arrives", body: "Driver rings the bell at the agreed time. Bags in the boot, dropped at the terminal door. No airport parking to find.", time: "Direct to the terminal door" },
     { n: 3, title: "We meet you when you land", body: "Your driver waits inside Arrivals with a sign showing your name. We track your flight so they're there whether you're early, late or delayed.", time: "inside the terminal" }
   ];
   return (
