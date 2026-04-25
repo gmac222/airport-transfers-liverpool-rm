@@ -196,6 +196,22 @@ function AdminApp() {
         .finally(() => setAssigningId(null));
     };
 
+    const handleDeleteJob = (id) => {
+        if (!window.confirm("Are you sure you want to permanently delete this booking?")) return;
+        
+        fetch('/api/booking', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: id })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) throw new Error(data.error);
+            fetchBookings();
+        })
+        .catch(err => alert('Error deleting booking: ' + err.message));
+    };
+
     if (!isLoggedIn) {
         return (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'var(--cream)' }}>
@@ -330,11 +346,19 @@ function AdminApp() {
                             
                             return (
                                 <div key={id} className="job-card" style={{opacity: isPending ? 1 : 0.6}}>
-                                    <div className="job-header">
-                                        <div className="job-ref">{fields['Booking Ref']}</div>
-                                        <div className={`badge ${isPending ? 'badge-pending' : 'badge-accepted'}`}>
-                                            {status}
+                                    <div className="job-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <div className="job-ref">{fields['Booking Ref']}</div>
+                                            <div className={`badge ${isPending ? 'badge-pending' : 'badge-accepted'}`}>
+                                                {status}
+                                            </div>
                                         </div>
+                                        <button 
+                                            onClick={() => handleDeleteJob(id)}
+                                            style={{ background: 'transparent', color: '#e53e3e', border: '1px solid #e53e3e', borderRadius: '4px', padding: '4px 8px', fontSize: '12px', cursor: 'pointer', fontWeight: 'bold' }}
+                                        >
+                                            Delete
+                                        </button>
                                     </div>
                                     
                                     <div className="job-details">

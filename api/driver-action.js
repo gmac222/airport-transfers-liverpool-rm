@@ -53,7 +53,7 @@ export default async function handler(req, res) {
                 messages: [
                     {
                         to: formattedPhone,
-                        body: `Hi ${customerName}, your RM Transfers driver (${driverName}) is on the way to pick you up! See you soon.`
+                        body: `Hi ${customerName}, your RM Transfers driver (${driverName}) is on the way to pick you up! See you soon.\n\n(Please do not reply to this automated text. If you have any changes, please call or text your driver directly at ${booking['Driver Phone'] || 'their number'}).`
                     }
                 ]
             })

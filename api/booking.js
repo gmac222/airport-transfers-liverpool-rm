@@ -75,6 +75,36 @@ module.exports = async (req, res) => {
             return res.status(500).json({ error: 'Failed to update booking' });
         }
     }
+    // DELETE Request: Delete Booking
+    if (req.method === 'DELETE') {
+        const { id } = req.body;
+        
+        if (!id) {
+            return res.status(400).json({ error: 'Missing record id' });
+        }
+
+        try {
+            const url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}/${id}`;
+            const response = await fetch(url, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${AIRTABLE_API_KEY}`
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.deleted) {
+                return res.status(200).json({ success: true, deleted: true });
+            } else {
+                return res.status(400).json({ error: 'Failed to delete record' });
+            }
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: 'Failed to delete booking' });
+        }
+    }
+
 
     // GET Request for Admin to fetch all pending/accepted bookings
     if (req.method === 'POST' && req.query.action === 'list') {
