@@ -29,7 +29,7 @@ module.exports = async (req, res) => {
     }
 
     try {
-        const url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}?filterByFormula=AND({Username}='${username}', {Password}='${password}')`;
+        const url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}?filterByFormula=AND({Name}='${username}', {Password}='${password}')`;
         const response = await fetch(url, {
             headers: {
                 'Authorization': `Bearer ${AIRTABLE_API_KEY}`
