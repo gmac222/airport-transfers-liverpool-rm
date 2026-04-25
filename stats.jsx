@@ -102,8 +102,8 @@ function StatsDashboard() {
     const now = new Date();
 
     bookings.forEach(b => {
-        const priceStr = b.fields['Total Price'] || '0';
-        const price = parseInt(priceStr.replace(/[^0-9]/g, ''), 10) || 0;
+        const rawPrice = b.fields['Total Price'];
+        const price = typeof rawPrice === 'number' ? rawPrice : parseInt((rawPrice || '0').toString().replace(/[^0-9]/g, ''), 10) || 0;
         
         totalRevenue += price;
 

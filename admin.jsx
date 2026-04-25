@@ -14,6 +14,10 @@ function AdminApp() {
     const [assigningId, setAssigningId] = useState(null);
     const [driversList, setDriversList] = useState([{ name: "Select a driver...", phone: "" }, { name: "Custom Driver", phone: "" }]);
 
+    const [editingJob, setEditingJob] = useState(null);
+    const [editForm, setEditForm] = useState({});
+    const [isSavingEdit, setIsSavingEdit] = useState(false);
+
     const [newDriverName, setNewDriverName] = useState('');
     const [newDriverPhone, setNewDriverPhone] = useState('');
     const [isAddingDriver, setIsAddingDriver] = useState(false);
@@ -212,6 +216,70 @@ function AdminApp() {
         .catch(err => alert('Error deleting booking: ' + err.message));
     };
 
+    const openCreateModal = () => {
+        setEditingJob('new');
+        setEditForm({
+            'Booking Ref': 'ATL-' + Array.from({length: 8}, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)]).join(''),
+            'Trip Type': 'oneway',
+            'Airport': 'LJLA',
+            'Customer Name': '',
+            'Customer Phone': '',
+            'Home Address': '',
+            'Outbound Date': '',
+            'Outbound Time': '',
+            'Outbound Flight': '',
+            'Return Date': '',
+            'Return Time': '',
+            'Return Flight': '',
+            'Passengers': 1,
+            'Total Price': 0,
+            'Status': 'Pending',
+            'Submitted At': new Date().toISOString()
+        });
+    };
+
+    const openEditModal = (record) => {
+        setEditingJob(record.id);
+        setEditForm({ ...record.fields });
+    };
+
+    const handleSaveBooking = (e) => {
+        e.preventDefault();
+        setIsSavingEdit(true);
+        
+        if (editingJob === 'new') {
+            // Create
+            fetch('/api/booking?action=create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fields: editForm })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) throw new Error(data.error);
+                setEditingJob(null);
+                fetchBookings();
+            })
+            .catch(err => alert('Error creating booking: ' + err.message))
+            .finally(() => setIsSavingEdit(false));
+        } else {
+            // Update
+            fetch('/api/booking', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: editingJob, fields: editForm })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) throw new Error(data.error);
+                setEditingJob(null);
+                fetchBookings();
+            })
+            .catch(err => alert('Error updating booking: ' + err.message))
+            .finally(() => setIsSavingEdit(false));
+        }
+    };
+
     if (!isLoggedIn) {
         return (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'var(--cream)' }}>
@@ -287,9 +355,9 @@ function AdminApp() {
                     <a href="/stats.html" className="btn" style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', textDecoration: 'none', padding: '6px 12px', borderRadius: '6px', fontWeight: 'bold', fontSize: '14px', display: 'flex', alignItems: 'center' }}>
                         Business Stats
                     </a>
-                    <a href="/#book" target="_blank" className="btn" style={{ background: 'var(--amber)', color: 'var(--navy-ink)', textDecoration: 'none', padding: '6px 12px', borderRadius: '6px', fontWeight: 'bold', fontSize: '14px', display: 'flex', alignItems: 'center' }}>
+                    <button onClick={openCreateModal} className="btn" style={{ background: 'var(--amber)', color: 'var(--navy-ink)', border: 'none', padding: '6px 12px', borderRadius: '6px', fontWeight: 'bold', fontSize: '14px', display: 'flex', alignItems: 'center', cursor: 'pointer', fontFamily: 'inherit' }}>
                         + New Manual Booking
-                    </a>
+                    </button>
                     <button 
                         onClick={handleLogout}
                         style={{ background: 'transparent', border: '1px solid white', color: 'white', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}
@@ -353,12 +421,20 @@ function AdminApp() {
                                                 {status}
                                             </div>
                                         </div>
-                                        <button 
-                                            onClick={() => handleDeleteJob(id)}
-                                            style={{ background: 'transparent', color: '#e53e3e', border: '1px solid #e53e3e', borderRadius: '4px', padding: '4px 8px', fontSize: '12px', cursor: 'pointer', fontWeight: 'bold' }}
-                                        >
-                                            Delete
-                                        </button>
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <button 
+                                                onClick={() => openEditModal(record)}
+                                                style={{ background: 'transparent', color: 'var(--amber)', border: '1px solid var(--amber)', borderRadius: '4px', padding: '4px 8px', fontSize: '12px', cursor: 'pointer', fontWeight: 'bold' }}
+                                            >
+                                                Edit
+                                            </button>
+                                            <button 
+                                                onClick={() => handleDeleteJob(id)}
+                                                style={{ background: 'transparent', color: '#e53e3e', border: '1px solid #e53e3e', borderRadius: '4px', padding: '4px 8px', fontSize: '12px', cursor: 'pointer', fontWeight: 'bold' }}
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
                                     </div>
                                     
                                     <div className="job-details">
@@ -460,6 +536,96 @@ function AdminApp() {
                     </div>
                 )}
             </div>
+
+            {editingJob && (
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '20px' }}>
+                    <div style={{ background: 'white', padding: '30px', borderRadius: '12px', width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
+                        <h2 style={{ marginTop: 0 }}>{editingJob === 'new' ? 'New Manual Booking' : 'Edit Booking'}</h2>
+                        <form onSubmit={handleSaveBooking} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                            <div style={{ display: 'flex', gap: '15px' }}>
+                                <div style={{ flex: 1 }}>
+                                    <label>Customer Name</label>
+                                    <input type="text" value={editForm['Customer Name'] || ''} onChange={e => setEditForm({...editForm, 'Customer Name': e.target.value})} required style={{width:'100%', padding:'8px'}} />
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <label>Phone</label>
+                                    <input type="text" value={editForm['Customer Phone'] || ''} onChange={e => setEditForm({...editForm, 'Customer Phone': e.target.value})} required style={{width:'100%', padding:'8px'}} />
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label>Pickup Address</label>
+                                <input type="text" value={editForm['Home Address'] || ''} onChange={e => setEditForm({...editForm, 'Home Address': e.target.value})} required style={{width:'100%', padding:'8px'}} />
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '15px' }}>
+                                <div style={{ flex: 1 }}>
+                                    <label>Airport</label>
+                                    <select value={editForm['Airport'] || 'LJLA'} onChange={e => setEditForm({...editForm, 'Airport': e.target.value})} style={{width:'100%', padding:'8px'}}>
+                                        <option value="LJLA">Liverpool John Lennon</option>
+                                        <option value="Manchester">Manchester</option>
+                                    </select>
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <label>Trip Type</label>
+                                    <select value={editForm['Trip Type'] || 'oneway'} onChange={e => setEditForm({...editForm, 'Trip Type': e.target.value})} style={{width:'100%', padding:'8px'}}>
+                                        <option value="oneway">One Way</option>
+                                        <option value="return">Return</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '15px' }}>
+                                <div style={{ flex: 1 }}>
+                                    <label>Outbound Date</label>
+                                    <input type="date" value={editForm['Outbound Date'] || ''} onChange={e => setEditForm({...editForm, 'Outbound Date': e.target.value})} style={{width:'100%', padding:'8px'}} />
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <label>Outbound Time</label>
+                                    <input type="time" value={editForm['Outbound Time'] || ''} onChange={e => setEditForm({...editForm, 'Outbound Time': e.target.value})} style={{width:'100%', padding:'8px'}} />
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <label>Outbound Flight</label>
+                                    <input type="text" value={editForm['Outbound Flight'] || ''} onChange={e => setEditForm({...editForm, 'Outbound Flight': e.target.value})} style={{width:'100%', padding:'8px'}} />
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '15px' }}>
+                                <div style={{ flex: 1 }}>
+                                    <label>Return Date</label>
+                                    <input type="date" value={editForm['Return Date'] || ''} onChange={e => setEditForm({...editForm, 'Return Date': e.target.value})} style={{width:'100%', padding:'8px'}} />
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <label>Return Time</label>
+                                    <input type="time" value={editForm['Return Time'] || ''} onChange={e => setEditForm({...editForm, 'Return Time': e.target.value})} style={{width:'100%', padding:'8px'}} />
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <label>Return Flight</label>
+                                    <input type="text" value={editForm['Return Flight'] || ''} onChange={e => setEditForm({...editForm, 'Return Flight': e.target.value})} style={{width:'100%', padding:'8px'}} />
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '15px' }}>
+                                <div style={{ flex: 1 }}>
+                                    <label>Passengers</label>
+                                    <input type="number" value={editForm['Passengers'] || 1} onChange={e => setEditForm({...editForm, 'Passengers': parseInt(e.target.value)})} style={{width:'100%', padding:'8px'}} />
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <label>Total Price (£)</label>
+                                    <input type="number" value={editForm['Total Price'] || 0} onChange={e => setEditForm({...editForm, 'Total Price': parseInt(e.target.value)})} required style={{width:'100%', padding:'8px'}} />
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '10px', marginTop: '10px', justifyContent: 'flex-end' }}>
+                                <button type="button" onClick={() => setEditingJob(null)} style={{ padding: '10px 20px', background: 'transparent', border: '1px solid var(--line)', borderRadius: '6px', cursor: 'pointer' }}>Cancel</button>
+                                <button type="submit" disabled={isSavingEdit} style={{ padding: '10px 20px', background: 'var(--amber)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
+                                    {isSavingEdit ? 'Saving...' : 'Save Booking'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

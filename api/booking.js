@@ -125,5 +125,33 @@ module.exports = async (req, res) => {
         }
     }
 
+    // POST Request: Create Manual Booking
+    if (req.method === 'POST' && req.query.action === 'create') {
+        const { fields } = req.body;
+        
+        if (!fields) {
+            return res.status(400).json({ error: 'Missing fields' });
+        }
+
+        try {
+            const url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ records: [{ fields }] })
+            });
+
+            const data = await response.json();
+
+            return res.status(200).json({ booking: data.records[0] });
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: 'Failed to create booking' });
+        }
+    }
+
     return res.status(405).json({ error: 'Method not allowed' });
 };
