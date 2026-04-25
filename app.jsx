@@ -432,7 +432,9 @@ function BookingForm() {
       return;
     }
 
-    const ref = "ATL-" + Math.floor(100000 + Math.random() * 899999);
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // removed lookalikes O,0,1,I
+    const randomStr = Array.from({length: 8}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+    const ref = "ATL-" + randomStr;
     const payload = {
       ref,
       submittedAt: new Date().toISOString(),
