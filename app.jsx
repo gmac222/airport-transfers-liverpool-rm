@@ -98,7 +98,13 @@ function Hero({ headline }) {
             </div>
           </div>
 
-          <div className="trust">
+          <div className="hero-cta" style={{ flexDirection: "column", alignItems: "flex-start", gap: "10px" }}>
+            <a href="#book" className="btn btn-primary" style={{ padding: "16px 32px", fontSize: "16px", width: "100%", justifyContent: "center" }}>
+              Book Now <Icon name="arrow" size={16} />
+            </a>
+          </div>
+
+          <div className="trust" style={{ marginTop: "24px" }}>
             <div className="trust-item">
               <span className="stars">★★★★★</span>
               <span className="trust-text"><b>4.9</b> on Google · 380+ reviews</span>
@@ -107,12 +113,6 @@ function Hero({ headline }) {
               <span className="stars">★★★★★</span>
               <span className="trust-text"><b>Excellent</b> on Trustpilot</span>
             </div>
-          </div>
-
-          <div className="hero-cta" style={{ flexDirection: "column", alignItems: "flex-start", gap: "10px" }}>
-            <a href="#book" className="btn btn-primary" style={{ padding: "16px 32px", fontSize: "16px", width: "100%", justifyContent: "center" }}>
-              Book Now <Icon name="arrow" size={16} />
-            </a>
           </div>
         </div>
 
@@ -1067,13 +1067,13 @@ function App() {
       <Nav />
       <Hero headline={t.headline} />
       <AuthorityStrip />
-      <AppPromo />
       <HowItWorks />
       <FixedPricePromise />
       <MeetAndGreet />
       <FAQ />
       <Reviews />
       <BookSection />
+      <AppPromo />
       <Footer />
       <StickyBar enabled={t.showStickyBar} />
 
