@@ -98,10 +98,11 @@ function Hero({ headline }) {
       <div className="hero-video-overlay"></div>
 
       <div className="wrap hero-video-content">
-        <h1 className="h1 hero-video-h1">
+        <h1 className="sr-only">Airport Transfers Liverpool</h1>
+        <div className="h1 hero-video-h1" aria-hidden="true">
           {h.main} <em>{h.accent}</em>
           {h.tail && <><br /><span className="hero-tail">{h.tail}</span></>}
-        </h1>
+        </div>
         <p className="sub hero-video-sub">
           Private airport transfers from your front door to Liverpool John Lennon or Manchester Airport — and we meet you in Arrivals on the way back. Fixed price once quoted, both legs. No hidden fees, no meter, no surprises.
         </p>
@@ -158,6 +159,11 @@ function HowItWorks() {
           <span className="section-kicker">From your door to the terminal. And back.</span>
           <h2 className="h2">Three steps. <em>No faff.</em></h2>
           <p className="section-sub">We've been doing this since 2011. The whole thing is designed so you don't have to worry about it on the day.</p>
+          <img 
+            src="./assets/8-seater-minibus.png" 
+            alt="RM Transfers 8-seater minibus" 
+            style={{ maxWidth: '320px', width: '100%', height: 'auto', margin: '32px auto 0', display: 'block' }}
+          />
         </div>
         <div className="steps">
           {steps.map(s => (
@@ -242,11 +248,6 @@ function YourVehicle() {
             src="./assets/airport-transfers-fleet.jpg" 
             alt="RM Transfers fleet" 
             style={{ width: '100%', height: 'auto', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
-          />
-          <img 
-            src="./assets/8-seater-minibus.png" 
-            alt="RM Transfers 8-seater minibus" 
-            style={{ width: '100%', height: 'auto' }}
           />
         </div>
       </div>
