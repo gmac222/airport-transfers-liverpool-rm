@@ -85,14 +85,14 @@ function Hero({ headline }) {
             <div className="price-card">
               <div>
                 <div className="route">Liverpool John Lennon</div>
-                <div className="airport">LJLA · door-to-terminal 25 mins</div>
+                <div className="airport">LJLA · Direct from anywhere in Liverpool</div>
               </div>
               <div className="amt">£65<small>each way · £130 return</small></div>
             </div>
             <div className="price-card">
               <div>
                 <div className="route">Manchester Airport</div>
-                <div className="airport">MAN · door-to-terminal 55 mins</div>
+                <div className="airport">MAN · Direct from anywhere in Liverpool</div>
               </div>
               <div className="amt">£75<small>each way · £150 return</small></div>
             </div>
@@ -166,7 +166,7 @@ function AuthorityStrip() {
 function HowItWorks() {
   const steps = [
     { n: 1, title: "Book both legs at once", body: "Tell us your pickup address and flight times — out and back. One booking, one fixed price, one driver looking after you. Confirmation text arrives within 10 minutes.", time: "~2 min to book" },
-    { n: 2, title: "We pick you up from home", body: "Driver rings the bell at the agreed time. Bags in the boot, straight on the M53, dropped at the terminal door. No airport parking to find.", time: "LJLA 25 min · MAN 55 min" },
+    { n: 2, title: "We pick you up from home", body: "Driver rings the bell at the agreed time. Bags in the boot, straight on the M53, dropped at the terminal door. No airport parking to find.", time: "Direct to the terminal door" },
     { n: 3, title: "We meet you when you land", body: "Driver waits inside Arrivals with a sign showing your name. We track your flight so they're there whether you're early, late or delayed.", time: "inside the terminal" }
   ];
   return (
@@ -516,12 +516,12 @@ function BookingForm() {
         <label>Airport <span className="req">*</span></label>
         <div className="airport-pick">
           <button type="button" className={airport === "LJLA" ? "active" : ""} onClick={() => setAirport("LJLA")}>
-            <span className="code">LJLA · 25 min</span>
+            <span className="code">LJLA</span>
             <span className="name">Liverpool John Lennon</span>
             <span className="p">£{tripType === "return" ? 130 : 65} {tripType === "return" ? "return" : "one way"}</span>
           </button>
           <button type="button" className={airport === "MAN" ? "active" : ""} onClick={() => setAirport("MAN")}>
-            <span className="code">MAN · 55 min</span>
+            <span className="code">MAN</span>
             <span className="name">Manchester Airport</span>
             <span className="p">£{tripType === "return" ? 150 : 75} {tripType === "return" ? "return" : "one way"}</span>
           </button>
