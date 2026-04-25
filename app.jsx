@@ -160,11 +160,6 @@ function HowItWorks() {
             <span className="section-kicker">From your door to the terminal. And back.</span>
             <h2 className="h2">Three steps. <em>No faff.</em></h2>
             <p className="section-sub">We've been doing this since 2011. The whole thing is designed so you don't have to worry about it on the day.</p>
-            <img 
-              src="./assets/8-seater-minibus.png" 
-              alt="RM Transfers 8-seater minibus" 
-              style={{ maxWidth: '320px', width: '100%', height: 'auto', margin: '32px auto 0', display: 'block' }}
-            />
           </div>
           <div className="steps">
             {steps.map(s => (
