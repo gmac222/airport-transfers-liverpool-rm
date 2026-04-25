@@ -93,7 +93,7 @@ function Hero({ headline }) {
         loop
         playsInline
         preload="auto"
-        poster="./assets/airport-transfers-wirral.jpg"
+        style={{ background: '#0E2747' }}
       >
         <source src="./assets/hero-bg.mp4" type="video/mp4" />
       </video>
