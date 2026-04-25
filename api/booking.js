@@ -62,10 +62,15 @@ module.exports = async (req, res) => {
                     'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ fields })
+                body: JSON.stringify({ fields, typecast: true })
             });
 
             const data = await response.json();
+
+            if (!response.ok) {
+                console.error('Airtable error:', data);
+                return res.status(response.status).json({ error: data.error?.message || 'Failed to update Airtable' });
+            }
 
             // SMS is now handled by the n8n webhook triggered from the frontend
 
