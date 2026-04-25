@@ -16,20 +16,23 @@ module.exports = async (req, res) => {
 
     const { username, password } = req.body;
 
-    if (!username || !password) {
+    const cleanUsername = username.trim();
+    const cleanPassword = password.trim();
+
+    if (!cleanUsername || !cleanPassword) {
         return res.status(400).json({ error: 'Missing username or password' });
     }
 
     const AIRTABLE_API_KEY = process.env.AIRTABLE_PERSONAL_ACCESS_TOKEN || process.env.AIRTABLE_API_KEY;
     const BASE_ID = 'appzmLNDAsk6m06Ae';
-    const TABLE_ID = 'tblgM0WSDVJUbbjS2'; // Admins table
+    const TABLE_ID = 'tblgM0WSDVJUbbjS2'; // Drivers table (formerly Admins)
 
     if (!AIRTABLE_API_KEY) {
         return res.status(500).json({ error: 'Airtable API key is not configured.' });
     }
 
     try {
-        const url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}?filterByFormula=AND({Name}='${username}', {Password}='${password}')`;
+        const url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}?filterByFormula=AND(LOWER({Name})='${cleanUsername.toLowerCase()}', {Password}='${cleanPassword}')`;
         const response = await fetch(url, {
             headers: {
                 'Authorization': `Bearer ${AIRTABLE_API_KEY}`
