@@ -26,6 +26,7 @@ function AdminApp() {
     const [driverNames, setDriverNames] = useState({});
     const [driverPhones, setDriverPhones] = useState({});
     const [paymentLinks, setPaymentLinks] = useState({});
+    const [prices, setPrices] = useState({});
 
     const handleLogin = (e) => {
         e.preventDefault();
@@ -148,13 +149,19 @@ function AdminApp() {
         setPaymentLinks(prev => ({ ...prev, [id]: link }));
     };
 
+    const handlePriceChange = (id, price) => {
+        setPrices(prev => ({ ...prev, [id]: price }));
+    };
+
     const handleAssignDriver = (id) => {
         const driverName = driverNames[id];
         const driverPhone = driverPhones[id];
         const paymentLink = paymentLinks[id];
+        const price = prices[id];
         if (!driverName || driverName.trim() === '') return alert('Please enter a driver name');
         if (!driverPhone || driverPhone.trim() === '') return alert('Please enter a driver phone number');
         if (!paymentLink || paymentLink.trim() === '') return alert('Please enter a payment link');
+        if (!price || price.trim() === '') return alert('Please enter a price');
 
         setAssigningId(id);
 
@@ -167,7 +174,8 @@ function AdminApp() {
                     'Status': 'Awaiting Payment',
                     'Driver Name': driverName.trim(),
                     'Driver Phone': driverPhone.trim(),
-                    'Payment Link': paymentLink.trim()
+                    'Payment Link': paymentLink.trim(),
+                    'Total Price': parseFloat(price)
                 }
             })
         })
@@ -186,7 +194,8 @@ function AdminApp() {
                             'Booking Ref': record.fields['Booking Ref'],
                             'Customer Name': record.fields['Customer Name'],
                             'Customer Phone': record.fields['Customer Phone'],
-                            'Payment Link': paymentLink.trim()
+                            'Payment Link': paymentLink.trim(),
+                            'Total Price': parseFloat(price)
                         }
                     })
                 }).catch(err => console.error('Error triggering sms:', err));
@@ -587,11 +596,18 @@ function AdminApp() {
                                                     style={{ flex: '1 1 150px' }}
                                                 />
                                                 <input 
+                                                    type="number" 
+                                                    placeholder="Price (£)..." 
+                                                    value={prices[id] || ''}
+                                                    onChange={e => handlePriceChange(id, e.target.value)}
+                                                    style={{ flex: '1 1 100px' }}
+                                                />
+                                                <input 
                                                     type="url" 
                                                     placeholder="Paste Revolut Payment Link..." 
                                                     value={paymentLinks[id] || ''}
                                                     onChange={e => handlePaymentLinkChange(id, e.target.value)}
-                                                    style={{ flex: '2 1 300px' }}
+                                                    style={{ flex: '2 1 200px' }}
                                                 />
                                             </div>
                                             <button 

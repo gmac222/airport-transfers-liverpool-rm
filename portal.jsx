@@ -170,9 +170,15 @@ function PortalApp() {
                             <span>Passengers / Luggage</span>
                             <strong>{fields['Passengers']} Pax / {fields['Luggage']} Bags</strong>
                         </div>
+                        {fields['Total Price'] && (
+                            <div className="detail-item">
+                                <span>Total Price</span>
+                                <strong>£{fields['Total Price']}</strong>
+                            </div>
+                        )}
                     </div>
 
-                    {status === 'Accepted' && driverName && (
+                    {(status === 'Accepted' || status === 'Awaiting Payment') && driverName && (
                         <div className="driver-card">
                             <div className="avatar">👨‍✈️</div>
                             <div>
@@ -188,7 +194,7 @@ function PortalApp() {
                         </div>
                     )}
 
-                    {status === 'Accepted' && fields['Payment Link'] && (
+                    {(status === 'Accepted' || status === 'Awaiting Payment') && fields['Payment Link'] && (
                         <div className="payment-card" style={{
                             marginTop: '32px', 
                             padding: '32px 24px', 

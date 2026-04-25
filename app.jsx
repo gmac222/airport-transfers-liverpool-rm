@@ -153,31 +153,31 @@ function HowItWorks() {
     { n: 3, title: "We meet you when you land", body: "Your driver waits inside Arrivals with a sign showing your name. We track your flight so they're there whether you're early, late or delayed.", time: "inside the terminal" }
   ];
   return (
-    <section id="how">
-      <div className="wrap">
-        <div className="section-head">
-          <span className="section-kicker">From your door to the terminal. And back.</span>
-          <h2 className="h2">Three steps. <em>No faff.</em></h2>
-          <p className="section-sub">We've been doing this since 2011. The whole thing is designed so you don't have to worry about it on the day.</p>
-          <img 
-            src="./assets/8-seater-minibus.png" 
-            alt="RM Transfers 8-seater minibus" 
-            style={{ maxWidth: '320px', width: '100%', height: 'auto', margin: '32px auto 0', display: 'block' }}
-          />
+    <section id="how" style={{ position: 'relative', overflow: 'hidden' }}>
+      <AuroraBackground>
+        <div className="wrap">
+          <div className="section-head">
+            <span className="section-kicker">From your door to the terminal. And back.</span>
+            <h2 className="h2">Three steps. <em>No faff.</em></h2>
+            <p className="section-sub">We've been doing this since 2011. The whole thing is designed so you don't have to worry about it on the day.</p>
+            <img 
+              src="./assets/8-seater-minibus.png" 
+              alt="RM Transfers 8-seater minibus" 
+              style={{ maxWidth: '320px', width: '100%', height: 'auto', margin: '32px auto 0', display: 'block' }}
+            />
+          </div>
+          <div className="steps">
+            {steps.map(s => (
+              <div className="step" key={s.n}>
+                <div className="step-num">{s.n}</div>
+                <h3>{s.title}</h3>
+                <p>{s.body}</p>
+                <div className="step-time"><span className="dot"></span>{s.time}</div>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="steps">
-          {steps.map(s => (
-            <div className="step" key={s.n}>
-              <div className="step-num">{s.n}</div>
-              <h3>{s.title}</h3>
-              <p>{s.body}</p>
-              <div className="step-time"><span className="dot"></span>{s.time}</div>
-            </div>
-          ))}
-        </div>
-
-
-      </div>
+      </AuroraBackground>
     </section>
   );
 }
