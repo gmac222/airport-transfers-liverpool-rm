@@ -65,7 +65,7 @@ export default async function handler(req, res) {
         const smsRes = await fetch('https://api.webexinteract.com/v1/sms', {
             method: 'POST',
             headers: {
-                'Authorization': 'Bearer aky_3CrID4uqxBbCYQTA6H1p35A2lDn',
+                'X-AUTH-KEY': 'aky_3CrID4uqxBbCYQTA6H1p35A2lDn',
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(payload)
