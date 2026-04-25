@@ -8,7 +8,7 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
 }/*EDITMODE-END*/;
 
 const HEADLINES = {
-  quiet: { main: "From your door", accent: "to the terminal.", tail: "And back." },
+  quiet: { main: "Your holiday", accent: "starts here.", tail: "" },
   direct: { main: "Airport transfers,", accent: "both ways — fixed price.", tail: "" },
   local: { main: "Door to airport,", accent: "we'll be there when you land.", tail: "" }
 };
@@ -155,7 +155,7 @@ function HowItWorks() {
     <section id="how">
       <div className="wrap">
         <div className="section-head">
-          <span className="section-kicker">How it works</span>
+          <span className="section-kicker">From your door to the terminal. And back.</span>
           <h2 className="h2">Three steps. <em>No faff.</em></h2>
           <p className="section-sub">We've been doing this since 2011. The whole thing is designed so you don't have to worry about it on the day.</p>
         </div>
@@ -1068,7 +1068,7 @@ function BookSection() {
       <div className="wrap book-centered" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <div className="book-lead" style={{ textAlign: 'center', maxWidth: '640px', marginBottom: '48px' }}>
           <span className="section-kicker" style={{ color: "var(--amber)", justifyContent: 'center' }}>Book now</span>
-          <h2 className="h2">Your holiday starts here, <em>let's begin.</em></h2>
+          <h2 className="h2"><em>Let's begin.</em></h2>
           <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '18px' }}>Fill the form and we'll text back with your driver's name and the fixed price — no card needed to reserve.</p>
         </div>
         <div style={{ width: '100%', maxWidth: '500px' }}>
