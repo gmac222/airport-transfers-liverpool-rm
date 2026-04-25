@@ -750,12 +750,12 @@ function AppPromo() {
           <span className="section-kicker" style={{ color: 'var(--amber)' }}>Go Mobile</span>
           <h2 className="h2" style={{ color: '#fff', margin: '0 0 20px 0' }}>Install the RM Transfers <em>mobile app.</em></h2>
           <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.8)', marginBottom: '30px', lineHeight: 1.5 }}>
-            Track your driver in real-time, manage your bookings, and get instant updates — right from your home screen. No App Store required.
+            Get instant status updates when your driver is en route, manage your bookings, and communicate directly — right from your home screen. No App Store required.
           </p>
           <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 40px 0', display: 'flex', flexDirection: 'column', gap: '15px' }}>
             <li style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{ background: 'rgba(230,178,75,0.1)', padding: '6px', borderRadius: '50%' }}><Icon name="check" size={16} color="var(--amber)" /></div>
-              <span>Track your driver’s location instantly</span>
+              <span>Get instant "En Route" & "Arrived" notifications</span>
             </li>
             <li style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{ background: 'rgba(230,178,75,0.1)', padding: '6px', borderRadius: '50%' }}><Icon name="check" size={16} color="var(--amber)" /></div>
