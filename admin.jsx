@@ -12,6 +12,7 @@ function AdminApp() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [assigningId, setAssigningId] = useState(null);
+    const [acknowledgingId, setAcknowledgingId] = useState(null);
     const [driversList, setDriversList] = useState([{ name: "Select a driver...", phone: "" }, { name: "Custom Driver", phone: "" }]);
 
     const [editingJob, setEditingJob] = useState(null);
@@ -163,7 +164,7 @@ function AdminApp() {
             body: JSON.stringify({
                 id: id,
                 fields: {
-                    'Status': 'Accepted',
+                    'Status': 'Awaiting Payment',
                     'Driver Name': driverName.trim(),
                     'Driver Phone': driverPhone.trim(),
                     'Payment Link': paymentLink.trim()
@@ -176,21 +177,19 @@ function AdminApp() {
             
             const record = bookings.find(b => b.id === id);
             if (record) {
-                fetch('https://gmac222.app.n8n.cloud/webhook/accept-booking-webhook', {
+                fetch('/api/sms', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        customerPhone: record.fields['Customer Phone'],
-                        bookingRef: record.fields['Booking Ref'],
-                        driverName: driverName.trim(),
-                        driverPhone: driverPhone.trim(),
-                        pickupAddress: record.fields['Home Address'],
-                        outboundDate: record.fields['Outbound Date'],
-                        outboundTime: record.fields['Outbound Time'],
-                        paymentLink: paymentLink.trim(),
-                        portalLink: `https://airporttaxitransfersliverpool.co.uk/portal.html?ref=${record.fields['Booking Ref']}`
+                        action: 'send-payment-link',
+                        fields: {
+                            'Booking Ref': record.fields['Booking Ref'],
+                            'Customer Name': record.fields['Customer Name'],
+                            'Customer Phone': record.fields['Customer Phone'],
+                            'Payment Link': paymentLink.trim()
+                        }
                     })
-                }).catch(err => console.error('Error triggering webhook:', err));
+                }).catch(err => console.error('Error triggering sms:', err));
             }
 
             // Refresh list
@@ -198,6 +197,42 @@ function AdminApp() {
         })
         .catch(err => alert('Error assigning driver: ' + err.message))
         .finally(() => setAssigningId(null));
+    };
+
+    const handleAcknowledgePayment = (id) => {
+        setAcknowledgingId(id);
+
+        fetch('/api/booking', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id: id,
+                fields: {
+                    'Status': 'Accepted'
+                }
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) throw new Error(data.error);
+            
+            const record = bookings.find(b => b.id === id);
+            if (record) {
+                fetch('/api/sms', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'send-confirmation',
+                        fields: record.fields
+                    })
+                }).catch(err => console.error('Error triggering sms:', err));
+            }
+
+            // Refresh list
+            fetchBookings();
+        })
+        .catch(err => alert('Error acknowledging payment: ' + err.message))
+        .finally(() => setAcknowledgingId(null));
     };
 
     const handleDeleteJob = (id) => {
@@ -431,13 +466,14 @@ function AdminApp() {
                             const { id, fields } = record;
                             const status = fields['Status'] || 'Pending';
                             const isPending = status === 'Pending';
+                            const isAwaitingPayment = status === 'Awaiting Payment';
                             
                             return (
                                 <div key={id} className="job-card" style={{opacity: isPending ? 1 : 0.6}}>
                                     <div className="job-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                             <div className="job-ref">{fields['Booking Ref']}</div>
-                                            <div className={`badge ${isPending ? 'badge-pending' : 'badge-accepted'}`}>
+                                            <div className={`badge ${isPending || isAwaitingPayment ? 'badge-pending' : 'badge-accepted'}`}>
                                                 {status}
                                             </div>
                                         </div>
@@ -542,6 +578,19 @@ function AdminApp() {
                                                 style={{ padding: '12px', width: '100%' }}
                                             >
                                                 {assigningId === id ? '...' : 'Assign Driver & Send Payment Link'}
+                                            </button>
+                                        </div>
+                                    ) : isAwaitingPayment ? (
+                                        <div className="job-actions" style={{background: '#fffbf0', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--amber)', display: 'flex', flexDirection: 'column', gap: '8px'}}>
+                                            <span style={{fontSize: '14px', fontWeight: 600, color: 'var(--amber-deep)'}}>Awaiting Payment</span>
+                                            <span style={{fontSize: '14px'}}>Driver: {fields['Driver Name']} {fields['Driver Phone'] ? `(${fields['Driver Phone']})` : ''}</span>
+                                            {fields['Payment Link'] && <span style={{fontSize: '14px', color: 'var(--muted)'}}>Payment Link: <a href={fields['Payment Link']} target="_blank" rel="noreferrer" style={{color: 'var(--navy)'}}>{fields['Payment Link']}</a></span>}
+                                            <button 
+                                                onClick={() => handleAcknowledgePayment(id)}
+                                                disabled={acknowledgingId === id}
+                                                style={{ padding: '10px', width: '100%', background: '#10b981', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', marginTop: '4px' }}
+                                            >
+                                                {acknowledgingId === id ? '...' : 'Acknowledge Payment & Confirm Booking'}
                                             </button>
                                         </div>
                                     ) : (
