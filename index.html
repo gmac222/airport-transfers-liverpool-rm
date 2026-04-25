@@ -2014,14 +2014,15 @@
         .aurora-container {
             position: relative;
             background: transparent;
+            overflow: hidden;
         }
 
         .aurora-bg-wrapper {
-            position: fixed;
+            position: absolute;
             inset: 0;
             overflow: hidden;
             pointer-events: none;
-            z-index: -1;
+            z-index: 0;
         }
 
         .aurora-effect {
@@ -2038,7 +2039,7 @@
             right: -15px;
             bottom: -15px;
             left: -15px;
-            opacity: 0.4;
+            opacity: 0.8;
             will-change: transform;
         }
 
@@ -2048,7 +2049,6 @@
             inset: 0;
             background-image: var(--white-gradient), var(--aurora);
             background-size: 200% 200%;
-            background-attachment: fixed;
             mix-blend-mode: overlay;
             animation: aurora-anim 180s linear infinite;
         }
