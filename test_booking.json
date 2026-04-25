@@ -1,0 +1,26 @@
+{
+  "ref": "ATL-999111",
+  "submittedAt": "2026-04-25T08:00:00.000Z",
+  "tripType": "oneway",
+  "onewayDir": "to",
+  "airport": "LJLA",
+  "airportName": "Liverpool John Lennon",
+  "passengers": 1,
+  "luggage": 1,
+  "priceGBP": 50,
+  "legPriceGBP": 50,
+  "customer": {
+    "name": "Eleanor McCormack",
+    "phone": "07961 952780",
+    "email": "eleanor@example.com",
+    "address": "123 Test Ave"
+  },
+  "outbound": {
+    "date": "2026-08-01",
+    "time": "12:00",
+    "flight": "EZY123"
+  },
+  "return": null,
+  "notes": "Automated test for SMS format",
+  "pageUrl": "http://127.0.0.1:8080/#book"
+}

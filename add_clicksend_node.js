@@ -56,7 +56,7 @@ https.get(`https://gmac222.app.n8n.cloud/api/v1/workflows/${WORKFLOW_ID}`, optio
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { \"messages\": [ { \"to\": $json.fields['Customer Phone'], \"body\": \"Hi \" + $json.fields['Customer Name'] + \", your Airport Transfers Liverpool booking (Ref: \" + $json.fields['Booking Ref'] + \") has been received! We will be in touch shortly to confirm.\" } ] } }}",
+        "jsonBody": "={{ { \"messages\": [ { \"to\": $json.fields['Customer Phone'].replace(/\\s+/g, '').replace(/^0/, '+44'), \"body\": \"Hi \" + $json.fields['Customer Name'] + \", your Airport Transfers Liverpool booking (Ref: \" + $json.fields['Booking Ref'] + \") has been received! We will be in touch shortly to confirm.\" } ] } }}",
         "options": {}
       },
       "id": "clicksend-customer-node",

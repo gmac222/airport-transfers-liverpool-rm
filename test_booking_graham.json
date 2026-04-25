@@ -1,0 +1,26 @@
+{
+  "customer": {
+    "name": "Graham McCormack",
+    "phone": "07398 233859",
+    "email": "graham.m.222@gmail.com",
+    "address": "123 Test Street, Liverpool, L1 8JQ"
+  },
+  "outbound": {
+    "date": "2026-06-15",
+    "time": "14:30",
+    "flight": "EZY1234"
+  },
+  "return": {
+    "date": "",
+    "time": "",
+    "flight": ""
+  },
+  "tripType": "oneway",
+  "onewayDirection": "to-airport",
+  "airport": "MAN",
+  "passengers": "2",
+  "luggage": "2",
+  "totalPrice": "85",
+  "notes": "Test booking for Resend email and ClickSend SMS validation.",
+  "pageUrl": "https://airporttaxitransfersliverpool.co.uk"
+}
