@@ -78,7 +78,7 @@ function Hero({ headline }) {
             {h.tail && <><br /><span style={{ color: "black" }}>{h.tail}</span></>}
           </h1>
           <p className="sub">
-            We pick you up from your front door, take you to Liverpool John Lennon or Manchester Airport, and meet you in Arrivals on the way back. Fixed price, both legs. No surge, no meter, no surprises.
+            We pick you up from your front door, take you to Liverpool John Lennon or Manchester Airport, and meet you in Arrivals on the way back. Fixed price, both legs. No hidden fees, no meter, no surprises.
           </p>
 
           <div className="hero-prices" id="prices">
@@ -195,7 +195,7 @@ function HowItWorks() {
 /* ---------- PROMISE ---------- */
 function FixedPricePromise() {
   const items = [
-    { title: "No surge pricing, ever", body: "Friday 5pm, Christmas morning, bank holiday — same £65 or £75." },
+    { title: "Fixed prices, always", body: "Friday 5pm, Christmas morning, bank holiday — same £65 or £75." },
     { title: "No extras for flight delays", body: "We track your flight. If you're late, we wait. You don't pay a penny more." },
     { title: "No hidden fees", body: "The price you're quoted includes parking, tolls, meet & greet and VAT. That's the lot." },
     { title: "Cancel free up to 24 hrs", body: "Plans change. We get it. No cancellation fee outside 24 hours of pickup." }
@@ -1020,7 +1020,7 @@ function StickyBar({ enabled }) {
     <div className={"sticky-bar" + (show ? " show" : "")}>
       <div className="sb-text">
         <b>LJLA £130 · MAN £150 return</b>
-        <span>Both legs · meet & greet · no surge</span>
+        <span>Both legs · meet & greet · fixed price</span>
       </div>
       <a href="#book" className="btn btn-primary">Book Now</a>
     </div>
