@@ -8,9 +8,17 @@ function AdminApp() {
     const [isLoggingIn, setIsLoggingIn] = useState(false);
 
     const [bookings, setBookings] = useState([]);
+    const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [assigningId, setAssigningId] = useState(null);
+
+    const PREDEFINED_DRIVERS = [
+        { name: "Select a driver...", phone: "" },
+        { name: "Roy McCormack", phone: "+447961952780" },
+        { name: "Custom Driver", phone: "" } // Allows manual entry if needed
+    ];
+
     const [driverNames, setDriverNames] = useState({});
     const [driverPhones, setDriverPhones] = useState({});
     const [paymentLinks, setPaymentLinks] = useState({});
@@ -55,7 +63,7 @@ function AdminApp() {
                     
                     const dateTimeA = new Date(`${dateA}T${timeA}`);
                     const dateTimeB = new Date(`${dateB}T${timeB}`);
-                    return dateTimeA - dateTimeB;
+                    return dateTimeB - dateTimeA; // Descending date order
                 });
                 
                 setBookings(sorted);
@@ -72,6 +80,16 @@ function AdminApp() {
             fetchBookings();
         }
     }, [isLoggedIn]);
+
+    const handleDriverSelection = (id, e) => {
+        const selectedName = e.target.value;
+        setDriverNames(prev => ({ ...prev, [id]: selectedName }));
+        
+        const foundDriver = PREDEFINED_DRIVERS.find(d => d.name === selectedName);
+        if (foundDriver && foundDriver.phone) {
+            setDriverPhones(prev => ({ ...prev, [id]: foundDriver.phone }));
+        }
+    };
 
     const handleDriverNameChange = (id, name) => {
         setDriverNames(prev => ({ ...prev, [id]: name }));
@@ -193,6 +211,15 @@ function AdminApp() {
         );
     }
 
+    const filteredBookings = bookings.filter(b => {
+        if (!searchQuery) return true;
+        const query = searchQuery.toLowerCase();
+        const ref = (b.fields['Booking Ref'] || '').toLowerCase();
+        const name = (b.fields['Customer Name'] || '').toLowerCase();
+        const phone = (b.fields['Customer Phone'] || '').toLowerCase();
+        return ref.includes(query) || name.includes(query) || phone.includes(query);
+    });
+
     return (
         <div>
             <div className="header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -209,13 +236,23 @@ function AdminApp() {
             </div>
             
             <div className="wrap">
+                <div style={{ marginBottom: '20px' }}>
+                    <input 
+                        type="text" 
+                        placeholder="Search by ref, name, or phone..." 
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                        style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--line)', fontFamily: 'inherit', fontSize: '15px' }}
+                    />
+                </div>
+
                 {error && <div style={{color: 'red', marginBottom: '20px'}}>{error}</div>}
                 
                 {loading ? (
                     <div className="loading">Loading pending jobs...</div>
                 ) : (
                     <div className="jobs-list">
-                        {bookings.map(record => {
+                        {filteredBookings.map(record => {
                             const { id, fields } = record;
                             const status = fields['Status'] || 'Pending';
                             const isPending = status === 'Pending';
@@ -251,13 +288,26 @@ function AdminApp() {
                                     {isPending ? (
                                         <div className="job-actions" style={{ flexDirection: 'column', gap: '10px' }}>
                                             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                                                <input 
-                                                    type="text" 
-                                                    placeholder="Enter Driver Name..." 
+                                                <select 
                                                     value={driverNames[id] || ''}
-                                                    onChange={e => handleDriverNameChange(id, e.target.value)}
-                                                    style={{ flex: '1 1 200px' }}
-                                                />
+                                                    onChange={e => handleDriverSelection(id, e)}
+                                                    style={{ flex: '1 1 200px', padding: '10px', borderRadius: '6px', border: '1px solid var(--line)', fontFamily: 'inherit' }}
+                                                >
+                                                    {PREDEFINED_DRIVERS.map(d => (
+                                                        <option key={d.name} value={d.name === 'Select a driver...' ? '' : d.name}>
+                                                            {d.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                                {driverNames[id] === 'Custom Driver' && (
+                                                    <input 
+                                                        type="text" 
+                                                        placeholder="Enter Custom Name..." 
+                                                        value={driverNames[id] === 'Custom Driver' ? '' : driverNames[id]}
+                                                        onChange={e => handleDriverNameChange(id, e.target.value)}
+                                                        style={{ flex: '1 1 150px' }}
+                                                    />
+                                                )}
                                                 <input 
                                                     type="tel" 
                                                     placeholder="Driver Phone..." 
