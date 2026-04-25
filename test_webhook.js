@@ -3,7 +3,7 @@ const https = require('https');
 const WEBHOOK_URL = 'https://gmac222.app.n8n.cloud/webhook/3c702483-e68c-428a-8c2c-429cbdf61668';
 
 const testBooking = {
-  ref: "TEST-99887",
+  ref: "TEST-55555",
   submittedAt: new Date().toISOString(),
   tripType: "return",
   onewayDir: "to",
@@ -13,7 +13,7 @@ const testBooking = {
   priceGBP: 120.50,
   customer: {
     name: "Sarah Jenkins",
-    phone: "07900123456",
+    phone: "07398233859",
     email: "sarah.jenkins@example.co.uk",
     address: "45 Penny Lane, Liverpool, L18 1DE"
   },

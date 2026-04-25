@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en-GB">
+
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-RXMLX8ED9H"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-RXMLX8ED9H');
+    </script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Manage Your Booking | Airport Transfers Liverpool</title>
+    <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg" />
+    <link rel="alternate icon" type="image/png" href="./assets/logo.png" />
+    <link rel="apple-touch-icon" href="./assets/logo.png" />
+    <meta name="theme-color" content="#0B1E37" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Source+Sans+3:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet" />
+    <style>
+        :root {
+            --navy: #0E2747;
+            --navy-2: #14345c;
+            --navy-ink: #0B1E37;
+            --amber: #E6B24B;
+            --amber-deep: #C7932F;
+            --cream: #FAF7F2;
+            --cream-2: #F3EEE4;
+            --line: #E8E2D4;
+            --ink: #1a1d24;
+            --muted: #5b6472;
+            --white: #ffffff;
+            --ok: #1f7a4c;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--cream);
+            font-family: 'Source Sans 3', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--ink);
+            -webkit-font-smoothing: antialiased;
+            font-feature-settings: "ss01", "cv11";
+            line-height: 1.5;
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace
+        }
+
+        .h1, .h2, .brand, h3, .price-card .amt {
+            font-family: 'Lexend', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .wrap {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .brand {
+            font-weight: 800;
+            font-size: 22px;
+            letter-spacing: -0.01em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            text-decoration: none;
+            margin-bottom: 40px;
+        }
+
+        .brand svg {
+            flex-shrink: 0
+        }
+
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+            line-height: 1
+        }
+
+        .brand-text .rm {
+            color: var(--navy);
+            font-weight: 800;
+            font-size: 17px;
+            letter-spacing: -0.015em;
+            white-space: nowrap
+        }
+
+        .brand-text .tf {
+            color: var(--amber-deep);
+            font-weight: 800;
+            font-size: 17px;
+            letter-spacing: -0.015em;
+            white-space: nowrap;
+            margin-top: 2px
+        }
+
+        /* Portal Specific Styles */
+        .portal-card {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px -10px rgba(14, 39, 71, .08);
+            border: 1px solid var(--line);
+            overflow: hidden;
+        }
+
+        .portal-header {
+            background: var(--navy);
+            color: #fff;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .portal-header h1 {
+            color: #fff;
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .portal-header p {
+            color: rgba(255,255,255,0.7);
+            margin: 5px 0 0 0;
+            font-size: 15px;
+        }
+
+        .portal-content {
+            padding: 40px 30px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 99px;
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .status-pending {
+            background: rgba(230, 178, 75, .2);
+            color: var(--amber-deep);
+            border: 1px solid rgba(230, 178, 75, .5);
+        }
+
+        .status-accepted {
+            background: rgba(31, 122, 76, .1);
+            color: var(--ok);
+            border: 1px solid rgba(31, 122, 76, .3);
+        }
+
+        .status-pulse {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        .status-pending .status-pulse { background: var(--amber-deep); animation: pulse 2s infinite; }
+        .status-accepted .status-pulse { background: var(--ok); }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(230, 178, 75, 0.4); }
+            70% { box-shadow: 0 0 0 6px rgba(230, 178, 75, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(230, 178, 75, 0); }
+        }
+
+        .grid-details {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        @media(min-width: 600px) {
+            .grid-details { grid-template-columns: 1fr 1fr; }
+        }
+
+        .detail-item {
+            background: var(--cream);
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+        }
+        .detail-item span {
+            display: block;
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 4px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .detail-item strong {
+            display: block;
+            font-size: 16px;
+            color: var(--navy-ink);
+        }
+
+        .driver-card {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 14px;
+            border: 2px dashed var(--amber);
+            margin-top: 30px;
+        }
+        .driver-card .avatar {
+            width: 50px;
+            height: 50px;
+            background: var(--cream-2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: var(--muted);
+        }
+
+        /* ---------- BUTTONS ---------- */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            height: 52px;
+            padding: 0 22px;
+            border-radius: 10px;
+            border: 0;
+            font-weight: 600;
+            font-size: 15px;
+            letter-spacing: -0.005em;
+            cursor: pointer;
+            transition: transform .08s ease, box-shadow .2s ease, background .2s ease;
+            text-decoration: none;
+            white-space: nowrap;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: var(--amber);
+            color: var(--navy-ink);
+            box-shadow: 0 1px 0 rgba(255, 255, 255, .5) inset, 0 6px 18px -6px rgba(230, 178, 75, .6);
+        }
+
+        .btn-primary:hover {
+            background: var(--amber-deep);
+            color: #fff
+        }
+
+        .btn-primary:active {
+            transform: translateY(1px)
+        }
+
+    </style>
+</head>
+
+<body>
+    <script src="https://unpkg.com/react@18.3.1/umd/react.development.js"
+        integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L"
+        crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"
+        integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm"
+        crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"
+        integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y"
+        crossorigin="anonymous"></script>
+
+    <div id="root"></div>
+
+    <script type="text/babel" src="portal.jsx"></script>
+</body>
+
+</html>
