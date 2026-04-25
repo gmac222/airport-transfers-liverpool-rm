@@ -167,6 +167,32 @@
 
         .loading { text-align: center; padding: 40px; color: var(--muted); }
 
+        @media (max-width: 600px) {
+            .job-details {
+                grid-template-columns: 1fr;
+            }
+            .job-header {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 8px;
+            }
+            .header {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 12px;
+            }
+            .job-actions > div {
+                flex-direction: column !important;
+            }
+            .job-actions button {
+                width: 100%;
+                padding: 12px;
+            }
+            form {
+                flex-direction: column !important;
+            }
+        }
+
     </style>
 </head>
 
