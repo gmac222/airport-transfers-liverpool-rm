@@ -21,7 +21,7 @@ export default async function handler(req, res) {
         if (!formattedCustomerPhone) return res.status(400).json({ error: 'Missing customer phone' });
         messages.push({
             to: formattedCustomerPhone,
-            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nA driver has been assigned to your RM Transfers booking (${fields['Booking Ref']}).\n\nPlease complete your payment to secure your booking: ${fields['Payment Link']}\n\n(Please do not reply to this text.)`
+            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nA driver has been assigned to your RM Transfers booking (${fields['Booking Ref']}).\n\nPlease complete your payment securely via your booking portal to confirm:\nhttps://airporttaxitransfersliverpool.co.uk/portal.html?ref=${fields['Booking Ref']}\n\n(Please do not reply to this automated text.)`
         });
     }
 

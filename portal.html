@@ -51,16 +51,58 @@
         body {
             margin: 0;
             padding: 0;
-            background: var(--bg);
-            background-image: 
-                radial-gradient(circle at 15% 50%, rgba(230, 178, 75, 0.08), transparent 25%),
-                radial-gradient(circle at 85% 30%, rgba(14, 39, 71, 0.5), transparent 25%);
+            background: #091321;
             font-family: 'Source Sans 3', -apple-system, BlinkMacSystemFont, sans-serif;
             color: var(--ink);
             -webkit-font-smoothing: antialiased;
             font-feature-settings: "ss01", "cv11";
             line-height: 1.5;
             min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ---------- AURORA BACKGROUND ---------- */
+        .aurora-bg-wrapper {
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .aurora-effect {
+            --aurora: repeating-linear-gradient(100deg, var(--cream) 10%, #eaf0f6 15%, #dce6f0 20%, var(--cream-2) 25%, var(--cream) 30%);
+            --white-gradient: repeating-linear-gradient(100deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.8) 7%, transparent 10%, transparent 12%, rgba(255,255,255,0.8) 16%);
+            
+            background-image: var(--white-gradient), var(--aurora);
+            background-size: 300% 300%;
+            background-position: 50% 50%, 50% 50%;
+            filter: blur(25px);
+            
+            position: absolute;
+            top: -15px;
+            right: -15px;
+            bottom: -15px;
+            left: -15px;
+            opacity: 0.3; /* Adjusted for portal */
+            will-change: transform;
+        }
+
+        .aurora-effect::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: var(--white-gradient), var(--aurora);
+            background-size: 200% 200%;
+            background-attachment: fixed;
+            mix-blend-mode: overlay;
+            animation: aurora-anim 180s linear infinite;
+        }
+
+        @keyframes aurora-anim {
+            0% { background-position: 50% 50%, 50% 50%; }
+            50% { background-position: 350% 150%, 350% 150%; }
+            100% { background-position: 50% 50%, 50% 50%; }
         }
 
         .mono {
@@ -321,6 +363,10 @@
         integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y"
         crossorigin="anonymous"></script>
 
+    <div class="aurora-bg-wrapper">
+        <div class="aurora-effect"></div>
+    </div>
+    
     <div id="root"></div>
 
     <script type="text/babel" src="portal.jsx"></script>

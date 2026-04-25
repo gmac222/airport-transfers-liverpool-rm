@@ -189,11 +189,20 @@ function PortalApp() {
                     )}
 
                     {status === 'Accepted' && fields['Payment Link'] && (
-                        <div style={{marginTop: '30px'}}>
-                            <a href={fields['Payment Link']} target="_blank" className="btn btn-primary" style={{width: '100%', textAlign: 'center', display: 'block'}}>
+                        <div style={{
+                            marginTop: '30px', 
+                            padding: '24px', 
+                            background: 'linear-gradient(145deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.02))', 
+                            borderRadius: '20px', 
+                            border: '1px solid rgba(16, 185, 129, 0.2)',
+                            boxShadow: '0 10px 30px -10px rgba(16, 185, 129, 0.15)',
+                            textAlign: 'center'
+                        }}>
+                            <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', color: '#fff', fontWeight: '600' }}>Complete Your Booking</h3>
+                            <a href={fields['Payment Link']} target="_blank" className="btn btn-primary" style={{width: '100%', textAlign: 'center', display: 'flex', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', boxShadow: '0 10px 20px -10px rgba(16, 185, 129, 0.5)'}}>
                                 Pay to Confirm Booking
                             </a>
-                            <p style={{fontSize: '13px', color: 'var(--muted)', textAlign: 'center', marginTop: '12px'}}>
+                            <p style={{fontSize: '13px', color: 'var(--muted)', textAlign: 'center', marginTop: '16px', marginBottom: '0'}}>
                                 Secure payment via Revolut
                             </p>
                         </div>
