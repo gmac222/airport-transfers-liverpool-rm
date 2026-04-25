@@ -1167,12 +1167,16 @@ function Footer() {
           <div className="brand" style={{ marginBottom: 12 }}>
             <LogoMark size={56} />
           </div>
-          <div className="foot-copy">Fixed-price airport transfers. Door to terminal, both ways. Licensed private hire · Est. 2011</div>
+          <div className="foot-copy">
+            Fixed-price airport transfers. Door to terminal, both ways. Licensed private hire · Est. 2011<br />
+            Office 1, Oaktree Court Business Centre, Mill Lane, Ness, Neston, CH64 8TP
+          </div>
         </div>
         <div className="foot-links">
           <a href="#how">How it works</a>
           <a href="#faq">FAQ</a>
           <a href="#reviews">Reviews</a>
+          <a href="/privacy/">Privacy Policy</a>
           <a href="tel:+441511234567">0151 123 4567</a>
         </div>
       </div>
