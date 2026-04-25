@@ -73,13 +73,10 @@
             padding: 40px 20px;
         }
 
-        .jobs-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-        }
-        @media (min-width: 700px) {
-            .jobs-grid { grid-template-columns: 1fr 1fr; }
+        .jobs-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
         }
 
         .job-card {

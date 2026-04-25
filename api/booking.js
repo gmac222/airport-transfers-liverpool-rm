@@ -67,36 +67,7 @@ module.exports = async (req, res) => {
 
             const data = await response.json();
 
-            // SEND SMS VIA CLICKSEND
-            if (fields['Status'] === 'Accepted') {
-                const bookingData = data;
-                const phone = bookingData.fields['Customer Phone'];
-                // For testing, override with user's phone if needed, but let's use the actual phone from Airtable
-                // Actually, the user asked to send all texts to 07398233859 for now:
-                const testPhone = "+447398233859"; 
-                
-                const driverName = fields['Driver Name'];
-                const bookingRef = bookingData.fields['Booking Ref'];
-                const portalLink = `https://${req.headers.host}/portal.html?ref=${bookingRef}`;
-
-                const smsBody = `Great news! Your booking (Ref: ${bookingRef}) is confirmed. Your driver will be ${driverName}. View your trip details here: ${portalLink}`;
-
-                await fetch('https://rest.clicksend.com/v3/sms/send', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': 'Basic Z3JhaGFtLm0uMjIyQGdtYWlsLmNvbTo2MzREMTAyQi0zMDRFLUI0QTUtQUQzQS1COTRFNDk1QjQ1OEM=',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        messages: [
-                            {
-                                to: testPhone, // Hardcoded for testing as per previous instructions
-                                body: smsBody
-                            }
-                        ]
-                    })
-                });
-            }
+            // SMS is now handled by the n8n webhook triggered from the frontend
 
             return res.status(200).json({ booking: data });
         } catch (error) {

@@ -12,6 +12,7 @@ function AdminApp() {
     const [error, setError] = useState(null);
     const [assigningId, setAssigningId] = useState(null);
     const [driverNames, setDriverNames] = useState({});
+    const [paymentLinks, setPaymentLinks] = useState({});
 
     const handleLogin = (e) => {
         e.preventDefault();
@@ -43,7 +44,20 @@ function AdminApp() {
             .then(res => res.json())
             .then(data => {
                 if (data.error) throw new Error(data.error);
-                setBookings(data.bookings);
+                
+                // Sort bookings by date and time
+                const sorted = data.bookings.sort((a, b) => {
+                    const dateA = a.fields['Outbound Date'] || '9999-12-31';
+                    const timeA = a.fields['Outbound Time'] || '23:59';
+                    const dateB = b.fields['Outbound Date'] || '9999-12-31';
+                    const timeB = b.fields['Outbound Time'] || '23:59';
+                    
+                    const dateTimeA = new Date(`${dateA}T${timeA}`);
+                    const dateTimeB = new Date(`${dateB}T${timeB}`);
+                    return dateTimeA - dateTimeB;
+                });
+                
+                setBookings(sorted);
                 setLoading(false);
             })
             .catch(err => {
@@ -62,9 +76,15 @@ function AdminApp() {
         setDriverNames(prev => ({ ...prev, [id]: name }));
     };
 
+    const handlePaymentLinkChange = (id, link) => {
+        setPaymentLinks(prev => ({ ...prev, [id]: link }));
+    };
+
     const handleAssignDriver = (id) => {
         const driverName = driverNames[id];
+        const paymentLink = paymentLinks[id];
         if (!driverName || driverName.trim() === '') return alert('Please enter a driver name');
+        if (!paymentLink || paymentLink.trim() === '') return alert('Please enter a payment link');
 
         setAssigningId(id);
 
@@ -75,7 +95,8 @@ function AdminApp() {
                 id: id,
                 fields: {
                     'Status': 'Accepted',
-                    'Driver Name': driverName.trim()
+                    'Driver Name': driverName.trim(),
+                    'Payment Link': paymentLink.trim()
                 }
             })
         })
@@ -92,7 +113,8 @@ function AdminApp() {
                         customerPhone: record.fields['Customer Phone'],
                         bookingRef: record.fields['Booking Ref'],
                         driverName: driverName.trim(),
-                        portalLink: 'https://airporttaxitransfersliverpool.co.uk/'
+                        paymentLink: paymentLink.trim(),
+                        portalLink: paymentLink.trim() // Mapping for existing SMS template
                     })
                 }).catch(err => console.error('Error triggering webhook:', err));
             }
@@ -180,7 +202,7 @@ function AdminApp() {
                 {loading ? (
                     <div className="loading">Loading pending jobs...</div>
                 ) : (
-                    <div className="jobs-grid">
+                    <div className="jobs-list">
                         {bookings.map(record => {
                             const { id, fields } = record;
                             const status = fields['Status'] || 'Pending';
@@ -215,23 +237,35 @@ function AdminApp() {
                                     </div>
 
                                     {isPending ? (
-                                        <div className="job-actions">
-                                            <input 
-                                                type="text" 
-                                                placeholder="Enter Driver Name..." 
-                                                value={driverNames[id] || ''}
-                                                onChange={e => handleDriverNameChange(id, e.target.value)}
-                                            />
+                                        <div className="job-actions" style={{ flexDirection: 'column', gap: '10px' }}>
+                                            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="Enter Driver Name..." 
+                                                    value={driverNames[id] || ''}
+                                                    onChange={e => handleDriverNameChange(id, e.target.value)}
+                                                    style={{ flex: '1 1 200px' }}
+                                                />
+                                                <input 
+                                                    type="url" 
+                                                    placeholder="Paste Revolut Payment Link..." 
+                                                    value={paymentLinks[id] || ''}
+                                                    onChange={e => handlePaymentLinkChange(id, e.target.value)}
+                                                    style={{ flex: '2 1 300px' }}
+                                                />
+                                            </div>
                                             <button 
                                                 onClick={() => handleAssignDriver(id)}
                                                 disabled={assigningId === id}
+                                                style={{ padding: '12px', width: '100%' }}
                                             >
-                                                {assigningId === id ? '...' : 'Assign & Accept'}
+                                                {assigningId === id ? '...' : 'Assign Driver & Send Payment Link'}
                                             </button>
                                         </div>
                                     ) : (
-                                        <div className="job-actions" style={{background: 'var(--cream)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--line)'}}>
+                                        <div className="job-actions" style={{background: 'var(--cream)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--line)', display: 'flex', flexDirection: 'column', gap: '4px'}}>
                                             <span style={{fontSize: '14px', fontWeight: 600}}>Driver: {fields['Driver Name']}</span>
+                                            {fields['Payment Link'] && <span style={{fontSize: '14px', color: 'var(--muted)'}}>Payment Link: <a href={fields['Payment Link']} target="_blank" rel="noreferrer" style={{color: 'var(--navy)'}}>{fields['Payment Link']}</a></span>}
                                         </div>
                                     )}
                                 </div>
