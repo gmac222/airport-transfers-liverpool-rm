@@ -66,68 +66,84 @@ function Nav() {
   );
 }
 
+/* ---------- AURORA BACKGROUND ---------- */
+function AuroraBackground({ children, showRadialGradient = true, className = "" }) {
+  return (
+    <div className={`aurora-container ${className}`} style={{ padding: 0, width: "100%", height: "100%", background: "transparent" }}>
+      <div className="aurora-bg-wrapper">
+        <div className={`aurora-effect ${showRadialGradient ? 'radial' : ''}`}></div>
+      </div>
+      <div className="aurora-content" style={{ width: "100%", height: "100%" }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
 /* ---------- HERO ---------- */
 function Hero({ headline }) {
   const h = HEADLINES[headline] || HEADLINES.quiet;
   return (
     <header className="hero">
-      <div className="wrap hero-grid">
-        <div>
-          <h1 className="h1">
-            {h.main} <em>{h.accent}</em>
-            {h.tail && <><br /><span style={{ color: "black" }}>{h.tail}</span></>}
-          </h1>
-          <p className="sub">
-            We pick you up from your front door, take you to Liverpool John Lennon or Manchester Airport, and meet you in Arrivals on the way back. Fixed price, both legs. No hidden fees, no meter, no surprises.
-          </p>
+      <AuroraBackground>
+        <div className="wrap hero-grid">
+          <div>
+            <h1 className="h1">
+              {h.main} <em>{h.accent}</em>
+              {h.tail && <><br /><span style={{ color: "black" }}>{h.tail}</span></>}
+            </h1>
+            <p className="sub">
+              We pick you up from your front door, take you to Liverpool John Lennon or Manchester Airport, and meet you in Arrivals on the way back. Fixed price, both legs. No hidden fees, no meter, no surprises.
+            </p>
 
-          <div className="hero-prices" id="prices">
-            <div className="price-card">
-              <div>
-                <div className="route">Liverpool John Lennon</div>
-                <div className="airport">LJLA</div>
+            <div className="hero-prices" id="prices">
+              <div className="price-card">
+                <div>
+                  <div className="route">Liverpool John Lennon</div>
+                  <div className="airport">LJLA</div>
+                </div>
+                <div className="amt">£65<small>each way · £130 return</small></div>
               </div>
-              <div className="amt">£65<small>each way · £130 return</small></div>
+              <div className="price-card">
+                <div>
+                  <div className="route">Manchester Airport</div>
+                  <div className="airport">MAN</div>
+                </div>
+                <div className="amt">£75<small>each way · £150 return</small></div>
+              </div>
             </div>
-            <div className="price-card">
-              <div>
-                <div className="route">Manchester Airport</div>
-                <div className="airport">MAN</div>
+
+            <div className="hero-cta" style={{ flexDirection: "column", alignItems: "flex-start", gap: "10px" }}>
+              <a href="#book" className="btn btn-primary" style={{ padding: "16px 32px", fontSize: "16px", width: "100%", justifyContent: "center" }}>
+                Book Now <Icon name="arrow" size={16} />
+              </a>
+            </div>
+
+            <div className="trust" style={{ marginTop: "24px" }}>
+              <div className="trust-item">
+                <span className="stars">★★★★★</span>
+                <span className="trust-text"><b>4.9</b> on Google · 380+ reviews</span>
               </div>
-              <div className="amt">£75<small>each way · £150 return</small></div>
+              <div className="trust-item">
+                <span className="stars">★★★★★</span>
+                <span className="trust-text"><b>Excellent</b> on Trustpilot</span>
+              </div>
             </div>
           </div>
 
-          <div className="hero-cta" style={{ flexDirection: "column", alignItems: "flex-start", gap: "10px" }}>
-            <a href="#book" className="btn btn-primary" style={{ padding: "16px 32px", fontSize: "16px", width: "100%", justifyContent: "center" }}>
-              Book Now <Icon name="arrow" size={16} />
-            </a>
-          </div>
-
-          <div className="trust" style={{ marginTop: "24px" }}>
-            <div className="trust-item">
-              <span className="stars">★★★★★</span>
-              <span className="trust-text"><b>4.9</b> on Google · 380+ reviews</span>
+          <div style={{ position: "relative" }}>
+            <div className="hero-media" role="img" aria-label="8-seater minibus" style={{ backgroundImage: "url('./assets/airport-transfers-wirral.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}>
             </div>
-            <div className="trust-item">
-              <span className="stars">★★★★★</span>
-              <span className="trust-text"><b>Excellent</b> on Trustpilot</span>
+            <div className="floating-card">
+              <div className="ic"><Icon name="check" size={18} /></div>
+              <div>
+                <b>Flight BA2391 tracked</b>
+                <span>Driver will wait if you're delayed</span>
+              </div>
             </div>
           </div>
         </div>
-
-        <div style={{ position: "relative" }}>
-          <div className="hero-media" role="img" aria-label="8-seater minibus" style={{ backgroundImage: "url('./assets/airport-transfers-wirral.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}>
-          </div>
-          <div className="floating-card">
-            <div className="ic"><Icon name="check" size={18} /></div>
-            <div>
-              <b>Flight BA2391 tracked</b>
-              <span>Driver will wait if you're delayed</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      </AuroraBackground>
     </header>
   );
 }

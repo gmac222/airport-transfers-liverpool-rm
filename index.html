@@ -296,9 +296,6 @@
         .hero {
             position: relative;
             padding: 40px 0 56px;
-            background:
-                radial-gradient(1200px 600px at 85% -10%, rgba(230, 178, 75, .14), transparent 60%),
-                linear-gradient(180deg, #fff 0%, var(--cream) 100%);
             overflow: hidden;
         }
 
@@ -1826,6 +1823,73 @@
             outline: 2px solid var(--amber);
             outline-offset: 2px;
             border-radius: 4px
+        }
+
+        /* ---------- AURORA BACKGROUND ---------- */
+        .aurora-container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: var(--cream);
+            color: var(--ink);
+            transition: background-color 0.3s;
+            padding: 80px 24px;
+        }
+
+        .aurora-bg-wrapper {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .aurora-effect {
+            --aurora: repeating-linear-gradient(100deg, #FFED4A 10%, #FF922B 15%, #FF6B6B 20%, #FCC419 25%, #FFED4A 30%);
+            --white-gradient: repeating-linear-gradient(100deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.8) 7%, transparent 10%, transparent 12%, rgba(255,255,255,0.8) 16%);
+            
+            background-image: var(--white-gradient), var(--aurora);
+            background-size: 300% 200%;
+            background-position: 50% 50%, 50% 50%;
+            filter: blur(14px);
+            
+            position: absolute;
+            top: -15px;
+            right: -15px;
+            bottom: -15px;
+            left: -15px;
+            opacity: 0.6;
+            will-change: transform;
+        }
+
+        .aurora-effect::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: var(--white-gradient), var(--aurora);
+            background-size: 200% 100%;
+            background-attachment: fixed;
+            mix-blend-mode: overlay;
+            animation: aurora-anim 60s linear infinite;
+        }
+
+        .aurora-effect.radial {
+            -webkit-mask-image: radial-gradient(ellipse at 100% 0%, black 10%, transparent 70%);
+            mask-image: radial-gradient(ellipse at 100% 0%, black 10%, transparent 70%);
+        }
+
+        @keyframes aurora-anim {
+            from { background-position: 50% 50%, 50% 50%; }
+            to { background-position: 350% 50%, 350% 50%; }
+        }
+
+        .aurora-content {
+            position: relative;
+            z-index: 1;
+            width: 100%;
         }
     </style>
 
