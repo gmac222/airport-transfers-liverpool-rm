@@ -1828,23 +1828,15 @@
         /* ---------- AURORA BACKGROUND ---------- */
         .aurora-container {
             position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            background: var(--cream);
-            color: var(--ink);
-            transition: background-color 0.3s;
-            padding: 80px 24px;
+            background: transparent;
         }
 
         .aurora-bg-wrapper {
-            position: absolute;
+            position: fixed;
             inset: 0;
             overflow: hidden;
             pointer-events: none;
-            z-index: 0;
+            z-index: -1;
         }
 
         .aurora-effect {
@@ -1852,7 +1844,7 @@
             --white-gradient: repeating-linear-gradient(100deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.8) 7%, transparent 10%, transparent 12%, rgba(255,255,255,0.8) 16%);
             
             background-image: var(--white-gradient), var(--aurora);
-            background-size: 300% 200%;
+            background-size: 300% 300%;
             background-position: 50% 50%, 50% 50%;
             filter: blur(14px);
             
@@ -1870,20 +1862,21 @@
             position: absolute;
             inset: 0;
             background-image: var(--white-gradient), var(--aurora);
-            background-size: 200% 100%;
+            background-size: 200% 200%;
             background-attachment: fixed;
             mix-blend-mode: overlay;
             animation: aurora-anim 60s linear infinite;
         }
 
         .aurora-effect.radial {
-            -webkit-mask-image: radial-gradient(ellipse at 100% 0%, black 10%, transparent 70%);
-            mask-image: radial-gradient(ellipse at 100% 0%, black 10%, transparent 70%);
+            -webkit-mask-image: radial-gradient(ellipse at 50% 0%, black 10%, transparent 100%);
+            mask-image: radial-gradient(ellipse at 50% 0%, black 10%, transparent 100%);
         }
 
         @keyframes aurora-anim {
-            from { background-position: 50% 50%, 50% 50%; }
-            to { background-position: 350% 50%, 350% 50%; }
+            0% { background-position: 50% 50%, 50% 50%; }
+            50% { background-position: 350% 150%, 350% 150%; }
+            100% { background-position: 50% 50%, 50% 50%; }
         }
 
         .aurora-content {

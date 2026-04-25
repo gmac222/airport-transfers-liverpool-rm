@@ -85,8 +85,7 @@ function Hero({ headline }) {
   const h = HEADLINES[headline] || HEADLINES.quiet;
   return (
     <header className="hero">
-      <AuroraBackground>
-        <div className="wrap hero-grid">
+      <div className="wrap hero-grid">
           <div>
             <h1 className="h1">
               {h.main} <em>{h.accent}</em>
@@ -143,7 +142,6 @@ function Hero({ headline }) {
             </div>
           </div>
         </div>
-      </AuroraBackground>
     </header>
   );
 }
@@ -1079,7 +1077,7 @@ function App() {
   }, [t.amberIntensity]);
 
   return (
-    <>
+    <AuroraBackground showRadialGradient={false}>
       <Nav />
       <Hero headline={t.headline} />
       <AuthorityStrip />
@@ -1108,7 +1106,7 @@ function App() {
         <TweakToggle label="Sticky book-bar on scroll" value={t.showStickyBar}
           onChange={v => setTweak("showStickyBar", v)} />
       </TweaksPanel>
-    </>
+    </AuroraBackground>
   );
 }
 
