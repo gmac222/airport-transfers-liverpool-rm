@@ -623,7 +623,7 @@ function BookingForm() {
           <p>We'll text you within 10 minutes with your driver's name and the minibus details{tripType === "return" ? " for both legs" : ""}. If you've booked for today, we'll call within 5.</p>
           <div className="ref" id="book-ref" tabIndex={-1}>Ref: {bookingRef} · £{price} fixed {tripType === "return" ? "return" : "one-way"}</div>
           <div style={{ marginTop: 24, fontSize: 13, color: "var(--muted)" }}>
-            Need to change something? Call us on <a href="tel:+441511234567" style={{ color: "var(--navy-ink)", fontWeight: 600 }}>0151 123 4567</a>.
+            Need to change something? Reply to the text message we send you.
           </div>
         </div>
       </div>
@@ -1109,17 +1109,12 @@ function AppPromo() {
 /* ---------- BOOK SECTION ---------- */
 function BookSection() {
   return (
-    <section id="book" className="book-section cream">
+    <section id="book" className="book-section">
       <div className="wrap book-grid">
         <div className="book-lead">
           <span className="section-kicker" style={{ color: "var(--amber)" }}>Book now</span>
           <h2 className="h2">Get a driver confirmed <em>in 10 minutes.</em></h2>
           <p>Fill the form and we'll text back with your driver's name and the fixed price — no card needed to reserve.</p>
-          <div className="or-call">
-            <span>Or book by phone</span>
-            <a href="tel:+441511234567">0151 123 4567</a>
-            <small>7 days · 6am to 11pm · a real person answers</small>
-          </div>
         </div>
         <BookingForm />
       </div>
@@ -1177,7 +1172,6 @@ function Footer() {
           <a href="#faq">FAQ</a>
           <a href="#reviews">Reviews</a>
           <a href="/privacy/">Privacy Policy</a>
-          <a href="tel:+441511234567">0151 123 4567</a>
         </div>
       </div>
     </footer>
