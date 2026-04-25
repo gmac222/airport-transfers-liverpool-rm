@@ -354,6 +354,22 @@ function AdminApp() {
                                             <span>Pickup</span>
                                             <strong>{fields['Home Address']}</strong>
                                         </div>
+                                        {fields['Outbound Flight'] && (
+                                            <div className="detail">
+                                                <span>Flight</span>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    <strong>{fields['Outbound Flight']}</strong>
+                                                    <a 
+                                                        href={`https://www.flightradar24.com/data/flights/${fields['Outbound Flight'].replace(/\s/g, '').toLowerCase()}`} 
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        style={{ fontSize: '11px', background: 'rgba(230, 178, 75, 0.2)', color: 'var(--amber-deep)', padding: '2px 8px', borderRadius: '4px', textDecoration: 'none', fontWeight: 'bold' }}
+                                                    >
+                                                        Track Live
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
 
                                     {isPending ? (
