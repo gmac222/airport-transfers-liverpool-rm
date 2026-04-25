@@ -268,6 +268,9 @@ function AdminApp() {
                     <div style={{fontSize: '14px'}}>Logged in as Admin</div>
                 </div>
                 <div style={{ display: 'flex', gap: '15px' }}>
+                    <a href="/stats.html" className="btn" style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', textDecoration: 'none', padding: '6px 12px', borderRadius: '6px', fontWeight: 'bold', fontSize: '14px', display: 'flex', alignItems: 'center' }}>
+                        Business Stats
+                    </a>
                     <a href="/#book" target="_blank" className="btn" style={{ background: 'var(--amber)', color: 'var(--navy-ink)', textDecoration: 'none', padding: '6px 12px', borderRadius: '6px', fontWeight: 'bold', fontSize: '14px', display: 'flex', alignItems: 'center' }}>
                         + New Manual Booking
                     </a>
