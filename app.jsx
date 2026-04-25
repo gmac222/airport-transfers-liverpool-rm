@@ -142,6 +142,73 @@ function Hero({ headline }) {
           </div>
         </div>
       </div>
+
+      {/* Authority credentials — overlaid on hero */}
+      <div className="hero-authority" style={{
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 3,
+        padding: '0 24px 32px'
+      }}>
+        <div className="wrap">
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '12px'
+          }}>
+            {[
+              { icon: "clock",  big: "13+",      small: "years trading · est. 2011" },
+              { icon: "check",  big: "4.9★",     small: "Google · 380+ reviews" },
+              { icon: "shield", big: "Licensed", small: "Private hire · DBS checked" },
+              { icon: "pound",  big: "£5M",      small: "Public liability insured" }
+            ].map((item, k) => (
+              <div key={k} style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '14px',
+                padding: '14px 18px',
+                borderRadius: '14px',
+                background: 'rgba(255, 255, 255, 0.08)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                transition: 'all 0.3s ease',
+              }}>
+                <div style={{
+                  flexShrink: 0,
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '10px',
+                  background: 'linear-gradient(135deg, rgba(230, 178, 75, 0.25), rgba(230, 178, 75, 0.08))',
+                  border: '1px solid rgba(230, 178, 75, 0.25)',
+                  color: 'var(--amber)',
+                  display: 'grid',
+                  placeItems: 'center'
+                }}>
+                  <Icon name={item.icon} size={18} />
+                </div>
+                <div>
+                  <div style={{
+                    fontSize: 'clamp(16px, 2vw, 20px)',
+                    fontWeight: 700,
+                    color: '#fff',
+                    letterSpacing: '-0.01em',
+                    lineHeight: 1.1
+                  }}>{item.big}</div>
+                  <div style={{
+                    fontSize: '12px',
+                    color: 'rgba(255, 255, 255, 0.6)',
+                    fontWeight: 500,
+                    marginTop: '2px'
+                  }}>{item.small}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </header>
   );
 }
@@ -1188,7 +1255,7 @@ function App() {
     <AuroraBackground showRadialGradient={false}>
       <Nav />
       <Hero headline={t.headline} />
-      <AuthorityStrip />
+
       <HowItWorks />
       <FixedPricePromise />
       <MeetAndGreet />
