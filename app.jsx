@@ -105,7 +105,7 @@ function Hero({ headline }) {
           {h.tail && <><br /><span className="hero-tail">{h.tail}</span></>}
         </h1>
         <p className="sub hero-video-sub">
-          We pick you up from your front door, take you to Liverpool John Lennon or Manchester Airport, and meet you in Arrivals on the way back. Fixed price, both legs. No hidden fees, no meter, no surprises.
+          Private 8-seat minibus from your front door to Liverpool John Lennon or Manchester Airport — and we meet you in Arrivals on the way back. Fixed price, both legs. No hidden fees, no meter, no surprises.
         </p>
 
         <div className="hero-prices hero-video-prices" id="prices">
@@ -139,73 +139,6 @@ function Hero({ headline }) {
           <div className="trust-item">
             <span className="stars">★★★★★</span>
             <span className="trust-text"><b>Excellent</b> on Trustpilot</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Authority credentials — overlaid on hero */}
-      <div className="hero-authority" style={{
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        zIndex: 3,
-        padding: '0 24px 32px'
-      }}>
-        <div className="wrap">
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '12px'
-          }}>
-            {[
-              { icon: "clock",  big: "13+",      small: "years trading · est. 2011" },
-              { icon: "check",  big: "4.9★",     small: "Google · 380+ reviews" },
-              { icon: "shield", big: "Licensed", small: "Private hire · DBS checked" },
-              { icon: "pound",  big: "£5M",      small: "Public liability insured" }
-            ].map((item, k) => (
-              <div key={k} style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '14px',
-                padding: '14px 18px',
-                borderRadius: '14px',
-                background: 'rgba(255, 255, 255, 0.08)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                transition: 'all 0.3s ease',
-              }}>
-                <div style={{
-                  flexShrink: 0,
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '10px',
-                  background: 'linear-gradient(135deg, rgba(230, 178, 75, 0.25), rgba(230, 178, 75, 0.08))',
-                  border: '1px solid rgba(230, 178, 75, 0.25)',
-                  color: 'var(--amber)',
-                  display: 'grid',
-                  placeItems: 'center'
-                }}>
-                  <Icon name={item.icon} size={18} />
-                </div>
-                <div>
-                  <div style={{
-                    fontSize: 'clamp(16px, 2vw, 20px)',
-                    fontWeight: 700,
-                    color: '#fff',
-                    letterSpacing: '-0.01em',
-                    lineHeight: 1.1
-                  }}>{item.big}</div>
-                  <div style={{
-                    fontSize: '12px',
-                    color: 'rgba(255, 255, 255, 0.6)',
-                    fontWeight: 500,
-                    marginTop: '2px'
-                  }}>{item.small}</div>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </div>
@@ -243,9 +176,9 @@ function AuthorityStrip() {
 /* ---------- HOW IT WORKS ---------- */
 function HowItWorks() {
   const steps = [
-    { n: 1, title: "Book both legs at once", body: "Tell us your pickup address and flight times — out and back. One booking, one fixed price, one driver looking after you. Confirmation text arrives within 10 minutes.", time: "~2 min to book" },
-    { n: 2, title: "We pick you up from home", body: "Driver rings the bell at the agreed time. Bags in the boot, straight on the M53, dropped at the terminal door. No airport parking to find.", time: "Direct to the terminal door" },
-    { n: 3, title: "We meet you when you land", body: "Driver waits inside Arrivals with a sign showing your name. We track your flight so they're there whether you're early, late or delayed.", time: "inside the terminal" }
+    { n: 1, title: "Book both legs at once", body: "Tell us your pickup address and flight times — out and back. One booking, one fixed price, one minibus. Confirmation text arrives within 10 minutes.", time: "~2 min to book" },
+    { n: 2, title: "Your private minibus arrives", body: "Driver rings the bell at the agreed time. Bags in the boot of our spacious 8-seat minibus, straight on the M53, dropped at the terminal door. No airport parking to find.", time: "Direct to the terminal door" },
+    { n: 3, title: "We meet you when you land", body: "Driver waits inside Arrivals with a sign showing your name. We track your flight so they're there whether you're early, late or delayed. Same minibus, same driver.", time: "inside the terminal" }
   ];
   return (
     <section id="how">
@@ -265,6 +198,24 @@ function HowItWorks() {
             </div>
           ))}
         </div>
+
+        {/* Authority strip — placed after the 3 steps */}
+        <div className="authority-grid" style={{ marginTop: '48px' }}>
+          {[
+            { icon: "clock",  big: "13+",      small: "years trading · est. 2011" },
+            { icon: "check",  big: "4.9★",     small: "Google · 380+ reviews" },
+            { icon: "shield", big: "Licensed", small: "Private hire · DBS checked" },
+            { icon: "pound",  big: "£5M",      small: "Public liability insured" }
+          ].map((item, k) => (
+            <div className="authority-item" key={k} style={{ animationDelay: `${k * 80}ms` }}>
+              <div className="authority-ic"><Icon name={item.icon} size={20} /></div>
+              <div>
+                <div className="big">{item.big}</div>
+                <div className="small">{item.small}</div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -273,7 +224,7 @@ function HowItWorks() {
 /* ---------- PROMISE ---------- */
 function FixedPricePromise() {
   const items = [
-    { title: "Fixed prices, always", body: "Friday 5pm, Christmas morning, bank holiday — same £65 or £75." },
+    { title: "Fixed prices, always", body: "Friday 5pm, Christmas morning, bank holiday — same £65 or £75 per leg in our private 8-seat minibus." },
     { title: "No extras for flight delays", body: "We track your flight. If you're late, we wait. You don't pay a penny more." },
     { title: "No hidden fees", body: "The price you're quoted includes parking, tolls, meet & greet and VAT. That's the lot." },
     { title: "Cancel free up to 24 hrs", body: "Plans change. We get it. No cancellation fee outside 24 hours of pickup." }
@@ -286,7 +237,7 @@ function FixedPricePromise() {
             <div>
               <span className="section-kicker" style={{ color: "var(--amber)" }}>The fixed-price promise</span>
               <h2 className="h2">The price we quote <em>is the price you pay.</em></h2>
-              <p className="sub-light">We've watched people get stung by £90 Ubers at midnight and £200 airport car parks for a long weekend. That's not what we do.</p>
+              <p className="sub-light">We've watched people get stung by £90 Ubers at midnight and £200 airport car parks for a long weekend. Our 8-seat private minibus is one fixed price — whether there's one of you or eight.</p>
             </div>
             <ul className="promise-list">
               {items.map((i, k) => (
@@ -306,12 +257,49 @@ function FixedPricePromise() {
   );
 }
 
+/* ---------- YOUR VEHICLE ---------- */
+function YourVehicle() {
+  return (
+    <section>
+      <div className="wrap" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '64px', alignItems: 'center' }}>
+        <div>
+          <span className="section-kicker">Your vehicle</span>
+          <h2 className="h2">One vehicle. <em>One fixed price.</em></h2>
+          <p className="section-sub" style={{ marginBottom: '24px' }}>Every booking travels in our private 8-seat minibus — whether there's one of you or eight. It's not shared. It's not a cramped saloon. It's your own spacious, air-conditioned minibus with room for everyone and everything.</p>
+          <ul className="mng-list">
+            <li>
+              <div className="ic"><Icon name="luggage" size={20} /></div>
+              <div><b>Room for 8 passengers + luggage</b><span>Family of four with big suitcases? Group of eight heading on a stag weekend? Same vehicle, same price.</span></div>
+            </li>
+            <li>
+              <div className="ic"><Icon name="shield" size={20} /></div>
+              <div><b>Private hire licensed</b><span>Fully licensed, DBS-checked drivers and £5M public liability insurance. Every trip, every time.</span></div>
+            </li>
+            <li>
+              <div className="ic"><Icon name="pound" size={20} /></div>
+              <div><b>The price is for the vehicle, not per person</b><span>£65 to LJLA or £75 to Manchester — whether you're solo or a full minibus. Split it between you and it's cheaper than the bus.</span></div>
+            </li>
+          </ul>
+          <a href="#book" className="btn btn-primary" style={{ marginTop: '24px' }}>Book Your Transfer <Icon name="arrow" size={16} /></a>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <img 
+            src="./assets/8-seater-minibus.png" 
+            alt="RM Transfers 8-seat private airport transfer minibus" 
+            style={{ maxWidth: '100%', height: 'auto', filter: 'drop-shadow(0 20px 40px rgba(14, 39, 71, 0.15))' }}
+          />
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ---------- MEET AND GREET ---------- */
 function MeetAndGreet() {
   return (
     <section>
       <div className="wrap mng-grid">
-        <div className="mng-media" role="img" aria-label="8-seater minibus" style={{ backgroundImage: "url('./assets/airport-transfers-wirral.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}>
+        <div className="mng-media" role="img" aria-label="8-seater minibus at the airport" style={{ backgroundImage: "url('./assets/airport-transfers-wirral.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}>
           <div className="flight-card">
             <div className="row"><span>Flight</span><b>BA2391</b></div>
             <div className="flight-route">
@@ -326,11 +314,11 @@ function MeetAndGreet() {
         <div className="mng-text">
           <span className="section-kicker">Both ways, one driver</span>
           <h2 className="h2">We pick you up at home. <em>We meet you in Arrivals.</em></h2>
-          <p className="section-sub">Most of our bookings are returns — same driver, both legs, so you're never explaining yourself twice. Door to terminal on the way out. Terminal to door on the way back.</p>
+          <p className="section-sub">Most of our bookings are returns — same driver, same minibus, both legs, so you're never explaining yourself twice. Door to terminal on the way out. Terminal to door on the way back.</p>
           <ul className="mng-list">
             <li>
               <div className="ic"><Icon name="track" size={20} /></div>
-              <div><b>Live flight tracking on the return</b><span>We check your flight the night before and the hour you land. Early, late or delayed — the driver is already there.</span></div>
+              <div><b>Live flight tracking on the return</b><span>We check your flight the night before and the hour you land. Early, late or delayed — the driver is already there with your minibus.</span></div>
             </li>
             <li>
               <div className="ic"><Icon name="meet" size={20} /></div>
@@ -507,7 +495,7 @@ function FAQ() {
     { q: "What happens if my flight is delayed?", a: "We check your flight number before leaving to collect you. If you're delayed, we delay. There's no extra charge — the fixed price covers up to 60 minutes of waiting in Arrivals, and honestly we've waited longer without ever billing for it. Fixed price means fixed price." },
     { q: "What if I'm not ready when you arrive at home?", a: "Fine. We build a few minutes' grace into every pickup, and we'd rather be early than late. Just tell us what time you want to leave the house and we'll plan back from that." },
     { q: "Are your drivers licensed and insured?", a: "Yes — every driver is fully licensed by the local council for private hire, DBS checked, and the business carries full public liability and hire & reward insurance. Happy to show you the paperwork before booking if you'd like." },
-    { q: "Will my luggage fit?", a: "We operate a comfortable 8-seater minibus — fits up to 8 passengers and plenty of luggage. Whether you're travelling light or heavy, we've got you covered in our spacious minibus (same fixed-price rules apply)." },
+    { q: "Will my luggage fit?", a: "Every booking travels in our private 8-seat minibus — not a saloon car. It comfortably fits up to 8 passengers with plenty of room for suitcases, car seats and golf bags. Whether you're a couple or a full group, the price stays the same." },
     { q: "Can I pay in cash?", a: "Cash or card, whichever suits. Card payment is taken by the driver at the end of the journey via contactless. No booking fee either way." },
     { q: "How far ahead do I need to book?", a: "Ideally 24 hours for guaranteed availability. We often take same-day bookings when a driver's free — call 0151 123 4567 and we'll tell you straight." }
   ];
@@ -1258,6 +1246,7 @@ function App() {
 
       <HowItWorks />
       <FixedPricePromise />
+      <YourVehicle />
       <MeetAndGreet />
       <FAQ />
       <Reviews />

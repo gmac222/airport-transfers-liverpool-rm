@@ -727,24 +727,11 @@
             color: #fff;
         }
 
-        /* ---------- HERO AUTHORITY STRIP ---------- */
-        .hero-authority .wrap > div {
-            grid-template-columns: repeat(2, 1fr) !important;
-        }
-
-        @media (min-width: 900px) {
-            .hero-authority .wrap > div {
-                grid-template-columns: repeat(4, 1fr) !important;
-            }
-        }
-
-        .hero-video-content {
-            padding-bottom: 180px !important;
-        }
-
-        @media (min-width: 900px) {
-            .hero-video-content {
-                padding-bottom: 120px !important;
+        /* ---------- YOUR VEHICLE ---------- */
+        @media (max-width: 768px) {
+            .wrap[style*="grid-template-columns: 1fr 1fr"] {
+                grid-template-columns: 1fr !important;
+                gap: 32px !important;
             }
         }
 
