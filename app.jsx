@@ -356,6 +356,12 @@ function FAQ() {
   );
 }
 
+const VIP_PACKAGES = [
+  { id: 'water_snacks', name: 'Chilled Water & Premium Snacks', desc: 'Two chilled bottles of sparkling water and premium snacks waiting in the car.', price: 15, icon: '💧' },
+  { id: 'celebration', name: 'The Celebration Package', desc: 'A chilled bottle of Prosecco and two glasses ready for when you land.', price: 35, icon: '🥂' },
+  { id: 'meet_greet', name: 'VIP Terminal Meet & Greet', desc: 'Driver waits inside the terminal with a digital iPad name-board.', price: 10, icon: '✨' }
+];
+
 /* ---------- BOOKING FORM ---------- */
 function BookingForm() {
   const [tripType, setTripType] = useState("return"); // "return" | "oneway"
@@ -368,6 +374,7 @@ function BookingForm() {
   const [submitError, setSubmitError] = useState(null);
   const [bookingRef, setBookingRef] = useState("");
   const [errors, setErrors] = useState({});
+  const [selectedVips, setSelectedVips] = useState([]);
   const [form, setForm] = useState({
     name: "", phone: "", email: "",
     address: "",
@@ -444,7 +451,7 @@ function BookingForm() {
       airportName: airport === "LJLA" ? "Liverpool John Lennon" : "Manchester",
       passengers: pax,
       luggage: bags,
-      priceGBP: price,
+      priceGBP: price + selectedVips.reduce((sum, id) => sum + VIP_PACKAGES.find(p => p.id === id).price, 0),
       legPriceGBP: legPrice,
       customer: {
         name: form.name.trim(),
@@ -459,7 +466,9 @@ function BookingForm() {
         ? { date: form.retDate, time: form.retTime, flight: form.retFlight.trim() }
         : (onewayDir === "from" ? { date: form.legDate, time: form.legTime, flight: form.legFlight.trim() } : null),
       notes: form.notes.trim() || null,
-      pageUrl: typeof window !== "undefined" ? window.location.href : null
+      pageUrl: typeof window !== "undefined" ? window.location.href : null,
+      vipUpgrades: selectedVips.length > 0 ? selectedVips.map(id => VIP_PACKAGES.find(p => p.id === id).name).join(', ') : null,
+      vipPrice: selectedVips.reduce((sum, id) => sum + VIP_PACKAGES.find(p => p.id === id).price, 0)
     };
 
     console.log("[booking] POSTing payload", payload);
@@ -660,12 +669,46 @@ function BookingForm() {
           value={form.notes} onChange={e => upd("notes", e.target.value)} />
       </div>
 
+      <div className="vip-section" style={{ marginTop: 24, marginBottom: 24, padding: "24px 20px", background: "#f8fafc", borderRadius: 12, border: "1px solid #e2e8f0" }}>
+        <h3 style={{ margin: "0 0 8px 0", fontSize: 18, color: "var(--navy)", display: "flex", alignItems: "center", gap: 8 }}>
+          <Icon name="star" size={20} color="var(--amber)" /> Enhance Your Journey
+        </h3>
+        <p style={{ margin: "0 0 20px 0", fontSize: 14, color: "var(--muted)" }}>Treat yourself or your guests with our premium add-ons.</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {VIP_PACKAGES.map(pkg => {
+            const isSelected = selectedVips.includes(pkg.id);
+            return (
+              <label key={pkg.id} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: 16, background: isSelected ? "#fffbf0" : "#fff", border: `2px solid ${isSelected ? "var(--amber)" : "#e2e8f0"}`, borderRadius: 10, cursor: "pointer", transition: "all 0.2s" }}>
+                <input 
+                  type="checkbox" 
+                  checked={isSelected}
+                  onChange={(e) => {
+                    if (e.target.checked) setSelectedVips([...selectedVips, pkg.id]);
+                    else setSelectedVips(selectedVips.filter(id => id !== pkg.id));
+                  }}
+                  style={{ marginTop: 4, width: 18, height: 18, accentColor: "var(--amber-deep)" }}
+                />
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                    <strong style={{ fontSize: 15, color: "var(--navy-ink)" }}>{pkg.icon} {pkg.name}</strong>
+                    <strong style={{ fontSize: 15, color: "var(--amber-deep)" }}>+£{pkg.price}</strong>
+                  </div>
+                  <div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.4 }}>{pkg.desc}</div>
+                </div>
+              </label>
+            );
+          })}
+        </div>
+      </div>
+
       <div className="form-summary">
         <div>
           <div className="lbl">{tripType === "return" ? "Return · both legs" : "One way"} · {airport === "LJLA" ? "Liverpool John Lennon" : "Manchester"}</div>
           <div className="sub-text">{tripType === "return" ? `£${legPrice} out + £${legPrice} back · ` : ""}Includes meet & greet, tolls, waiting time</div>
         </div>
-        <div className="total">£{price}</div>
+        <div className="total">
+          £{price + selectedVips.reduce((sum, id) => sum + VIP_PACKAGES.find(p => p.id === id).price, 0)}
+        </div>
       </div>
 
       <button type="submit" className="form-submit" disabled={submitting}>
@@ -673,7 +716,7 @@ function BookingForm() {
           <span>Sending…</span>
         ) : (
           <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
-            Book Now · £{price} <Icon name="arrow" size={16} />
+            Book Now · £{price + selectedVips.reduce((sum, id) => sum + VIP_PACKAGES.find(p => p.id === id).price, 0)} <Icon name="arrow" size={16} />
           </span>
         )}
       </button>

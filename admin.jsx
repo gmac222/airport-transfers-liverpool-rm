@@ -378,6 +378,12 @@ function AdminApp() {
                                             <span>Pickup</span>
                                             <strong>{fields['Home Address']}</strong>
                                         </div>
+                                        {fields['VIP Upgrades'] && (
+                                            <div className="detail" style={{ background: '#fffbf0', padding: '8px', borderRadius: '6px', border: '1px solid var(--amber)' }}>
+                                                <span style={{ color: 'var(--amber-deep)' }}>✨ VIP Upgrades</span>
+                                                <strong style={{ color: 'var(--navy)' }}>{fields['VIP Upgrades']}</strong>
+                                            </div>
+                                        )}
                                         {fields['Outbound Flight'] && (
                                             <div className="detail">
                                                 <span>Flight</span>
