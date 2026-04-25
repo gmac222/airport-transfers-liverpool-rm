@@ -297,9 +297,9 @@ function YourVehicle() {
 /* ---------- MEET AND GREET ---------- */
 function MeetAndGreet() {
   return (
-    <section>
+    <section className="bg-light">
       <div className="wrap mng-grid">
-        <div className="mng-media" role="img" aria-label="8-seater minibus at the airport" style={{ backgroundImage: "url('./assets/airport-transfers-wirral.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}>
+        <div className="mng-media" role="img" aria-label="Driver waiting in airport arrivals area" style={{ backgroundImage: "url('./assets/airport-arrivals-greet.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}>
           <div className="flight-card">
             <div className="row"><span>Flight</span><b>BA2391</b></div>
             <div className="flight-route">
