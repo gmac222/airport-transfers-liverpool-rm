@@ -239,9 +239,9 @@ function YourVehicle() {
         </div>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <img 
-            src="./assets/8-seater-minibus.png" 
-            alt="RM Transfers 8-seat private airport transfer minibus" 
-            style={{ maxWidth: '100%', height: 'auto', filter: 'drop-shadow(0 20px 40px rgba(14, 39, 71, 0.15))' }}
+            src="./assets/airport-transfers-fleet.jpg" 
+            alt="RM Transfers fleet of private airport transfer vehicles" 
+            style={{ maxWidth: '100%', height: 'auto', borderRadius: '16px', boxShadow: '0 20px 40px rgba(14, 39, 71, 0.15)', border: '1px solid rgba(0,0,0,0.05)' }}
           />
         </div>
       </div>
