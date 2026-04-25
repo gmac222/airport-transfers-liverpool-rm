@@ -146,33 +146,6 @@ function Hero({ headline }) {
   );
 }
 
-/* ---------- AUTHORITY STRIP ---------- */
-function AuthorityStrip() {
-  const items = [
-    { icon: "clock",  big: "13+",      small: "years trading · est. 2011" },
-    { icon: "check",  big: "4.9★",     small: "Google · 380+ reviews" },
-    { icon: "shield", big: "Licensed", small: "Private hire · DBS checked" },
-    { icon: "pound",  big: "£5M",      small: "Public liability insured" }
-  ];
-  return (
-    <section className="authority" aria-label="Trust and credentials">
-      <div className="wrap">
-        <div className="authority-grid">
-          {items.map((i, k) => (
-            <div className="authority-item" key={k} style={{ animationDelay: `${k * 80}ms` }}>
-              <div className="authority-ic"><Icon name={i.icon} size={20} /></div>
-              <div>
-                <div className="big">{i.big}</div>
-                <div className="small">{i.small}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 /* ---------- HOW IT WORKS ---------- */
 function HowItWorks() {
   const steps = [
@@ -199,23 +172,7 @@ function HowItWorks() {
           ))}
         </div>
 
-        {/* Authority strip — placed after the 3 steps */}
-        <div className="authority-grid" style={{ marginTop: '48px' }}>
-          {[
-            { icon: "clock",  big: "13+",      small: "years trading · est. 2011" },
-            { icon: "check",  big: "4.9★",     small: "Google · 380+ reviews" },
-            { icon: "shield", big: "Licensed", small: "Private hire · DBS checked" },
-            { icon: "pound",  big: "£5M",      small: "Public liability insured" }
-          ].map((item, k) => (
-            <div className="authority-item" key={k} style={{ animationDelay: `${k * 80}ms` }}>
-              <div className="authority-ic"><Icon name={item.icon} size={20} /></div>
-              <div>
-                <div className="big">{item.big}</div>
-                <div className="small">{item.small}</div>
-              </div>
-            </div>
-          ))}
-        </div>
+
       </div>
     </section>
   );
