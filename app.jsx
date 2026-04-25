@@ -739,7 +739,20 @@ function BookingForm() {
 function AppPromo() {
   return (
     <section className="app-promo-section" style={{ background: 'var(--navy-ink)', color: '#fff', padding: '80px 20px', overflow: 'hidden', position: 'relative' }}>
-      <div className="wrap" style={{ display: 'flex', flexDirection: 'column', md: { flexDirection: 'row' }, alignItems: 'center', gap: '60px', position: 'relative', zIndex: 2 }}>
+      <style>{`
+        .app-promo-wrap {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 60px;
+        }
+        @media (min-width: 768px) {
+          .app-promo-wrap {
+            flex-direction: row;
+          }
+        }
+      `}</style>
+      <div className="wrap app-promo-wrap" style={{ position: 'relative', zIndex: 2 }}>
         
         <div style={{ flex: 1, maxWidth: '500px' }}>
           <span className="section-kicker" style={{ color: 'var(--amber)' }}>Go Mobile</span>
