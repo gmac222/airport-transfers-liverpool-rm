@@ -799,7 +799,7 @@ function BookingForm() {
         </div>
       )}
       <div className="form-foot" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-        <span><b style={{ color: "var(--navy-ink)" }}>Text confirmation shortly after.</b> No card needed — pay the driver on the day.</span>
+        <span><b style={{ color: "var(--navy-ink)" }}>Text confirmation shortly after.</b></span>
         <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", color: "var(--muted)" }}>
           <Icon name="shield" size={14} /> 100% Secure. No obligation. Your data is strictly protected.
         </span>
