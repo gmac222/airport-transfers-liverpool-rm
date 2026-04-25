@@ -73,13 +73,12 @@ function Hero({ headline }) {
     <header className="hero">
       <div className="wrap hero-grid">
         <div>
-          <span className="eyebrow"><span className="pulse"></span>Booking for today & tomorrow — 3 drivers free</span>
           <h1 className="h1">
             {h.main} <em>{h.accent}</em>
             {h.tail && <><br /><span style={{ color: "black" }}>{h.tail}</span></>}
           </h1>
           <p className="sub">
-            Airport Transfers Liverpool is a small, local private hire firm. We pick you up from your front door, take you to Liverpool John Lennon or Manchester Airport, and meet you in Arrivals on the way back. Fixed price, both legs. No surge, no meter, no surprises.
+            We pick you up from your front door, take you to Liverpool John Lennon or Manchester Airport, and meet you in Arrivals on the way back. Fixed price, both legs. No surge, no meter, no surprises.
           </p>
 
           <div className="hero-prices" id="prices">
