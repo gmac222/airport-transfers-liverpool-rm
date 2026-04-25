@@ -182,7 +182,7 @@ function HowItWorks() {
       <div className="wrap">
         <div className="section-head">
           <span className="section-kicker">How it works</span>
-          <h2 className="h2">Three steps. No app. No faff.</h2>
+          <h2 className="h2">Three steps. <em>No faff.</em></h2>
           <p className="section-sub">We've been doing this since 2011. The whole thing is designed so you don't have to worry about it on the day.</p>
         </div>
         <div className="steps">
@@ -215,7 +215,7 @@ function FixedPricePromise() {
           <div className="promise-grid">
             <div>
               <span className="section-kicker" style={{ color: "var(--amber)" }}>The fixed-price promise</span>
-              <h2>The price we quote is the price you pay.</h2>
+              <h2 className="h2">The price we quote <em>is the price you pay.</em></h2>
               <p className="sub-light">We've watched people get stung by £90 Ubers at midnight and £200 airport car parks for a long weekend. That's not what we do.</p>
             </div>
             <ul className="promise-list">
@@ -255,7 +255,7 @@ function MeetAndGreet() {
         </div>
         <div className="mng-text">
           <span className="section-kicker">Both ways, one driver</span>
-          <h2 className="h2">We pick you up at home. We meet you in Arrivals.</h2>
+          <h2 className="h2">We pick you up at home. <em>We meet you in Arrivals.</em></h2>
           <p className="section-sub">Most of our bookings are returns — same driver, both legs, so you're never explaining yourself twice. Door to terminal on the way out. Terminal to door on the way back.</p>
           <ul className="mng-list">
             <li>
@@ -288,11 +288,11 @@ function Reviews() {
     { name: "Pete Mort", init: "PM", when: "6 months ago", text: "Excellent service. Roy is always on time, very helpful with luggage and a very smooth driver. Vehicles are clean and comfortable. Used RM Transfers for years and wouldn't use anyone else." }
   ];
   return (
-    <section id="reviews" className="cream">
+    <section id="reviews">
       <div className="wrap">
         <div className="section-head reviews-head">
           <span className="section-kicker">What our customers say</span>
-          <h2 className="h2">Booked, tracked, arrived — on repeat.</h2>
+          <h2 className="h2">Booked, tracked, arrived — <em>on repeat.</em></h2>
           <div className="score">
             <div className="num">4.9</div>
             <div>
@@ -334,11 +334,11 @@ function FAQ() {
     { q: "How far ahead do I need to book?", a: "Ideally 24 hours for guaranteed availability. We often take same-day bookings when a driver's free — call 0151 123 4567 and we'll tell you straight." }
   ];
   return (
-    <section id="faq">
+    <section id="faq" className="cream">
       <div className="wrap">
         <div className="section-head">
           <span className="section-kicker">Common questions</span>
-          <h2 className="h2">The things people actually worry about.</h2>
+          <h2 className="h2">The things people <em>actually worry about.</em></h2>
         </div>
         <div className="faq">
           {items.map((it, k) => (
@@ -756,9 +756,9 @@ function AppPromo() {
         
         <div style={{ flex: 1, maxWidth: '500px' }}>
           <span className="section-kicker" style={{ color: 'var(--amber)' }}>Go Mobile</span>
-          <h2 style={{ fontSize: '36px', lineHeight: 1.1, margin: '0 0 20px 0', fontFamily: 'Lexend' }}>Install the RM Transfers App.</h2>
+          <h2 className="h2" style={{ color: '#fff', margin: '0 0 20px 0' }}>Install the RM Transfers <em>mobile app.</em></h2>
           <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.8)', marginBottom: '30px', lineHeight: 1.5 }}>
-            Both drivers and customers can now install our portal directly to their home screen. No App Store required.
+            Track your driver in real-time, manage your bookings, and get instant updates — right from your home screen. No App Store required.
           </p>
           <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 40px 0', display: 'flex', flexDirection: 'column', gap: '15px' }}>
             <li style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -767,11 +767,11 @@ function AppPromo() {
             </li>
             <li style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{ background: 'rgba(230,178,75,0.1)', padding: '6px', borderRadius: '50%' }}><Icon name="check" size={16} color="var(--amber)" /></div>
-              <span>Manage current and future bookings</span>
+              <span>Manage your current and future bookings</span>
             </li>
             <li style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{ background: 'rgba(230,178,75,0.1)', padding: '6px', borderRadius: '50%' }}><Icon name="check" size={16} color="var(--amber)" /></div>
-              <span>One-tap text to driver capabilities</span>
+              <span>Message your driver directly with one tap</span>
             </li>
           </ul>
           
@@ -838,11 +838,11 @@ function AppPromo() {
 /* ---------- BOOK SECTION ---------- */
 function BookSection() {
   return (
-    <section id="book" className="book-section">
+    <section id="book" className="book-section cream">
       <div className="wrap book-grid">
         <div className="book-lead">
           <span className="section-kicker" style={{ color: "var(--amber)" }}>Book now</span>
-          <h2>Get a driver confirmed in 10 minutes.</h2>
+          <h2 className="h2">Get a driver confirmed <em>in 10 minutes.</em></h2>
           <p>Fill the form and we'll text back with your driver's name and the fixed price — no card needed to reserve.</p>
           <div className="or-call">
             <span>Or book by phone</span>
@@ -930,12 +930,12 @@ function App() {
       <Nav />
       <Hero headline={t.headline} />
       <AuthorityStrip />
+      <AppPromo />
       <HowItWorks />
       <FixedPricePromise />
       <MeetAndGreet />
       <FAQ />
       <Reviews />
-      <AppPromo />
       <BookSection />
       <Footer />
       <StickyBar enabled={t.showStickyBar} />
