@@ -735,6 +735,93 @@ function BookingForm() {
   );
 }
 
+/* ---------- APP PROMO ---------- */
+function AppPromo() {
+  return (
+    <section className="app-promo-section" style={{ background: 'var(--navy-ink)', color: '#fff', padding: '80px 20px', overflow: 'hidden', position: 'relative' }}>
+      <div className="wrap" style={{ display: 'flex', flexDirection: 'column', md: { flexDirection: 'row' }, alignItems: 'center', gap: '60px', position: 'relative', zIndex: 2 }}>
+        
+        <div style={{ flex: 1, maxWidth: '500px' }}>
+          <span className="section-kicker" style={{ color: 'var(--amber)' }}>Go Mobile</span>
+          <h2 style={{ fontSize: '36px', lineHeight: 1.1, margin: '0 0 20px 0', fontFamily: 'Lexend' }}>Install the RM Transfers App.</h2>
+          <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.8)', marginBottom: '30px', lineHeight: 1.5 }}>
+            Both drivers and customers can now install our portal directly to their home screen. No App Store required.
+          </p>
+          <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 40px 0', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <li style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ background: 'rgba(230,178,75,0.1)', padding: '6px', borderRadius: '50%' }}><Icon name="check" size={16} color="var(--amber)" /></div>
+              <span>Track your driver’s location instantly</span>
+            </li>
+            <li style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ background: 'rgba(230,178,75,0.1)', padding: '6px', borderRadius: '50%' }}><Icon name="check" size={16} color="var(--amber)" /></div>
+              <span>Manage current and future bookings</span>
+            </li>
+            <li style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ background: 'rgba(230,178,75,0.1)', padding: '6px', borderRadius: '50%' }}><Icon name="check" size={16} color="var(--amber)" /></div>
+              <span>One-tap text to driver capabilities</span>
+            </li>
+          </ul>
+          
+          <div style={{ background: 'rgba(255,255,255,0.05)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>How to install:</div>
+            <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '15px' }}>Open this website on Safari (iPhone) or Chrome (Android), tap the Share icon, and select <strong>"Add to Home Screen"</strong>.</div>
+          </div>
+        </div>
+
+        <div style={{ flex: 1, display: 'flex', justifyContent: 'center', position: 'relative' }}>
+          {/* Decorative glow */}
+          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '300px', height: '300px', background: 'var(--amber)', filter: 'blur(100px)', opacity: 0.15, borderRadius: '50%' }}></div>
+          
+          {/* CSS iPhone Frame */}
+          <div style={{ 
+            width: '280px', 
+            height: '580px', 
+            background: '#fff', 
+            borderRadius: '40px', 
+            padding: '12px',
+            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5), inset 0 0 0 2px #e2e8f0, inset 0 0 0 6px #f8fafc',
+            position: 'relative',
+            zIndex: 10
+          }}>
+            {/* Notch */}
+            <div style={{ position: 'absolute', top: '12px', left: '50%', transform: 'translateX(-50%)', width: '100px', height: '25px', background: '#f8fafc', borderBottomLeftRadius: '16px', borderBottomRightRadius: '16px', zIndex: 20 }}></div>
+            
+            {/* Screen content */}
+            <div style={{ width: '100%', height: '100%', background: 'var(--cream)', borderRadius: '30px', overflow: 'hidden', position: 'relative' }}>
+              <div style={{ background: 'var(--navy)', height: '140px', padding: '30px 20px', color: 'white', textAlign: 'center', borderBottomLeftRadius: '20px', borderBottomRightRadius: '20px' }}>
+                <div style={{ marginTop: '15px', fontWeight: 'bold', fontSize: '18px' }}>Booking ATL-2X4V</div>
+                <div style={{ opacity: 0.7, fontSize: '13px' }}>Passenger: Graham</div>
+              </div>
+              <div style={{ padding: '20px' }}>
+                <div style={{ background: 'rgba(31, 122, 76, .1)', color: 'var(--ok)', padding: '8px 16px', borderRadius: '99px', fontSize: '12px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '15px' }}>
+                  <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--ok)' }}></div>
+                  Driver Assigned
+                </div>
+                <div style={{ background: '#fff', padding: '15px', borderRadius: '12px', border: '1px solid var(--line)', marginBottom: '15px' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px', fontWeight: 'bold' }}>Driver</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'var(--amber)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 'bold' }}>R</div>
+                    <div style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--navy-ink)' }}>Roy <span style={{ color: 'var(--muted)', fontWeight: 'normal' }}>(07700 900 123)</span></div>
+                  </div>
+                </div>
+                <div style={{ background: '#fff', padding: '15px', borderRadius: '12px', border: '1px solid var(--line)' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px', fontWeight: 'bold' }}>Payment</div>
+                  <div style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--navy-ink)', marginBottom: '10px' }}>£150 Total</div>
+                  <div style={{ background: 'var(--navy)', color: '#fff', padding: '8px', borderRadius: '6px', textAlign: 'center', fontSize: '12px', fontWeight: 'bold' }}>Pay via Revolut</div>
+                </div>
+              </div>
+              
+              {/* Home indicator */}
+              <div style={{ position: 'absolute', bottom: '8px', left: '50%', transform: 'translateX(-50%)', width: '100px', height: '4px', background: '#000', borderRadius: '4px', opacity: 0.2 }}></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  );
+}
+
 /* ---------- BOOK SECTION ---------- */
 function BookSection() {
   return (
@@ -835,6 +922,7 @@ function App() {
       <MeetAndGreet />
       <FAQ />
       <Reviews />
+      <AppPromo />
       <BookSection />
       <Footer />
       <StickyBar enabled={t.showStickyBar} />

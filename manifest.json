@@ -1,0 +1,16 @@
+{
+  "name": "RM Transfers",
+  "short_name": "RM Transfers",
+  "start_url": "/portal.html",
+  "display": "standalone",
+  "background_color": "#FAF7F2",
+  "theme_color": "#0E2747",
+  "description": "Airport transfers for Liverpool and Manchester. Door-to-terminal, both ways.",
+  "icons": [
+    {
+      "src": "./assets/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

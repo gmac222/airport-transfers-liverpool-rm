@@ -1805,6 +1805,14 @@
             border-radius: 4px
         }
     </style>
+
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="RM Transfers" />
+    <link rel="apple-touch-icon" href="/assets/logo.png" />
+
 </head>
 
 <body>
@@ -1825,6 +1833,18 @@
     <script type="text/babel" src="app.jsx"></script>
 
     I
+
+    <!-- Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(err => {
+            console.log('Service Worker registration failed:', err);
+          });
+        });
+      }
+    </script>
+
 </body>
 
 </html>
