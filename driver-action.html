@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driver Action | RM Transfers</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #0B1E37;
+            color: #FAF7F2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 40px;
+            border-radius: 16px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 400px;
+            width: 90%;
+        }
+        img {
+            height: 60px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #E6B24B;
+            margin: 0 0 10px 0;
+            font-size: 24px;
+        }
+        p {
+            font-size: 16px;
+            color: #A0ABB8;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+        button {
+            background: #E6B24B;
+            color: #0B1E37;
+            border: none;
+            padding: 16px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 18px;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s ease;
+        }
+        button:active {
+            transform: scale(0.98);
+            background: #d4a342;
+        }
+        button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        .success {
+            display: none;
+            color: #4CAF50;
+            font-weight: bold;
+            font-size: 20px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <img src="/assets/logo.png" alt="RM Transfers" />
+        <h1 id="title">Alert Customer</h1>
+        <p id="subtitle">Tap the button below to instantly text the customer that you are on the way to pick them up.</p>
+        
+        <button id="actionBtn" onclick="notifyCustomer()">I am on the way!</button>
+        <div id="successMsg" class="success">✓ Customer Notified! Drive safe.</div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const ref = urlParams.get('ref');
+
+        if (!ref) {
+            document.getElementById('actionBtn').style.display = 'none';
+            document.getElementById('subtitle').innerText = "Invalid link. Missing booking reference.";
+        }
+
+        async function notifyCustomer() {
+            const btn = document.getElementById('actionBtn');
+            btn.disabled = true;
+            btn.innerText = "Sending...";
+
+            try {
+                const res = await fetch('/api/driver-action', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ref: ref, action: 'on-the-way' })
+                });
+                
+                const data = await res.json();
+                if (data.success) {
+                    btn.style.display = 'none';
+                    document.getElementById('subtitle').style.display = 'none';
+                    document.getElementById('successMsg').style.display = 'block';
+                    document.getElementById('title').innerText = "Success";
+                } else {
+                    alert("Error: " + (data.error || "Failed to notify customer"));
+                    btn.disabled = false;
+                    btn.innerText = "I am on the way!";
+                }
+            } catch (err) {
+                alert("Network error.");
+                btn.disabled = false;
+                btn.innerText = "I am on the way!";
+            }
+        }
+    </script>
+</body>
+</html>
