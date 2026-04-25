@@ -54,25 +54,17 @@ export default async function handler(req, res) {
     }
 
     try {
-        const payload = {
-            from: "RMTransfers", // Ensure this Sender ID is created/approved in your Webex dashboard
-            message_body: messages[0].body,
-            to: [
-                { phone: [messages[0].to] }
-            ]
-        };
-
-        const smsRes = await fetch('https://api.webexinteract.com/v1/sms', {
+        const smsRes = await fetch('https://rest.clicksend.com/v3/sms/send', {
             method: 'POST',
             headers: {
-                'X-AUTH-KEY': 'aky_3CrID4uqxBbCYQTA6H1p35A2lDn',
+                'Authorization': 'Basic Z3JhaGFtLm0uMjIyQGdtYWlsLmNvbTo2MzREMTAyQi0zMDRFLUI0QTUtQUQzQS1COTRFNDk1QjQ1OEM=',
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({ messages })
         });
 
         if (!smsRes.ok) {
-            console.error("Webex error:", await smsRes.text());
+            console.error("ClickSend error:", await smsRes.text());
             return res.status(500).json({ error: 'Failed to send SMS' });
         }
 
