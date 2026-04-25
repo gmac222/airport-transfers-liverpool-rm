@@ -98,15 +98,6 @@ function Hero({ headline }) {
             </div>
           </div>
 
-          <div className="hero-cta" style={{ flexDirection: "column", alignItems: "flex-start", gap: "10px" }}>
-            <a href="#book" className="btn btn-primary" style={{ padding: "16px 32px", fontSize: "16px", width: "100%", justifyContent: "center" }}>
-              Book Now <Icon name="arrow" size={16} />
-            </a>
-            <div style={{ fontSize: "13px", color: "var(--muted)", fontWeight: 500, display: "flex", alignItems: "center", gap: "6px" }}>
-              <Icon name="check" size={14} color="#23c55e" /> Takes 60 seconds • No card needed • Text back in 10 minutes
-            </div>
-          </div>
-
           <div className="trust">
             <div className="trust-item">
               <span className="stars">★★★★★</span>
@@ -116,6 +107,12 @@ function Hero({ headline }) {
               <span className="stars">★★★★★</span>
               <span className="trust-text"><b>Excellent</b> on Trustpilot</span>
             </div>
+          </div>
+
+          <div className="hero-cta" style={{ flexDirection: "column", alignItems: "flex-start", gap: "10px" }}>
+            <a href="#book" className="btn btn-primary" style={{ padding: "16px 32px", fontSize: "16px", width: "100%", justifyContent: "center" }}>
+              Book Now <Icon name="arrow" size={16} />
+            </a>
           </div>
         </div>
 
