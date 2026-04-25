@@ -85,14 +85,14 @@ function Hero({ headline }) {
             <div className="price-card">
               <div>
                 <div className="route">Liverpool John Lennon</div>
-                <div className="airport">LJLA · Direct from anywhere in Liverpool</div>
+                <div className="airport">LJLA</div>
               </div>
               <div className="amt">£65<small>each way · £130 return</small></div>
             </div>
             <div className="price-card">
               <div>
                 <div className="route">Manchester Airport</div>
-                <div className="airport">MAN · Direct from anywhere in Liverpool</div>
+                <div className="airport">MAN</div>
               </div>
               <div className="amt">£75<small>each way · £150 return</small></div>
             </div>
