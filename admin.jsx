@@ -331,6 +331,27 @@ function AdminApp() {
         .catch(err => alert('Error sending SMS: ' + err.message));
     };
 
+    const handleDirectSMS = (record, action) => {
+        let confirmText = '';
+        if (action === 'driver-on-way') confirmText = "Send 'Driver On Way' SMS to Customer?";
+        if (action === 'driver-arrived') confirmText = "Send 'Driver Arrived' SMS to Customer?";
+        if (action === 'resend-driver') confirmText = "Resend Job SMS & Portal Link to Driver?";
+
+        if (!window.confirm(confirmText)) return;
+        
+        fetch('/api/sms', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action, fields: record.fields })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) throw new Error(data.error);
+            alert('SMS sent successfully!');
+        })
+        .catch(err => alert('Error sending SMS: ' + err.message));
+    };
+
     if (!isLoggedIn) {
         return (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'var(--cream)' }}>
@@ -594,9 +615,20 @@ function AdminApp() {
                                             </button>
                                         </div>
                                     ) : (
-                                        <div className="job-actions" style={{background: 'var(--cream)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--line)', display: 'flex', flexDirection: 'column', gap: '4px'}}>
+                                        <div className="job-actions" style={{background: 'var(--cream)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--line)', display: 'flex', flexDirection: 'column', gap: '8px'}}>
                                             <span style={{fontSize: '14px', fontWeight: 600}}>Driver: {fields['Driver Name']} {fields['Driver Phone'] ? `(${fields['Driver Phone']})` : ''}</span>
                                             {fields['Payment Link'] && <span style={{fontSize: '14px', color: 'var(--muted)'}}>Payment Link: <a href={fields['Payment Link']} target="_blank" rel="noreferrer" style={{color: 'var(--navy)'}}>{fields['Payment Link']}</a></span>}
+                                            <div style={{ display: 'flex', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
+                                                <button onClick={() => handleDirectSMS(record, 'resend-driver')} style={{ flex: 1, padding: '8px 4px', background: 'white', border: '1px solid var(--amber)', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', color: 'var(--amber-deep)', fontWeight: 'bold' }}>
+                                                    Resend Driver Info
+                                                </button>
+                                                <button onClick={() => handleDirectSMS(record, 'driver-on-way')} style={{ flex: 1, padding: '8px 4px', background: 'white', border: '1px solid #10b981', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', color: '#10b981', fontWeight: 'bold' }}>
+                                                    Backup: Send 'On Way'
+                                                </button>
+                                                <button onClick={() => handleDirectSMS(record, 'driver-arrived')} style={{ flex: 1, padding: '8px 4px', background: 'white', border: '1px solid #10b981', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', color: '#10b981', fontWeight: 'bold' }}>
+                                                    Backup: Send 'Arrived'
+                                                </button>
+                                            </div>
                                         </div>
                                     )}
                                 </div>
