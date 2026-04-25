@@ -602,6 +602,111 @@
             font-size: 12px
         }
 
+        /* ---------- VIDEO HERO ---------- */
+        .hero-video {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .hero-video-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 0;
+        }
+
+        .hero-video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                160deg,
+                rgba(14, 39, 71, 0.82) 0%,
+                rgba(14, 39, 71, 0.65) 40%,
+                rgba(14, 39, 71, 0.55) 100%
+            );
+            z-index: 1;
+        }
+
+        .hero-video-content {
+            position: relative;
+            z-index: 2;
+            max-width: 680px;
+            padding-top: 100px;
+            padding-bottom: 64px;
+        }
+
+        @media (min-width: 1000px) {
+            .hero-video-content {
+                padding-top: 0;
+                padding-bottom: 0;
+            }
+        }
+
+        /* White text overrides for video hero */
+        .hero-video .hero-video-h1 {
+            color: #fff;
+        }
+
+        .hero-video .hero-video-h1 em {
+            color: var(--amber);
+        }
+
+        .hero-video .hero-tail {
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .hero-video .hero-video-sub {
+            color: rgba(255, 255, 255, 0.85);
+            max-width: 560px;
+        }
+
+        /* Glass-morphism price cards on video */
+        .hero-video .hero-price-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+        }
+
+        .hero-video .hero-price-card .route {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .hero-video .hero-price-card .airport {
+            color: #fff;
+        }
+
+        .hero-video .hero-price-card .amt {
+            color: #fff;
+        }
+
+        .hero-video .hero-price-card .amt small {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Trust bar on video */
+        .hero-video .hero-video-trust {
+            border-top-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .hero-video .trust-text {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .hero-video .trust-text b {
+            color: #fff;
+        }
+
         /* ---------- SECTION ---------- */
         section {
             padding: 64px 0;
