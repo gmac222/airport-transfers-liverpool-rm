@@ -13,7 +13,16 @@ const HEADLINES = {
   local: { main: "Door to airport,", accent: "we'll be there when you land.", tail: "" }
 };
 
-const PRICES = { LJLA: 65, MAN: 75 };
+const PRICES = {
+  LJLA: { car: 65, mpv: 75, minibus: 90 },
+  MAN: { car: 75, mpv: 85, minibus: 100 }
+};
+
+function getLegPrice(airport, pax, bags = 0) {
+  if (pax <= 3 && bags <= 3) return PRICES[airport].car;
+  if (pax <= 5 && bags <= 5) return PRICES[airport].mpv;
+  return PRICES[airport].minibus;
+}
 
 function Icon({ name, size = 20, color = "currentColor" }) {
   const props = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: color, strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round" };
@@ -105,7 +114,7 @@ function Hero({ headline }) {
           {h.tail && <><br /><span className="hero-tail">{h.tail}</span></>}
         </h1>
         <p className="sub hero-video-sub">
-          Private 8-seat minibus from your front door to Liverpool John Lennon or Manchester Airport — and we meet you in Arrivals on the way back. Fixed price, both legs. No hidden fees, no meter, no surprises.
+          Private airport transfers from your front door to Liverpool John Lennon or Manchester Airport — and we meet you in Arrivals on the way back. Fixed price once quoted, both legs. No hidden fees, no meter, no surprises.
         </p>
 
         <div className="hero-prices hero-video-prices" id="prices">
@@ -114,14 +123,14 @@ function Hero({ headline }) {
               <div className="route">Liverpool John Lennon</div>
               <div className="airport">LJLA</div>
             </div>
-            <div className="amt">£65<small>each way · £130 return</small></div>
+            <div className="amt">From £65<small>each way</small></div>
           </div>
           <div className="price-card hero-price-card">
             <div>
               <div className="route">Manchester Airport</div>
               <div className="airport">MAN</div>
             </div>
-            <div className="amt">£75<small>each way · £150 return</small></div>
+            <div className="amt">From £75<small>each way</small></div>
           </div>
         </div>
 
@@ -149,8 +158,8 @@ function Hero({ headline }) {
 /* ---------- HOW IT WORKS ---------- */
 function HowItWorks() {
   const steps = [
-    { n: 1, title: "Book both legs at once", body: "Tell us your pickup address and flight times — out and back. One booking, one fixed price, one minibus. Confirmation text arrives shortly.", time: "~2 min to book" },
-    { n: 2, title: "Your private minibus arrives", body: "Driver rings the bell at the agreed time. Bags in the boot of our spacious 8-seat minibus, straight on the M53, dropped at the terminal door. No airport parking to find.", time: "Direct to the terminal door" },
+    { n: 1, title: "Book both legs at once", body: "Tell us your pickup address and flight times — out and back. One booking, one fixed price for your vehicle. Confirmation text arrives shortly.", time: "~2 min to book" },
+    { n: 2, title: "Your private vehicle arrives", body: "Driver rings the bell at the agreed time. Bags in the boot, straight on the M53, dropped at the terminal door. No airport parking to find.", time: "Direct to the terminal door" },
     { n: 3, title: "We meet you when you land", body: "Your driver waits inside Arrivals with a sign showing your name. We track your flight so they're there whether you're early, late or delayed.", time: "inside the terminal" }
   ];
   return (
@@ -181,7 +190,7 @@ function HowItWorks() {
 /* ---------- PROMISE ---------- */
 function FixedPricePromise() {
   const items = [
-    { title: "Fixed prices, always", body: "Friday 5pm, Christmas morning, bank holiday — same £65 or £75 per leg in our private 8-seat minibus." },
+    { title: "Fixed prices, always", body: "Friday 5pm, Christmas morning, bank holiday — your quoted price won't change. No surge pricing." },
     { title: "No extras for flight delays", body: "We track your flight. If you're late, we wait. You don't pay a penny more." },
     { title: "No hidden fees", body: "The price you're quoted includes parking, tolls, meet & greet and VAT. That's the lot." },
     { title: "Cancel free up to 24 hrs", body: "Plans change. We get it. No cancellation fee outside 24 hours of pickup." }
@@ -194,7 +203,7 @@ function FixedPricePromise() {
             <div>
               <span className="section-kicker" style={{ color: "var(--amber)" }}>The fixed-price promise</span>
               <h2 className="h2">The price we quote <em>is the price you pay.</em></h2>
-              <p className="sub-light">We've watched people get stung by £90 Ubers at midnight and £200 airport car parks for a long weekend. Our 8-seat private minibus is one fixed price — whether there's one of you or eight.</p>
+              <p className="sub-light">We've watched people get stung by £90 Ubers at midnight and £200 airport car parks for a long weekend. We offer fixed pricing based on the vehicle you need — no meters, no hidden fees.</p>
             </div>
             <ul className="promise-list">
               {items.map((i, k) => (
@@ -221,12 +230,12 @@ function YourVehicle() {
       <div className="wrap" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '64px', alignItems: 'center' }}>
         <div>
           <span className="section-kicker">Your vehicle</span>
-          <h2 className="h2">Private 8-seat minibus. <em>One fixed price.</em></h2>
-          <p className="section-sub" style={{ marginBottom: '24px' }}>Every booking travels in our private 8-seat minibus — whether there's one of you or eight. It's not shared. It's not a cramped saloon. It's your own spacious, air-conditioned minibus with room for everyone and everything.</p>
+          <h2 className="h2">Private airport transfers. <em>Fixed pricing.</em></h2>
+          <p className="section-sub" style={{ marginBottom: '24px' }}>Every booking travels in a private vehicle tailored to your group size. Whether it's a car, an MPV, or a spacious 8-seat minibus, you'll have room for everyone and everything.</p>
           <ul className="mng-list">
             <li>
               <div className="ic"><Icon name="luggage" size={20} /></div>
-              <div><b>Room for 8 passengers + luggage</b><span>Family of four with big suitcases? Group of eight heading on a stag weekend? Same vehicle, same price.</span></div>
+              <div><b>Room for up to 8 passengers + luggage</b><span>Whether you're travelling solo or as a group of eight, we'll send the right vehicle to fit everyone comfortably.</span></div>
             </li>
             <li>
               <div className="ic"><Icon name="shield" size={20} /></div>
@@ -234,7 +243,7 @@ function YourVehicle() {
             </li>
             <li>
               <div className="ic"><Icon name="pound" size={20} /></div>
-              <div><b>The price is for the vehicle, not per person</b><span>£65 to LJLA or £75 to Manchester — whether you're solo or a full minibus. Split it between you and it's cheaper than the bus.</span></div>
+              <div><b>Clear pricing based on vehicle size</b><span>Prices start at £65 to LJLA or £75 to Manchester. Split it between your group and it's cheaper than the bus.</span></div>
             </li>
           </ul>
           <a href="#book" className="btn btn-primary" style={{ marginTop: '24px' }}>Book Your Transfer <Icon name="arrow" size={16} /></a>
@@ -448,11 +457,11 @@ function Reviews() {
 function FAQ() {
   const items = [
     { q: "Can I book the outbound and return together?", a: "Yes — and honestly, most people do. One booking, one fixed price for both legs. You only need to give us your flight numbers and we'll take care of the rest." },
-    { q: "How do I know the driver will actually turn up?", a: "Every booking gets a confirmation text shortly after with your driver's name, the minibus, and the plate. The night before pickup we send a reminder. The morning of, your driver messages you directly. If that sounds like a lot of texts — it's deliberate. It's the bit Uber doesn't do." },
+    { q: "How do I know the driver will actually turn up?", a: "Every booking gets a confirmation text shortly after with your driver's name, the vehicle, and the plate. The night before pickup we send a reminder. The morning of, your driver messages you directly. If that sounds like a lot of texts — it's deliberate. It's the bit Uber doesn't do." },
     { q: "What happens if my flight is delayed?", a: "We check your flight number before leaving to collect you. If you're delayed, we delay. There's no extra charge — the fixed price covers up to 60 minutes of waiting in Arrivals, and honestly we've waited longer without ever billing for it. Fixed price means fixed price." },
     { q: "What if I'm not ready when you arrive at home?", a: "Fine. We build a few minutes' grace into every pickup, and we'd rather be early than late. Just tell us what time you want to leave the house and we'll plan back from that." },
     { q: "Are your drivers licensed and insured?", a: "Yes — every driver is fully licensed by the local council for private hire, DBS checked, and the business carries full public liability and hire & reward insurance. Happy to show you the paperwork before booking if you'd like." },
-    { q: "Will my luggage fit?", a: "Every booking travels in our private 8-seat minibus — not a saloon car. It comfortably fits up to 8 passengers with plenty of room for suitcases, car seats and golf bags. Whether you're a couple or a full group, the price stays the same." },
+    { q: "Will my luggage fit?", a: "We allocate vehicles based on your passenger count and luggage needs — ranging from standard cars to spacious 8-seat minibuses. We make sure there's plenty of room for everyone and everything." },
     { q: "Can I pay in cash?", a: "Cash or card, whichever suits. Card payment is taken by the driver at the end of the journey via contactless. No booking fee either way." },
     { q: "How far ahead do I need to book?", a: "Ideally 24 hours for guaranteed availability. We often take same-day bookings when a driver's free — call 0151 123 4567 and we'll tell you straight." }
   ];
@@ -503,7 +512,7 @@ function BookingForm() {
     notes: ""
   });
 
-  const legPrice = PRICES[airport];
+  const legPrice = getLegPrice(airport, pax, bags);
   const price = tripType === "return" ? legPrice * 2 : legPrice;
 
   function upd(k, v) {
@@ -640,12 +649,12 @@ function BookingForm() {
           <button type="button" className={airport === "LJLA" ? "active" : ""} onClick={() => setAirport("LJLA")}>
             <span className="code">LJLA</span>
             <span className="name">Liverpool John Lennon</span>
-            <span className="p">£{tripType === "return" ? 130 : 65} {tripType === "return" ? "return" : "one way"}</span>
+            <span className="p">£{tripType === "return" ? getLegPrice("LJLA", pax, bags) * 2 : getLegPrice("LJLA", pax, bags)} {tripType === "return" ? "return" : "one way"}</span>
           </button>
           <button type="button" className={airport === "MAN" ? "active" : ""} onClick={() => setAirport("MAN")}>
             <span className="code">MAN</span>
             <span className="name">Manchester Airport</span>
-            <span className="p">£{tripType === "return" ? 150 : 75} {tripType === "return" ? "return" : "one way"}</span>
+            <span className="p">£{tripType === "return" ? getLegPrice("MAN", pax, bags) * 2 : getLegPrice("MAN", pax, bags)} {tripType === "return" ? "return" : "one way"}</span>
           </button>
         </div>
       </div>
@@ -741,7 +750,7 @@ function BookingForm() {
           <div className="stepper">
             <button type="button" onClick={() => setPax(p => Math.max(1, p - 1))} disabled={pax <= 1}>−</button>
             <span className="val">{pax}</span>
-            <button type="button" onClick={() => setPax(p => Math.min(7, p + 1))} disabled={pax >= 7}>+</button>
+            <button type="button" onClick={() => setPax(p => Math.min(8, p + 1))} disabled={pax >= 8}>+</button>
           </div>
         </div>
         <div className="field">
@@ -753,9 +762,9 @@ function BookingForm() {
           </div>
         </div>
       </div>
-      {pax > 4 && (
+      {pax > 3 && (
         <div className="field" style={{ marginTop: -8 }}>
-          <div className="hint" style={{ color: "var(--amber-deep)", fontWeight: 500 }}>5+ passengers — we'll send our 7-seater at the same fixed price.</div>
+          <div className="hint" style={{ color: "var(--amber-deep)", fontWeight: 500 }}>{pax > 5 ? "6-8 passengers — we'll allocate our spacious minibus." : "4-5 passengers — we'll allocate an MPV."}</div>
         </div>
       )}
 
@@ -1069,13 +1078,15 @@ function AppPromo() {
 function BookSection() {
   return (
     <section id="book" className="book-section">
-      <div className="wrap book-grid">
-        <div className="book-lead">
-          <span className="section-kicker" style={{ color: "var(--amber)" }}>Book now</span>
+      <div className="wrap book-centered" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div className="book-lead" style={{ textAlign: 'center', maxWidth: '640px', marginBottom: '48px' }}>
+          <span className="section-kicker" style={{ color: "var(--amber)", justifyContent: 'center' }}>Book now</span>
           <h2 className="h2">Your holiday starts here, <em>let's begin.</em></h2>
-          <p>Fill the form and we'll text back with your driver's name and the fixed price — no card needed to reserve.</p>
+          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '18px' }}>Fill the form and we'll text back with your driver's name and the fixed price — no card needed to reserve.</p>
         </div>
-        <BookingForm />
+        <div style={{ width: '100%', maxWidth: '500px' }}>
+          <BookingForm />
+        </div>
       </div>
     </section>
   );
@@ -1104,7 +1115,7 @@ function StickyBar({ enabled }) {
   return (
     <div className={"sticky-bar" + (show ? " show" : "")}>
       <div className="sb-text">
-        <b>LJLA £130 · MAN £150 return</b>
+        <b>LJLA from £65 · MAN from £75</b>
         <span>Both legs · meet & greet · fixed price</span>
       </div>
       <a href="#book" className="btn btn-primary">Book Now</a>
@@ -1115,25 +1126,27 @@ function StickyBar({ enabled }) {
 /* ---------- FOOTER ---------- */
 function Footer() {
   return (
-    <footer>
-      <div className="wrap foot-grid">
-        <div>
-          <div className="brand" style={{ marginBottom: 12 }}>
-            <LogoMark size={56} />
-          </div>
-          <div className="foot-copy">
-            Fixed-price airport transfers. Door to terminal, both ways. Licensed private hire · Est. 2011<br />
-            Office 1, Oaktree Court Business Centre, Mill Lane, Ness, Neston, CH64 8TP
-          </div>
+    <footer style={{ background: "var(--navy-ink)", color: "rgba(255, 255, 255, 0.7)", padding: "80px 0 40px", textAlign: "center", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+      <div className="wrap foot-centered" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "32px" }}>
+        <div className="brand" style={{ display: "flex", justifyContent: "center" }}>
+          <img src="./assets/logo.png" alt="RM Transfers" style={{ height: "64px", width: "auto", objectFit: "contain", filter: "brightness(0) invert(1)" }} />
         </div>
-        <div className="foot-links">
-          <a href="/#how">How it works</a>
-          <a href="/#faq">FAQ</a>
-          <a href="/#reviews">Reviews</a>
-          <a href="/about-us.html">About Us</a>
-          <a href="/contact.html">Contact Us</a>
-          <a href="/terms.html">Terms & Conditions</a>
-          <a href="/privacy.html">Privacy Policy</a>
+        <div className="foot-copy" style={{ fontSize: "15px", maxWidth: "500px", margin: "0 auto", lineHeight: "1.6" }}>
+          Fixed-price airport transfers. Door to terminal, both ways.<br />
+          Licensed private hire · Est. 2011<br /><br />
+          Office 1, Oaktree Court Business Centre, Mill Lane, Ness, Neston, CH64 8TP
+        </div>
+        <div className="foot-links" style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "24px", marginTop: "16px" }}>
+          <a href="/#how" style={{ color: "#fff", textDecoration: "none", fontWeight: 500 }}>How it works</a>
+          <a href="/#faq" style={{ color: "#fff", textDecoration: "none", fontWeight: 500 }}>FAQ</a>
+          <a href="/#reviews" style={{ color: "#fff", textDecoration: "none", fontWeight: 500 }}>Reviews</a>
+          <a href="/about-us.html" style={{ color: "#fff", textDecoration: "none", fontWeight: 500 }}>About Us</a>
+          <a href="/contact.html" style={{ color: "#fff", textDecoration: "none", fontWeight: 500 }}>Contact Us</a>
+          <a href="/terms.html" style={{ color: "#fff", textDecoration: "none", fontWeight: 500 }}>Terms & Conditions</a>
+          <a href="/privacy.html" style={{ color: "#fff", textDecoration: "none", fontWeight: 500 }}>Privacy Policy</a>
+        </div>
+        <div style={{ marginTop: "32px", fontSize: "13px", color: "rgba(255, 255, 255, 0.4)", borderTop: "1px solid rgba(255, 255, 255, 0.1)", paddingTop: "32px", width: "100%" }}>
+          &copy; {new Date().getFullYear()} RM Transfers. All rights reserved.
         </div>
       </div>
     </footer>
