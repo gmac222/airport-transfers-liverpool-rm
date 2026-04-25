@@ -13,17 +13,6 @@ const HEADLINES = {
   local: { main: "Door to airport,", accent: "we'll be there when you land.", tail: "" }
 };
 
-const PRICES = {
-  LJLA: { car: 65, mpv: 75, minibus: 90 },
-  MAN: { car: 75, mpv: 85, minibus: 100 }
-};
-
-function getLegPrice(airport, pax, bags = 0) {
-  if (pax <= 3 && bags <= 3) return PRICES[airport].car;
-  if (pax <= 5 && bags <= 5) return PRICES[airport].mpv;
-  return PRICES[airport].minibus;
-}
-
 function Icon({ name, size = 20, color = "currentColor" }) {
   const props = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: color, strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round" };
   const paths = {
@@ -463,7 +452,7 @@ function FAQ() {
     { q: "Are your drivers licensed and insured?", a: "Yes — every driver is fully licensed by the local council for private hire, DBS checked, and the business carries full public liability and hire & reward insurance. Happy to show you the paperwork before booking if you'd like." },
     { q: "Will my luggage fit?", a: "We allocate vehicles based on your passenger count and luggage needs — ranging from standard cars to spacious 8-seat minibuses. We make sure there's plenty of room for everyone and everything." },
     { q: "How do I pay?", a: "Payment is taken securely online via a payment link in your customer portal once your driver is assigned. You don't need a card to reserve your booking." },
-    { q: "How far ahead do I need to book?", a: "Ideally 24 hours for guaranteed availability. We often take same-day bookings when a driver's free — call 0151 123 4567 and we'll tell you straight." }
+    { q: "How far ahead do I need to book?", a: "Ideally 24 hours for guaranteed availability. We often take same-day bookings when a driver's free — call 0151 453 7156 and we'll tell you straight." }
   ];
   return (
     <section id="faq" className="cream">
@@ -512,8 +501,7 @@ function BookingForm() {
     notes: ""
   });
 
-  const legPrice = getLegPrice(airport, pax, bags);
-  const price = tripType === "return" ? legPrice * 2 : legPrice;
+  // Prices will be manually quoted
 
   function upd(k, v) {
     setForm(f => ({ ...f, [k]: v }));
@@ -536,7 +524,7 @@ function BookingForm() {
         const tripDate = new Date(`${dateStr}T${timeStr}`);
         if (tripDate.getTime() - now.getTime() < minNoticeMs) {
           errs[dateField] = "Minimum 12 hours notice required";
-          errs[timeField] = "Call 0151 123 4567 for last-minute jobs";
+          errs[timeField] = "Call 0151 453 7156 for last-minute jobs";
         }
       }
     };
@@ -575,9 +563,8 @@ function BookingForm() {
       airport,
       airportName: airport === "LJLA" ? "Liverpool John Lennon" : "Manchester",
       passengers: pax,
-      luggage: bags,
-      priceGBP: price,
-      legPriceGBP: legPrice,
+      notes: form.notes,
+      source: "website_v2",
       customer: {
         name: form.name.trim(),
         phone: form.phone.trim(),
@@ -605,10 +592,10 @@ function BookingForm() {
       });
       console.log("[booking] webhook response", res.status);
       if (!res.ok) throw new Error("Webhook responded " + res.status);
-      window.location.href = `/thank-you/?ref=${ref}&price=${price}&type=${tripType}`;
+      window.location.href = `/thank-you/?ref=${ref}&type=${tripType}`;
     } catch (err) {
       console.error("[booking] submit error", err);
-      setSubmitError("We couldn't send that just now. Please call 0151 123 4567 or try again.");
+      setSubmitError("We couldn't send that just now. Please call 0151 453 7156 or try again.");
     } finally {
       setSubmitting(false);
     }
@@ -621,7 +608,7 @@ function BookingForm() {
           <div className="check"><Icon name="check" size={32} /></div>
           <h3>Booking request received.</h3>
           <p>We'll text you shortly with your driver's name and the minibus details{tripType === "return" ? " for both legs" : ""}. If you've booked for today, we'll call as soon as possible.</p>
-          <div className="ref" id="book-ref" tabIndex={-1}>Ref: {bookingRef} · £{price} fixed {tripType === "return" ? "return" : "one-way"}</div>
+          <div className="ref" id="book-ref" tabIndex={-1}>Ref: {bookingRef} · {tripType === "return" ? "return" : "one-way"}</div>
           <div style={{ marginTop: 24, fontSize: 13, color: "var(--muted)" }}>
             Need to change something? Reply to the text message we send you.
           </div>
@@ -649,12 +636,10 @@ function BookingForm() {
           <button type="button" className={airport === "LJLA" ? "active" : ""} onClick={() => setAirport("LJLA")}>
             <span className="code">LJLA</span>
             <span className="name">Liverpool John Lennon</span>
-            <span className="p">£{tripType === "return" ? getLegPrice("LJLA", pax, bags) * 2 : getLegPrice("LJLA", pax, bags)} {tripType === "return" ? "return" : "one way"}</span>
           </button>
           <button type="button" className={airport === "MAN" ? "active" : ""} onClick={() => setAirport("MAN")}>
             <span className="code">MAN</span>
             <span className="name">Manchester Airport</span>
-            <span className="p">£{tripType === "return" ? getLegPrice("MAN", pax, bags) * 2 : getLegPrice("MAN", pax, bags)} {tripType === "return" ? "return" : "one way"}</span>
           </button>
         </div>
       </div>
@@ -795,10 +780,7 @@ function BookingForm() {
       <div className="form-summary">
         <div>
           <div className="lbl">{tripType === "return" ? "Return · both legs" : "One way"} · {airport === "LJLA" ? "Liverpool John Lennon" : "Manchester"}</div>
-          <div className="sub-text">{tripType === "return" ? `£${legPrice} out + £${legPrice} back · ` : ""}Includes meet & greet, tolls, waiting time</div>
-        </div>
-        <div className="total">
-          £{price}
+          <div className="sub-text">Includes meet & greet, tolls, waiting time</div>
         </div>
       </div>
 
@@ -807,7 +789,7 @@ function BookingForm() {
           <span>Sending…</span>
         ) : (
           <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
-            Book Now · £{price} <Icon name="arrow" size={16} />
+            Book Now <Icon name="arrow" size={16} />
           </span>
         )}
       </button>
@@ -1126,7 +1108,7 @@ function StickyBar({ enabled }) {
 /* ---------- FOOTER ---------- */
 function Footer() {
   return (
-    <footer style={{ background: "var(--navy-ink)", color: "rgba(255, 255, 255, 0.7)", padding: "80px 0 40px", textAlign: "center", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+    <footer style={{ background: "#050B14", color: "rgba(255, 255, 255, 0.7)", padding: "80px 0 40px", textAlign: "center", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
       <div className="wrap foot-centered" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "32px" }}>
         <div className="brand" style={{ display: "flex", justifyContent: "center" }}>
           <img src="./assets/logo.png" alt="RM Transfers" style={{ height: "64px", width: "auto", objectFit: "contain", filter: "brightness(0) invert(1)" }} />

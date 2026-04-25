@@ -1093,7 +1093,6 @@
         .mng-media {
             position: relative;
             border-radius: 18px;
-            overflow: hidden;
             aspect-ratio: 4/3;
             background:
                 repeating-linear-gradient(135deg, rgba(14, 39, 71, .05) 0 2px, transparent 2px 14px),
@@ -1103,14 +1102,20 @@
 
         .flight-card {
             position: absolute;
-            top: 20px;
-            left: 20px;
+            top: -30px;
+            left: -15px;
             background: #fff;
             border-radius: 14px;
             padding: 14px 16px;
             box-shadow: 0 20px 40px -15px rgba(14, 39, 71, .25);
             border: 1px solid var(--line);
             min-width: 220px;
+        }
+
+        @media (min-width:700px) {
+            .flight-card {
+                left: -30px;
+            }
         }
 
         .flight-card .row {
@@ -2068,7 +2073,7 @@
       "name": "RM Transfers",
       "alternateName": "Airport Transfers Liverpool",
       "url": "https://airporttaxitransfersliverpool.co.uk/",
-      "telephone": "+441511234567",
+      "telephone": "+441514537156",
       "address": {
         "@type": "PostalAddress",
         "streetAddress": "Office 1, Oaktree Court Business Centre, Mill Lane",
