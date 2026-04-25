@@ -237,16 +237,16 @@ function YourVehicle() {
           </ul>
           <a href="#book" className="btn btn-primary" style={{ marginTop: '24px' }}>Book Your Transfer <Icon name="arrow" size={16} /></a>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', alignItems: 'center', justifyContent: 'center' }}>
           <img 
             src="./assets/airport-transfers-fleet.jpg" 
-            alt="RM Transfers fleet of private airport transfer vehicles" 
-            style={{ width: '100%', height: 'auto', borderRadius: '16px', boxShadow: '0 20px 40px rgba(14, 39, 71, 0.15)', border: '1px solid rgba(0,0,0,0.05)' }}
+            alt="RM Transfers fleet" 
+            style={{ width: '100%', height: 'auto', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
           />
           <img 
             src="./assets/8-seater-minibus.png" 
             alt="RM Transfers 8-seater minibus" 
-            style={{ width: '100%', height: 'auto', borderRadius: '16px', boxShadow: '0 20px 40px rgba(14, 39, 71, 0.15)', border: '1px solid rgba(0,0,0,0.05)' }}
+            style={{ width: '100%', height: 'auto' }}
           />
         </div>
       </div>
