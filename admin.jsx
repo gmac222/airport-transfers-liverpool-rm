@@ -89,6 +89,45 @@ function AdminApp() {
         }
     }, [isLoggedIn]);
 
+    // Calendar Effect
+    useEffect(() => {
+        if (viewMode === 'calendar' && !loading) {
+            const calendarEl = document.getElementById('calendar');
+            if (calendarEl) {
+                // Initialize FullCalendar
+                const calendar = new window.FullCalendar.Calendar(calendarEl, {
+                    initialView: 'timeGridWeek',
+                    headerToolbar: {
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                    },
+                    height: 'auto',
+                    events: bookings.map(b => {
+                        const status = b.fields['Status'] || 'Pending';
+                        let color = 'var(--amber-deep)'; // Pending
+                        if (status === 'Completed' || status === 'Accepted') color = '#10b981'; // Green
+                        else if (status === 'Awaiting Payment') color = '#f59e0b'; // Amber
+                        else if (status === 'Cancelled') color = '#e53e3e'; // Red
+                        
+                        return {
+                            id: b.id,
+                            title: `${b.fields['Booking Ref']} - ${b.fields['Customer Name']}`,
+                            start: b.fields['Outbound Date'] + 'T' + (b.fields['Outbound Time'] || '00:00:00'),
+                            color: color,
+                            extendedProps: { record: b }
+                        };
+                    }),
+                    eventClick: function(info) {
+                        openEditModal(info.event.extendedProps.record);
+                    }
+                });
+                calendar.render();
+                return () => calendar.destroy();
+            }
+        }
+    }, [viewMode, bookings, loading]);
+
     const handleAddDriver = async (e) => {
         e.preventDefault();
         if (!newDriverName.trim()) return alert("Driver name is required.");
@@ -487,6 +526,20 @@ function AdminApp() {
                         Active Jobs
                     </button>
                     <button 
+                        onClick={() => setViewMode('calendar')} 
+                        style={{ 
+                            background: viewMode === 'calendar' ? 'var(--navy)' : 'transparent', 
+                            color: viewMode === 'calendar' ? 'white' : 'var(--navy)', 
+                            border: '1px solid var(--navy)', 
+                            padding: '8px 16px', 
+                            borderRadius: '8px', 
+                            cursor: 'pointer',
+                            fontWeight: 'bold'
+                        }}
+                    >
+                        Calendar
+                    </button>
+                    <button 
                         onClick={() => setViewMode('archive')} 
                         style={{ 
                             background: viewMode === 'archive' ? 'var(--navy)' : 'transparent', 
@@ -501,43 +554,47 @@ function AdminApp() {
                         Archive
                     </button>
                 </div>
-                <div style={{ marginBottom: '20px', display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-                    <div style={{ flex: '1 1 400px' }}>
-                        <input 
-                            type="text" 
-                            placeholder="Search by ref, name, or phone..." 
-                            value={searchQuery}
-                            onChange={e => setSearchQuery(e.target.value)}
-                            style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--line)', fontFamily: 'inherit', fontSize: '15px' }}
-                        />
+                {viewMode !== 'calendar' && (
+                    <div style={{ marginBottom: '20px', display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+                        <div style={{ flex: '1 1 400px' }}>
+                            <input 
+                                type="text" 
+                                placeholder="Search by ref, name, or phone..." 
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--line)', fontFamily: 'inherit', fontSize: '15px' }}
+                            />
+                        </div>
+                        
+                        <form onSubmit={handleAddDriver} style={{ flex: '1 1 400px', display: 'flex', gap: '10px', background: 'var(--cream)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--line)' }}>
+                            <input 
+                                type="text" 
+                                placeholder="New Driver Name" 
+                                value={newDriverName}
+                                onChange={e => setNewDriverName(e.target.value)}
+                                style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--line)' }}
+                                required
+                            />
+                            <input 
+                                type="tel" 
+                                placeholder="Phone Number" 
+                                value={newDriverPhone}
+                                onChange={e => setNewDriverPhone(e.target.value)}
+                                style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--line)' }}
+                            />
+                            <button type="submit" disabled={isAddingDriver} className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '14px' }}>
+                                {isAddingDriver ? 'Adding...' : 'Add Driver'}
+                            </button>
+                        </form>
                     </div>
-                    
-                    <form onSubmit={handleAddDriver} style={{ flex: '1 1 400px', display: 'flex', gap: '10px', background: 'var(--cream)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--line)' }}>
-                        <input 
-                            type="text" 
-                            placeholder="New Driver Name" 
-                            value={newDriverName}
-                            onChange={e => setNewDriverName(e.target.value)}
-                            style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--line)' }}
-                            required
-                        />
-                        <input 
-                            type="tel" 
-                            placeholder="Phone Number" 
-                            value={newDriverPhone}
-                            onChange={e => setNewDriverPhone(e.target.value)}
-                            style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--line)' }}
-                        />
-                        <button type="submit" disabled={isAddingDriver} className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '14px' }}>
-                            {isAddingDriver ? 'Adding...' : 'Add Driver'}
-                        </button>
-                    </form>
-                </div>
+                )}
 
                 {error && <div style={{color: 'red', marginBottom: '20px'}}>{error}</div>}
                 
                 {loading ? (
-                    <div className="loading">Loading pending jobs...</div>
+                    <div className="loading">Loading...</div>
+                ) : viewMode === 'calendar' ? (
+                    <div id="calendar" style={{ background: 'white', padding: '20px', borderRadius: '12px', border: '1px solid var(--line)' }}></div>
                 ) : (
                     <div className="jobs-list">
                         {filteredBookings.map(record => {
