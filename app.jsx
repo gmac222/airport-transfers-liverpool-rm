@@ -104,7 +104,7 @@ function Hero({ headline }) {
           {h.tail && <><br /><span className="hero-tail">{h.tail}</span></>}
         </div>
         <p className="sub hero-video-sub">
-          Private airport transfers from your front door to Liverpool John Lennon or Manchester Airport — and we meet you in Arrivals on the way back. Fixed price once quoted, both legs. No hidden fees, no meter, no surprises.
+          Private airport transfers from your front door to Liverpool John Lennon or Manchester Airport. Fixed price once quoted, both legs. No hidden fees, no meter, no surprises.
         </p>
 
         <div className="hero-prices hero-video-prices" id="prices">
