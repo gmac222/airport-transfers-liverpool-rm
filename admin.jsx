@@ -104,7 +104,7 @@ function AdminApp() {
                         right: 'dayGridMonth,timeGridWeek,timeGridDay'
                     },
                     height: 'auto',
-                    events: bookings.flatMap(b => {
+                    events: bookings.filter(b => b.fields['Status'] === 'Accepted' || b.fields['Status'] === 'Completed').flatMap(b => {
                         const status = b.fields['Status'] || 'Pending';
                         let color = 'var(--amber-deep)'; // Pending
                         if (status === 'Completed' || status === 'Accepted') color = '#10b981'; // Green
