@@ -9,6 +9,7 @@ function AdminApp() {
 
     const [bookings, setBookings] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
+    const [viewMode, setViewMode] = useState('active');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [assigningId, setAssigningId] = useState(null);
@@ -59,14 +60,7 @@ function AdminApp() {
             .then(data => {
                 if (data.error) throw new Error(data.error);
                 
-                // Sort bookings by Submitted At (latest first)
-                const sorted = data.bookings.sort((a, b) => {
-                    const dateA = new Date(a.fields['Submitted At'] || 0);
-                    const dateB = new Date(b.fields['Submitted At'] || 0);
-                    return dateB - dateA;
-                });
-                
-                setBookings(sorted);
+                setBookings(data.bookings);
                 setLoading(false);
             })
             .catch(err => {
@@ -422,12 +416,31 @@ function AdminApp() {
     }
 
     const filteredBookings = bookings.filter(b => {
+        const status = b.fields['Status'] || 'Pending';
+        const isArchive = status === 'Completed' || status === 'Cancelled';
+        
+        if (viewMode === 'active' && isArchive) return false;
+        if (viewMode === 'archive' && !isArchive) return false;
+
         if (!searchQuery) return true;
         const query = searchQuery.toLowerCase();
         const ref = (b.fields['Booking Ref'] || '').toLowerCase();
         const name = (b.fields['Customer Name'] || '').toLowerCase();
         const phone = (b.fields['Customer Phone'] || '').toLowerCase();
         return ref.includes(query) || name.includes(query) || phone.includes(query);
+    }).sort((a, b) => {
+        const dateStrA = a.fields['Outbound Date'] || '9999-12-31';
+        const timeStrA = a.fields['Outbound Time'] || '23:59';
+        const dateStrB = b.fields['Outbound Date'] || '9999-12-31';
+        const timeStrB = b.fields['Outbound Time'] || '23:59';
+        
+        const dateTimeA = new Date(`${dateStrA}T${timeStrA}`);
+        const dateTimeB = new Date(`${dateStrB}T${timeStrB}`);
+        
+        if (viewMode === 'archive') {
+            return dateTimeB - dateTimeA;
+        }
+        return dateTimeA - dateTimeB;
     });
 
     return (
@@ -458,6 +471,36 @@ function AdminApp() {
             </div>
             
             <div className="wrap">
+                <div style={{ marginBottom: '20px', display: 'flex', gap: '10px' }}>
+                    <button 
+                        onClick={() => setViewMode('active')} 
+                        style={{ 
+                            background: viewMode === 'active' ? 'var(--navy)' : 'transparent', 
+                            color: viewMode === 'active' ? 'white' : 'var(--navy)', 
+                            border: '1px solid var(--navy)', 
+                            padding: '8px 16px', 
+                            borderRadius: '8px', 
+                            cursor: 'pointer',
+                            fontWeight: 'bold'
+                        }}
+                    >
+                        Active Jobs
+                    </button>
+                    <button 
+                        onClick={() => setViewMode('archive')} 
+                        style={{ 
+                            background: viewMode === 'archive' ? 'var(--navy)' : 'transparent', 
+                            color: viewMode === 'archive' ? 'white' : 'var(--navy)', 
+                            border: '1px solid var(--navy)', 
+                            padding: '8px 16px', 
+                            borderRadius: '8px', 
+                            cursor: 'pointer',
+                            fontWeight: 'bold'
+                        }}
+                    >
+                        Archive
+                    </button>
+                </div>
                 <div style={{ marginBottom: '20px', display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
                     <div style={{ flex: '1 1 400px' }}>
                         <input 
