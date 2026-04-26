@@ -502,22 +502,24 @@ function BookingForm() {
     notes: ""
   });
 
-  const [addressQuery, setAddressQuery] = useState("");
   const [addressSuggestions, setAddressSuggestions] = useState([]);
   const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
+  const skipSearchRef = useRef(false);
 
   useEffect(() => {
-    if (!addressQuery || addressQuery.length < 3) {
+    if (!form.address || form.address.length < 3) {
       setAddressSuggestions([]);
       return;
     }
     
-    // We only want to search if the query doesn't match the selected form.address
-    if (addressQuery === form.address) return;
+    if (skipSearchRef.current) {
+      skipSearchRef.current = false;
+      return;
+    }
 
     const timeoutId = setTimeout(async () => {
       try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(addressQuery)}&format=json&addressdetails=1&countrycodes=gb&limit=5`, {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(form.address)}&format=json&addressdetails=1&countrycodes=gb&limit=5`, {
           headers: { "Accept-Language": "en-GB,en;q=0.9" }
         });
         if (res.ok) {
@@ -531,18 +533,35 @@ function BookingForm() {
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [addressQuery, form.address]);
+  }, [form.address]);
 
-  const formatAddress = (s) => {
+  const formatAddress = (s, currentQuery) => {
     const parts = [];
+    let houseNumber = s.address?.house_number;
+    
+    // Preserve house number from user's input if Nominatim omits it
+    if (!houseNumber && currentQuery) {
+      const match = currentQuery.trim().match(/^(\d+[a-zA-Z]?(-\d+[a-zA-Z]?)?)\s/);
+      if (match) {
+        houseNumber = match[1];
+      }
+    }
+
     if (s.address) {
-      if (s.address.house_number) parts.push(s.address.house_number);
+      if (houseNumber) parts.push(houseNumber);
       if (s.address.road) parts.push(s.address.road);
       if (s.address.suburb) parts.push(s.address.suburb);
       if (s.address.city || s.address.town || s.address.village) parts.push(s.address.city || s.address.town || s.address.village);
       if (s.address.postcode) parts.push(s.address.postcode);
     }
-    return parts.length > 0 ? parts.join(', ') : s.display_name.replace(', United Kingdom', '');
+    
+    if (parts.length > 0) return parts.join(', ');
+    
+    let display = s.display_name.replace(', United Kingdom', '');
+    if (houseNumber && !display.startsWith(houseNumber)) {
+      display = houseNumber + ' ' + display;
+    }
+    return display;
   };
 
   // Prices will be manually quoted
@@ -694,9 +713,8 @@ function BookingForm() {
       <div className={"field" + (errors.address ? " error" : "")} style={{ position: "relative" }}>
         <label>Home address <span className="req">*</span></label>
         <input type="text" placeholder="e.g. 14 Wellington Rd, Heswall CH60"
-          value={addressQuery || form.address} 
+          value={form.address} 
           onChange={e => {
-            setAddressQuery(e.target.value);
             upd("address", e.target.value);
             setShowAddressSuggestions(true);
           }}
@@ -712,15 +730,15 @@ function BookingForm() {
             marginTop: "4px"
           }}>
             {addressSuggestions.map((s, i) => {
-              const formatted = formatAddress(s);
+              const formatted = formatAddress(s, form.address);
               return (
                 <div key={i} style={{
                   padding: "10px 12px", cursor: "pointer", borderBottom: i < addressSuggestions.length - 1 ? "1px solid var(--line)" : "none",
                   fontSize: "14px", color: "var(--ink)", transition: "background 0.2s"
                 }}
                 onMouseDown={() => {
+                  skipSearchRef.current = true;
                   upd("address", formatted);
-                  setAddressQuery(formatted);
                   setShowAddressSuggestions(false);
                 }}
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "var(--cream)"}
