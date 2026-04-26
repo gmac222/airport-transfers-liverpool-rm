@@ -5,7 +5,7 @@ export default async function handler(req, res) {
 
     const { ref, action } = req.body;
 
-    if (!ref || action !== 'on-the-way') {
+    if (!ref || (action !== 'on-the-way' && action !== 'complete-job')) {
         return res.status(400).json({ error: 'Invalid request' });
     }
 
@@ -30,6 +30,7 @@ export default async function handler(req, res) {
             return res.status(404).json({ error: 'Booking not found' });
         }
 
+        const recordId = data.records[0].id;
         const booking = data.records[0].fields;
         const customerPhone = booking['Customer Phone'];
         const customerName = booking['Customer Name'] ? booking['Customer Name'].split(' ')[0] : 'Customer';
@@ -42,6 +43,34 @@ export default async function handler(req, res) {
         // Format phone to international
         const formattedPhone = customerPhone.replace(/\s+/g, '').replace(/^0/, '+44');
 
+        let messageBody = "";
+
+        if (action === 'on-the-way') {
+            messageBody = `Hi ${customerName}, your RM Transfers driver (${driverName}) is on the way to pick you up! See you soon.\n\n(Please do not reply to this automated text. If you have any changes, please call or text your driver directly at ${booking['Driver Phone'] || 'their number'}).`;
+        } else if (action === 'complete-job') {
+            messageBody = `Hi ${customerName},\n\nThank you for traveling with RM Transfers!\n\nWe hope you had a great journey. If you have a moment, we'd really appreciate it if you could leave us a review on Trustpilot:\n\nhttps://uk.trustpilot.com/review/rmtransfers.co.uk?utm_medium=trustbox&utm_source=TrustBoxReviewCollector\n\nThanks again!`;
+            
+            // Update Airtable status to Completed
+            const updateRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}/${recordId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    fields: {
+                        'Status': 'Completed'
+                    }
+                })
+            });
+
+            if (!updateRes.ok) {
+                console.error("Airtable update error:", await updateRes.text());
+                // Still proceed to send SMS even if Airtable update fails, or maybe we shouldn't?
+                // It's probably better to proceed to send the review invite anyway.
+            }
+        }
+
         // 2. Send SMS via ClickSend
         const smsRes = await fetch('https://rest.clicksend.com/v3/sms/send', {
             method: 'POST',
@@ -53,7 +82,7 @@ export default async function handler(req, res) {
                 messages: [
                     {
                         to: formattedPhone,
-                        body: `Hi ${customerName}, your RM Transfers driver (${driverName}) is on the way to pick you up! See you soon.\n\n(Please do not reply to this automated text. If you have any changes, please call or text your driver directly at ${booking['Driver Phone'] || 'their number'}).`
+                        body: messageBody
                     }
                 ]
             })
@@ -64,7 +93,7 @@ export default async function handler(req, res) {
             return res.status(500).json({ error: 'Failed to send SMS' });
         }
 
-        return res.status(200).json({ success: true, message: 'Customer notified' });
+        return res.status(200).json({ success: true, message: action === 'complete-job' ? 'Job completed and review sent' : 'Customer notified' });
 
     } catch (error) {
         console.error("Server error:", error);

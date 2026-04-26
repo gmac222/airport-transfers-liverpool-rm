@@ -81,11 +81,12 @@
 <body>
     <div class="card">
         <img src="/assets/logo.png" alt="RM Transfers" />
-        <h1 id="title">Alert Customer</h1>
-        <p id="subtitle">Tap the button below to instantly text the customer that you are on the way to pick them up.</p>
+        <h1 id="title">Driver Actions</h1>
+        <p id="subtitle">Select an action below for this booking.</p>
         
         <button id="actionBtn" onclick="notifyCustomer()">I am on the way!</button>
-        <div id="successMsg" class="success">✓ Customer Notified! Drive safe.</div>
+        <button id="completeBtn" onclick="completeJob()" style="margin-top: 15px; background: #28a745; color: white;">Complete Job</button>
+        <div id="successMsg" class="success"></div>
     </div>
 
     <script>
@@ -94,12 +95,15 @@
 
         if (!ref) {
             document.getElementById('actionBtn').style.display = 'none';
+            document.getElementById('completeBtn').style.display = 'none';
             document.getElementById('subtitle').innerText = "Invalid link. Missing booking reference.";
         }
 
         async function notifyCustomer() {
             const btn = document.getElementById('actionBtn');
+            const completeBtn = document.getElementById('completeBtn');
             btn.disabled = true;
+            completeBtn.style.display = 'none';
             btn.innerText = "Sending...";
 
             try {
@@ -113,17 +117,57 @@
                 if (data.success) {
                     btn.style.display = 'none';
                     document.getElementById('subtitle').style.display = 'none';
+                    document.getElementById('successMsg').innerText = "✓ Customer Notified! Drive safe.";
                     document.getElementById('successMsg').style.display = 'block';
                     document.getElementById('title').innerText = "Success";
                 } else {
                     alert("Error: " + (data.error || "Failed to notify customer"));
                     btn.disabled = false;
+                    completeBtn.style.display = 'block';
                     btn.innerText = "I am on the way!";
                 }
             } catch (err) {
                 alert("Network error.");
                 btn.disabled = false;
+                completeBtn.style.display = 'block';
                 btn.innerText = "I am on the way!";
+            }
+        }
+
+        async function completeJob() {
+            if (!confirm("Are you sure you want to complete this job? This will send a review invite to the customer.")) return;
+            
+            const btn = document.getElementById('completeBtn');
+            const actionBtn = document.getElementById('actionBtn');
+            btn.disabled = true;
+            actionBtn.style.display = 'none';
+            btn.innerText = "Processing...";
+
+            try {
+                const res = await fetch('/api/driver-action', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ref: ref, action: 'complete-job' })
+                });
+                
+                const data = await res.json();
+                if (data.success) {
+                    btn.style.display = 'none';
+                    document.getElementById('subtitle').style.display = 'none';
+                    document.getElementById('successMsg').innerText = "✓ Job completed and review invite sent.";
+                    document.getElementById('successMsg').style.display = 'block';
+                    document.getElementById('title').innerText = "Job Complete";
+                } else {
+                    alert("Error: " + (data.error || "Failed to complete job"));
+                    btn.disabled = false;
+                    actionBtn.style.display = 'block';
+                    btn.innerText = "Complete Job";
+                }
+            } catch (err) {
+                alert("Network error.");
+                btn.disabled = false;
+                actionBtn.style.display = 'block';
+                btn.innerText = "Complete Job";
             }
         }
     </script>
