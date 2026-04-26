@@ -502,6 +502,49 @@ function BookingForm() {
     notes: ""
   });
 
+  const [addressQuery, setAddressQuery] = useState("");
+  const [addressSuggestions, setAddressSuggestions] = useState([]);
+  const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
+
+  useEffect(() => {
+    if (!addressQuery || addressQuery.length < 3) {
+      setAddressSuggestions([]);
+      return;
+    }
+    
+    // We only want to search if the query doesn't match the selected form.address
+    if (addressQuery === form.address) return;
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(addressQuery)}&format=json&addressdetails=1&countrycodes=gb&limit=5`, {
+          headers: { "Accept-Language": "en-GB,en;q=0.9" }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setAddressSuggestions(data);
+          setShowAddressSuggestions(true);
+        }
+      } catch (err) {
+        console.error("Autolookup error", err);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [addressQuery, form.address]);
+
+  const formatAddress = (s) => {
+    const parts = [];
+    if (s.address) {
+      if (s.address.house_number) parts.push(s.address.house_number);
+      if (s.address.road) parts.push(s.address.road);
+      if (s.address.suburb) parts.push(s.address.suburb);
+      if (s.address.city || s.address.town || s.address.village) parts.push(s.address.city || s.address.town || s.address.village);
+      if (s.address.postcode) parts.push(s.address.postcode);
+    }
+    return parts.length > 0 ? parts.join(', ') : s.display_name.replace(', United Kingdom', '');
+  };
+
   // Prices will be manually quoted
 
   function upd(k, v) {
@@ -648,10 +691,50 @@ function BookingForm() {
         </div>
       </div>
 
-      <div className={"field" + (errors.address ? " error" : "")}>
+      <div className={"field" + (errors.address ? " error" : "")} style={{ position: "relative" }}>
         <label>Home address <span className="req">*</span></label>
         <input type="text" placeholder="e.g. 14 Wellington Rd, Heswall CH60"
-          value={form.address} onChange={e => upd("address", e.target.value)} />
+          value={addressQuery || form.address} 
+          onChange={e => {
+            setAddressQuery(e.target.value);
+            upd("address", e.target.value);
+            setShowAddressSuggestions(true);
+          }}
+          onFocus={() => setShowAddressSuggestions(true)}
+          onBlur={() => setTimeout(() => setShowAddressSuggestions(false), 200)}
+          autoComplete="off"
+        />
+        {showAddressSuggestions && addressSuggestions.length > 0 && (
+          <div className="autocomplete-suggestions" style={{
+            position: "absolute", top: "100%", left: 0, right: 0, 
+            background: "#fff", border: "1px solid var(--line)", borderRadius: "6px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.1)", zIndex: 10, overflow: "hidden",
+            marginTop: "4px"
+          }}>
+            {addressSuggestions.map((s, i) => {
+              const formatted = formatAddress(s);
+              return (
+                <div key={i} style={{
+                  padding: "10px 12px", cursor: "pointer", borderBottom: i < addressSuggestions.length - 1 ? "1px solid var(--line)" : "none",
+                  fontSize: "14px", color: "var(--ink)", transition: "background 0.2s"
+                }}
+                onMouseDown={() => {
+                  upd("address", formatted);
+                  setAddressQuery(formatted);
+                  setShowAddressSuggestions(false);
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "var(--cream)"}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+                >
+                  <div style={{ fontWeight: 500 }}>{formatted.split(',')[0]}</div>
+                  <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "2px" }}>
+                    {formatted.split(',').slice(1).join(',')}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
         <div className="hint">{tripType === "return" ? "We pick up here on the way out, drop back here on the way home." : "Where we pick you up or drop you off."}</div>
         {errors.address && <div className="err-msg">{errors.address}</div>}
       </div>
