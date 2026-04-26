@@ -103,21 +103,60 @@ function AdminApp() {
                         right: 'dayGridMonth,timeGridWeek,timeGridDay'
                     },
                     height: 'auto',
-                    events: bookings.map(b => {
+                    events: bookings.flatMap(b => {
                         const status = b.fields['Status'] || 'Pending';
                         let color = 'var(--amber-deep)'; // Pending
                         if (status === 'Completed' || status === 'Accepted') color = '#10b981'; // Green
                         else if (status === 'Awaiting Payment') color = '#f59e0b'; // Amber
                         else if (status === 'Cancelled') color = '#e53e3e'; // Red
                         
-                        return {
-                            id: b.id,
-                            title: `${b.fields['Booking Ref']} - ${b.fields['Customer Name']}`,
-                            start: b.fields['Outbound Date'] + 'T' + (b.fields['Outbound Time'] || '00:00:00'),
-                            color: color,
-                            extendedProps: { record: b }
-                        };
+                        const evs = [];
+                        
+                        if (b.fields['Outbound Date']) {
+                            evs.push({
+                                id: b.id + '-outbound',
+                                title: `OUTBOUND: ${b.fields['Booking Ref']}`,
+                                start: b.fields['Outbound Date'] + 'T' + (b.fields['Outbound Time'] || '00:00:00'),
+                                color: color,
+                                extendedProps: { record: b, tripPart: 'Outbound' }
+                            });
+                        }
+
+                        if (b.fields['Trip Type'] === 'return' && b.fields['Return Date']) {
+                            evs.push({
+                                id: b.id + '-return',
+                                title: `RETURN: ${b.fields['Booking Ref']}`,
+                                start: b.fields['Return Date'] + 'T' + (b.fields['Return Time'] || '00:00:00'),
+                                color: color,
+                                extendedProps: { record: b, tripPart: 'Return' }
+                            });
+                        }
+                        return evs;
                     }),
+                    eventContent: function(arg) {
+                        const record = arg.event.extendedProps.record;
+                        const part = arg.event.extendedProps.tripPart;
+                        const f = record.fields;
+                        
+                        const timeStr = arg.timeText || (arg.event.start ? arg.event.start.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '');
+                        let flight = part === 'Outbound' ? f['Outbound Flight'] : f['Return Flight'];
+                        
+                        let outDir = f['Oneway Direction'] === 'from' ? 'From' : 'To';
+                        let retDir = f['Oneway Direction'] === 'from' ? 'To' : 'From';
+                        let direction = part === 'Outbound' ? outDir : retDir;
+                        let airport = f['Airport'] === 'Manchester' ? 'MAN' : 'LPL';
+                        
+                        let html = `
+                            <div style="font-size: 11px; padding: 3px 5px; line-height: 1.4; color: white; white-space: normal; overflow: hidden; cursor: pointer;">
+                                <strong>${timeStr} | ${f['Booking Ref']}</strong><br/>
+                                <strong>${f['Customer Name']}</strong> (${f['Passengers']}pax ${f['Luggage'] || 0}bags)<br/>
+                                <strong>${part.toUpperCase()}</strong>: ${direction} ${airport}<br/>
+                                ${flight ? `✈️ ${flight}<br/>` : ''}
+                                ${f['Driver Name'] ? `🚗 ${f['Driver Name']}` : '🚗 <i>Unassigned</i>'}
+                            </div>
+                        `;
+                        return { html: html };
+                    },
                     eventClick: function(info) {
                         openEditModal(info.event.extendedProps.record);
                     }
