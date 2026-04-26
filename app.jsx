@@ -593,6 +593,30 @@ function BookingForm() {
       });
       console.log("[booking] webhook response", res.status);
       if (!res.ok) throw new Error("Webhook responded " + res.status);
+
+      // Trigger SMS notification to Graham and Roy
+      try {
+        await fetch("/api/sms", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "new-booking-operator-alert",
+            fields: {
+              "Booking Ref": payload.ref,
+              "Customer Name": payload.customer.name,
+              "Customer Phone": payload.customer.phone,
+              "Home Address": payload.customer.address,
+              "Airport Name": payload.airportName,
+              "Trip Type": payload.tripType,
+              "Passengers": payload.passengers,
+              "Luggage": payload.luggage
+            }
+          })
+        });
+      } catch (smsErr) {
+        console.error("[booking] sms alert error", smsErr);
+      }
+
       window.location.href = `/thank-you/?ref=${ref}&type=${tripType}`;
     } catch (err) {
       console.error("[booking] submit error", err);

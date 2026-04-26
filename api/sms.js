@@ -81,6 +81,16 @@ export default async function handler(req, res) {
         });
     }
 
+    if (action === 'new-booking-operator-alert') {
+        const adminNumbers = ['+447398233859', '+447746899644'];
+        adminNumbers.forEach(num => {
+            messages.push({
+                to: num,
+                body: `NEW BOOKING: ${fields['Booking Ref']}\nName: ${fields['Customer Name']}\nFrom: ${fields['Home Address']}\nTo: ${fields['Airport Name']}\nType: ${fields['Trip Type']}\nPax: ${fields['Passengers']} Bags: ${fields['Luggage']}\nPhone: ${fields['Customer Phone']}`
+            });
+        });
+    }
+
     if (messages.length === 0) {
         return res.status(400).json({ error: 'No valid action specified' });
     }
