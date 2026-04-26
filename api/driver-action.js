@@ -44,12 +44,45 @@ export default async function handler(req, res) {
         const formattedPhone = customerPhone.replace(/\s+/g, '').replace(/^0/, '+44');
 
         let messageBody = "";
+        let scheduleTime = null;
 
         if (action === 'on-the-way') {
             messageBody = `Hi ${customerName}, your RM Transfers driver (${driverName}) is on the way to pick you up! See you soon.\n\n(Please do not reply to this automated text. If you have any changes, please call or text your driver directly at ${booking['Driver Phone'] || 'their number'}).`;
         } else if (action === 'complete-job') {
             messageBody = `Hi ${customerName},\n\nThank you for traveling with RM Transfers!\n\nWe hope you had a great journey. If you have a moment, we'd really appreciate it if you could leave us a review on Trustpilot:\n\nhttps://uk.trustpilot.com/review/rmtransfers.co.uk?utm_medium=trustbox&utm_source=TrustBoxReviewCollector\n\nThanks again!`;
             
+            // Calculate 24 hours from now
+            const now = new Date();
+            let sendDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+            
+            // Ensure sending only during normal hours (9 AM - 6 PM UK time)
+            try {
+                // Get the hour in UK time
+                const formatter = new Intl.DateTimeFormat('en-GB', { 
+                    timeZone: 'Europe/London', 
+                    hour: 'numeric', 
+                    hourCycle: 'h23' 
+                });
+                const ukHourStr = formatter.format(sendDate);
+                // In some environments, it might include AM/PM or non-breaking spaces. We parse just the digits.
+                const ukHour = parseInt(ukHourStr.replace(/\D/g, ''), 10);
+
+                if (!isNaN(ukHour)) {
+                    if (ukHour < 9) {
+                        // Set to 9 AM
+                        sendDate.setUTCHours(sendDate.getUTCHours() + (9 - ukHour));
+                    } else if (ukHour >= 18) {
+                        // Set to next day 9 AM
+                        sendDate.setUTCHours(sendDate.getUTCHours() + (24 - ukHour + 9));
+                    }
+                }
+                scheduleTime = Math.floor(sendDate.getTime() / 1000);
+            } catch(e) {
+                console.error("Timezone formatting error:", e);
+                // Fallback to exactly 24 hours if Intl formatting fails
+                scheduleTime = Math.floor(sendDate.getTime() / 1000);
+            }
+
             // Update Airtable status to Completed
             const updateRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}/${recordId}`, {
                 method: 'PATCH',
@@ -71,6 +104,15 @@ export default async function handler(req, res) {
             }
         }
 
+        const messagePayload = {
+            to: formattedPhone,
+            body: messageBody
+        };
+
+        if (scheduleTime) {
+            messagePayload.schedule = scheduleTime;
+        }
+
         // 2. Send SMS via ClickSend
         const smsRes = await fetch('https://rest.clicksend.com/v3/sms/send', {
             method: 'POST',
@@ -79,12 +121,7 @@ export default async function handler(req, res) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                messages: [
-                    {
-                        to: formattedPhone,
-                        body: messageBody
-                    }
-                ]
+                messages: [messagePayload]
             })
         });
 
@@ -93,7 +130,7 @@ export default async function handler(req, res) {
             return res.status(500).json({ error: 'Failed to send SMS' });
         }
 
-        return res.status(200).json({ success: true, message: action === 'complete-job' ? 'Job completed and review sent' : 'Customer notified' });
+        return res.status(200).json({ success: true, message: action === 'complete-job' ? 'Job completed and review scheduled' : 'Customer notified' });
 
     } catch (error) {
         console.error("Server error:", error);

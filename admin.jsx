@@ -438,6 +438,23 @@ function AdminApp() {
         .catch(err => alert('Error sending SMS: ' + err.message));
     };
 
+    const handleCompleteJob = (record) => {
+        if (!window.confirm("Are you sure you want to mark this job as completed and send the review invite?")) return;
+        
+        fetch('/api/driver-action', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ref: record.fields['Booking Ref'], action: 'complete-job' })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) throw new Error(data.error);
+            alert('Job completed successfully!');
+            fetchBookings();
+        })
+        .catch(err => alert('Error completing job: ' + err.message));
+    };
+
     if (!isLoggedIn) {
         return (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'var(--cream)' }}>
@@ -838,6 +855,9 @@ function AdminApp() {
                                                 </button>
                                                 <button onClick={() => handleDirectSMS(record, 'send-review-invite')} style={{ flex: 1, padding: '8px 4px', background: 'white', border: '1px solid #3b82f6', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', color: '#3b82f6', fontWeight: 'bold' }}>
                                                     Send Review Invite
+                                                </button>
+                                                <button onClick={() => handleCompleteJob(record)} style={{ flex: 1, padding: '8px 4px', background: '#3b82f6', border: '1px solid #3b82f6', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', color: 'white', fontWeight: 'bold' }}>
+                                                    Close Job (Complete)
                                                 </button>
                                             </div>
                                         </div>
