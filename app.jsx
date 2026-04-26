@@ -453,7 +453,7 @@ function FAQ() {
     { q: "Are your drivers licensed and insured?", a: "Yes — every driver is fully licensed by the local council for private hire, DBS checked, and the business carries full public liability and hire & reward insurance. Happy to show you the paperwork before booking if you'd like." },
     { q: "Will my luggage fit?", a: "We allocate vehicles based on your passenger count and luggage needs — ranging from standard cars to spacious 8-seat minibuses. We make sure there's plenty of room for everyone and everything." },
     { q: "How do I pay?", a: "Payment is taken securely online via a payment link in your customer portal once your driver is assigned. You don't need a card to reserve your booking." },
-    { q: "How far ahead do I need to book?", a: "Ideally 24 hours for guaranteed availability. We often take same-day bookings when a driver's free — call 0151 453 7156 and we'll tell you straight." }
+    { q: "How far ahead do I need to book?", a: "Ideally 24 hours for guaranteed availability. We often take same-day bookings when a driver's free — call 0151 453 3607 and we'll tell you straight." }
   ];
   return (
     <section id="faq" className="cream">
@@ -587,7 +587,7 @@ function BookingForm() {
         const tripDate = new Date(`${dateStr}T${timeStr}`);
         if (tripDate.getTime() - now.getTime() < minNoticeMs) {
           errs[dateField] = "Minimum 12 hours notice required";
-          errs[timeField] = "Call 0151 453 7156 for last-minute jobs";
+          errs[timeField] = "Call 0151 453 3607 for last-minute jobs";
         }
       }
     };
@@ -661,7 +661,7 @@ function BookingForm() {
       window.location.href = `/thank-you/?ref=${ref}&type=${tripType}`;
     } catch (err) {
       console.error("[booking] submit error", err);
-      setSubmitError("We couldn't send that just now. Please call 0151 453 7156 or try again.");
+      setSubmitError("We couldn't send that just now. Please call 0151 453 3607 or try again.");
     } finally {
       setSubmitting(false);
     }
@@ -1244,7 +1244,7 @@ function Footer() {
         <div className="foot-copy" style={{ fontSize: "15px", maxWidth: "500px", margin: "0 auto", lineHeight: "1.6" }}>
           Fixed-price airport transfers. Door to terminal, both ways.<br />
           Licensed private hire · Est. 2011<br /><br />
-          Office 1, Oaktree Court Business Centre, Mill Lane, Ness, Neston, CH64 8TP
+          42 Jamaica Street, Liverpool, L1 0AF
         </div>
         <div className="foot-links" style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "24px", marginTop: "16px" }}>
           <a href="/#how" style={{ color: "#fff", textDecoration: "none", fontWeight: 500 }}>How it works</a>
