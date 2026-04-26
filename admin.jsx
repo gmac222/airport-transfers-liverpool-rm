@@ -10,6 +10,7 @@ function AdminApp() {
     const [bookings, setBookings] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [viewMode, setViewMode] = useState('active');
+    const [activeFilter, setActiveFilter] = useState('all');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [assigningId, setAssigningId] = useState(null);
@@ -517,6 +518,12 @@ function AdminApp() {
         if (viewMode === 'active' && isArchive) return false;
         if (viewMode === 'archive' && !isArchive) return false;
 
+        if (viewMode === 'active' && activeFilter !== 'all') {
+            if (activeFilter === 'enquiries' && status !== 'Pending') return false;
+            if (activeFilter === 'awaiting_payment' && status !== 'Awaiting Payment') return false;
+            if (activeFilter === 'paid' && status !== 'Accepted') return false;
+        }
+
         if (!searchQuery) return true;
         const query = searchQuery.toLowerCase();
         const ref = (b.fields['Booking Ref'] || '').toLowerCase();
@@ -610,6 +617,69 @@ function AdminApp() {
                         Archive
                     </button>
                 </div>
+
+                {viewMode === 'active' && (
+                    <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', padding: '10px', background: 'var(--cream)', borderRadius: '8px', flexWrap: 'wrap' }}>
+                        <span style={{fontWeight: 'bold', alignSelf: 'center', marginRight: '10px', color: 'var(--navy)'}}>Filter:</span>
+                        <button 
+                            onClick={() => setActiveFilter('all')} 
+                            style={{ 
+                                background: activeFilter === 'all' ? 'var(--navy)' : 'transparent', 
+                                color: activeFilter === 'all' ? 'white' : 'var(--navy)', 
+                                border: '1px solid var(--navy)', 
+                                padding: '6px 12px', 
+                                borderRadius: '6px', 
+                                cursor: 'pointer',
+                                fontSize: '13px'
+                            }}
+                        >
+                            All Active
+                        </button>
+                        <button 
+                            onClick={() => setActiveFilter('enquiries')} 
+                            style={{ 
+                                background: activeFilter === 'enquiries' ? 'var(--navy)' : 'transparent', 
+                                color: activeFilter === 'enquiries' ? 'white' : 'var(--navy)', 
+                                border: '1px solid var(--navy)', 
+                                padding: '6px 12px', 
+                                borderRadius: '6px', 
+                                cursor: 'pointer',
+                                fontSize: '13px'
+                            }}
+                        >
+                            Enquiries
+                        </button>
+                        <button 
+                            onClick={() => setActiveFilter('awaiting_payment')} 
+                            style={{ 
+                                background: activeFilter === 'awaiting_payment' ? 'var(--navy)' : 'transparent', 
+                                color: activeFilter === 'awaiting_payment' ? 'white' : 'var(--navy)', 
+                                border: '1px solid var(--navy)', 
+                                padding: '6px 12px', 
+                                borderRadius: '6px', 
+                                cursor: 'pointer',
+                                fontSize: '13px'
+                            }}
+                        >
+                            Awaiting Payment
+                        </button>
+                        <button 
+                            onClick={() => setActiveFilter('paid')} 
+                            style={{ 
+                                background: activeFilter === 'paid' ? 'var(--navy)' : 'transparent', 
+                                color: activeFilter === 'paid' ? 'white' : 'var(--navy)', 
+                                border: '1px solid var(--navy)', 
+                                padding: '6px 12px', 
+                                borderRadius: '6px', 
+                                cursor: 'pointer',
+                                fontSize: '13px'
+                            }}
+                        >
+                            Paid
+                        </button>
+                    </div>
+                )}
+
                 {viewMode !== 'calendar' && (
                     <div style={{ marginBottom: '20px', display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
                         <div style={{ flex: '1 1 400px' }}>
