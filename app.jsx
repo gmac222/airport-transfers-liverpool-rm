@@ -564,7 +564,7 @@ function BookingForm() {
       airport,
       airportName: airport === "LJLA" ? "Liverpool John Lennon" : "Manchester",
       passengers: pax,
-      notes: form.notes,
+      luggage: bags,
       source: "website_v2",
       customer: {
         name: form.name.trim(),

@@ -265,9 +265,11 @@ function AdminApp() {
         setEditForm({
             'Booking Ref': 'ATL-' + Array.from({length: 8}, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)]).join(''),
             'Trip Type': 'oneway',
+            'Oneway Direction': 'to',
             'Airport': 'LJLA',
             'Customer Name': '',
             'Customer Phone': '',
+            'Customer Email': '',
             'Home Address': '',
             'Outbound Date': '',
             'Outbound Time': '',
@@ -276,6 +278,8 @@ function AdminApp() {
             'Return Time': '',
             'Return Flight': '',
             'Passengers': 1,
+            'Luggage': 0,
+            'Notes': '',
             'Total Price': 0,
             'Status': 'Pending',
             'Submitted At': new Date().toISOString()
@@ -533,6 +537,24 @@ function AdminApp() {
                                             <span>Phone</span>
                                             <strong>{fields['Customer Phone']}</strong>
                                         </div>
+                                        {fields['Customer Email'] && (
+                                            <div className="detail">
+                                                <span>Email</span>
+                                                <strong>{fields['Customer Email']}</strong>
+                                            </div>
+                                        )}
+                                        <div className="detail">
+                                            <span>Bags & Pax</span>
+                                            <strong>{fields['Passengers']} Pax, {fields['Luggage'] || 0} Bags</strong>
+                                        </div>
+                                        <div className="detail">
+                                            <span>Trip Type & Airport</span>
+                                            <strong>
+                                                {fields['Trip Type'] === 'return' ? 'Return' : `One Way (${fields['Oneway Direction'] === 'from' ? 'From' : 'To'} Airport)`} 
+                                                {' - '}
+                                                {fields['Airport'] === 'Manchester' ? 'Manchester' : 'Liverpool'}
+                                            </strong>
+                                        </div>
                                         <div className="detail">
                                             <span>Date & Time</span>
                                             <strong>{fields['Outbound Date']} @ {fields['Outbound Time']}</strong>
@@ -561,6 +583,36 @@ function AdminApp() {
                                                         Track Live
                                                     </a>
                                                 </div>
+                                            </div>
+                                        )}
+                                        {fields['Trip Type'] === 'return' && (
+                                            <>
+                                                <div className="detail">
+                                                    <span>Return Date & Time</span>
+                                                    <strong>{fields['Return Date']} @ {fields['Return Time']}</strong>
+                                                </div>
+                                                {fields['Return Flight'] && (
+                                                    <div className="detail">
+                                                        <span>Return Flight</span>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                            <strong>{fields['Return Flight']}</strong>
+                                                            <a 
+                                                                href={`https://www.flightradar24.com/data/flights/${fields['Return Flight'].replace(/\s/g, '').toLowerCase()}`} 
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                style={{ fontSize: '11px', background: 'rgba(230, 178, 75, 0.2)', color: 'var(--amber-deep)', padding: '2px 8px', borderRadius: '4px', textDecoration: 'none', fontWeight: 'bold' }}
+                                                            >
+                                                                Track Live
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </>
+                                        )}
+                                        {fields['Notes'] && (
+                                            <div className="detail" style={{ gridColumn: '1 / -1', background: '#f8fafc', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                                                <span>Notes</span>
+                                                <strong style={{ whiteSpace: 'pre-wrap' }}>{fields['Notes']}</strong>
                                             </div>
                                         )}
                                     </div>
@@ -672,6 +724,10 @@ function AdminApp() {
                                     <label>Phone</label>
                                     <input type="text" value={editForm['Customer Phone'] || ''} onChange={e => setEditForm({...editForm, 'Customer Phone': e.target.value})} required style={{width:'100%', padding:'8px'}} />
                                 </div>
+                                <div style={{ flex: 1 }}>
+                                    <label>Email</label>
+                                    <input type="email" value={editForm['Customer Email'] || ''} onChange={e => setEditForm({...editForm, 'Customer Email': e.target.value})} style={{width:'100%', padding:'8px'}} />
+                                </div>
                             </div>
                             
                             <div>
@@ -694,6 +750,15 @@ function AdminApp() {
                                         <option value="return">Return</option>
                                     </select>
                                 </div>
+                                {editForm['Trip Type'] === 'oneway' && (
+                                    <div style={{ flex: 1 }}>
+                                        <label>Direction</label>
+                                        <select value={editForm['Oneway Direction'] || 'to'} onChange={e => setEditForm({...editForm, 'Oneway Direction': e.target.value})} style={{width:'100%', padding:'8px'}}>
+                                            <option value="to">To Airport</option>
+                                            <option value="from">From Airport</option>
+                                        </select>
+                                    </div>
+                                )}
                             </div>
 
                             <div style={{ display: 'flex', gap: '15px' }}>
@@ -732,9 +797,18 @@ function AdminApp() {
                                     <input type="number" value={editForm['Passengers'] || 1} onChange={e => setEditForm({...editForm, 'Passengers': parseInt(e.target.value)})} style={{width:'100%', padding:'8px'}} />
                                 </div>
                                 <div style={{ flex: 1 }}>
+                                    <label>Luggage</label>
+                                    <input type="number" value={editForm['Luggage'] || 0} onChange={e => setEditForm({...editForm, 'Luggage': parseInt(e.target.value)})} style={{width:'100%', padding:'8px'}} />
+                                </div>
+                                <div style={{ flex: 1 }}>
                                     <label>Total Price (£)</label>
                                     <input type="number" value={editForm['Total Price'] || 0} onChange={e => setEditForm({...editForm, 'Total Price': parseInt(e.target.value)})} required style={{width:'100%', padding:'8px'}} />
                                 </div>
+                            </div>
+
+                            <div>
+                                <label>Notes</label>
+                                <textarea value={editForm['Notes'] || ''} onChange={e => setEditForm({...editForm, 'Notes': e.target.value})} style={{width:'100%', padding:'8px', minHeight: '80px', fontFamily: 'inherit', borderRadius: '4px', border: '1px solid var(--line)'}} />
                             </div>
 
 
