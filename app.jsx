@@ -522,7 +522,7 @@ function BookingForm() {
         });
         if (res.ok) {
           const data = await res.json();
-          setAddressSuggestions(data);
+          setAddressSuggestions(Array.isArray(data) ? data : []);
           setShowAddressSuggestions(true);
         }
       } catch (err) {
