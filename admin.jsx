@@ -445,21 +445,21 @@ function AdminApp() {
         .catch(err => alert('Error sending SMS: ' + err.message));
     };
 
-    const handleCompleteJob = (record) => {
-        if (!window.confirm("Are you sure you want to mark this job as completed and send the review invite?")) return;
+    const handleCloseJob = (record) => {
+        if (!window.confirm("Are you sure you want to close this job and send the review invite?")) return;
         
         fetch('/api/driver-action', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ref: record.fields['Booking Ref'], action: 'complete-job' })
+            body: JSON.stringify({ ref: record.fields['Booking Ref'], action: 'close-job' })
         })
         .then(res => res.json())
         .then(data => {
             if (data.error) throw new Error(data.error);
-            alert('Job completed successfully!');
+            alert('Job closed and archived successfully!');
             fetchBookings();
         })
-        .catch(err => alert('Error completing job: ' + err.message));
+        .catch(err => alert('Error closing job: ' + err.message));
     };
 
     if (!isLoggedIn) {
@@ -519,7 +519,7 @@ function AdminApp() {
 
     const filteredBookings = bookings.filter(b => {
         const status = b.fields['Status'] || 'Pending';
-        const isArchive = status === 'Completed' || status === 'Cancelled';
+        const isArchive = status === 'Archived' || status === 'Cancelled';
         
         if (viewMode === 'active' && isArchive) return false;
         if (viewMode === 'archive' && !isArchive) return false;
@@ -528,6 +528,7 @@ function AdminApp() {
             if (activeFilter === 'enquiries' && status !== 'Pending') return false;
             if (activeFilter === 'awaiting_payment' && status !== 'Awaiting Payment') return false;
             if (activeFilter === 'paid' && status !== 'Accepted') return false;
+            if (activeFilter === 'completed' && status !== 'Completed') return false;
         }
 
         if (!searchQuery) return true;
@@ -630,6 +631,12 @@ function AdminApp() {
                             >
                                 Paid
                             </button>
+                            <button 
+                                onClick={() => setActiveFilter('completed')} 
+                                className={`filter-btn filter-completed ${activeFilter === 'completed' ? 'active' : ''}`}
+                            >
+                                Completed (Review Pending)
+                            </button>
                         </div>
                     </div>
                 )}
@@ -682,6 +689,7 @@ function AdminApp() {
                             const status = fields['Status'] || 'Pending';
                             const isPending = status === 'Pending';
                             const isAwaitingPayment = status === 'Awaiting Payment';
+                            const isCompleted = status === 'Completed';
                             
                             return (
                                 <div key={id} className="job-card" style={{opacity: isPending ? 1 : 0.6}}>
@@ -766,7 +774,7 @@ function AdminApp() {
                                             </div>
                                         )}
                                         {fields['Trip Type'] === 'return' && (
-                                            <>
+                                            <React.Fragment>
                                                 <div className="detail">
                                                     <span>Return Date & Time</span>
                                                     <strong>{fields['Return Date']} @ {fields['Return Time']}</strong>
@@ -787,7 +795,7 @@ function AdminApp() {
                                                         </div>
                                                     </div>
                                                 )}
-                                            </>
+                                            </React.Fragment>
                                         )}
                                         {fields['Notes'] && (
                                             <div className="detail" style={{ gridColumn: '1 / -1', background: '#f8fafc', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
@@ -863,6 +871,17 @@ function AdminApp() {
                                                 {acknowledgingId === id ? '...' : 'Acknowledge Payment & Confirm Booking'}
                                             </button>
                                         </div>
+                                    ) : isCompleted ? (
+                                        <div className="job-actions" style={{background: '#f0fdf4', padding: '10px 14px', borderRadius: '8px', border: '1px solid #10b981', display: 'flex', flexDirection: 'column', gap: '8px'}}>
+                                            <span style={{fontSize: '14px', fontWeight: 600, color: '#047857'}}>Job Completed (Review Pending)</span>
+                                            <span style={{fontSize: '14px'}}>Driver: {fields['Driver Name']} {fields['Driver Phone'] ? `(${fields['Driver Phone']})` : ''}</span>
+                                            <button 
+                                                onClick={() => handleCloseJob(record)}
+                                                style={{ padding: '10px', width: '100%', background: '#10b981', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', marginTop: '4px' }}
+                                            >
+                                                Close Job & Send Review Invite
+                                            </button>
+                                        </div>
                                     ) : (
                                         <div className="job-actions" style={{background: 'var(--cream)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--line)', display: 'flex', flexDirection: 'column', gap: '8px'}}>
                                             <span style={{fontSize: '14px', fontWeight: 600}}>Driver: {fields['Driver Name']} {fields['Driver Phone'] ? `(${fields['Driver Phone']})` : ''}</span>
@@ -880,8 +899,8 @@ function AdminApp() {
                                                 <button onClick={() => handleDirectSMS(record, 'send-review-invite')} style={{ flex: 1, padding: '8px 4px', background: 'white', border: '1px solid #3b82f6', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', color: '#3b82f6', fontWeight: 'bold' }}>
                                                     Send Review Invite
                                                 </button>
-                                                <button onClick={() => handleCompleteJob(record)} style={{ flex: 1, padding: '8px 4px', background: '#3b82f6', border: '1px solid #3b82f6', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', color: 'white', fontWeight: 'bold' }}>
-                                                    Close Job (Complete)
+                                                <button onClick={() => handleCloseJob(record)} style={{ flex: 1, padding: '8px 4px', background: '#3b82f6', border: '1px solid #3b82f6', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', color: 'white', fontWeight: 'bold' }}>
+                                                    Close Job (Archive)
                                                 </button>
                                             </div>
                                         </div>

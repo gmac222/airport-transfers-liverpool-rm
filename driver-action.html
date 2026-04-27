@@ -135,7 +135,7 @@
         }
 
         async function completeJob() {
-            if (!confirm("Are you sure you want to complete this job? This will send a review invite to the customer.")) return;
+            if (!confirm("Are you sure you want to complete this job?")) return;
             
             const btn = document.getElementById('completeBtn');
             const actionBtn = document.getElementById('actionBtn');
@@ -154,7 +154,7 @@
                 if (data.success) {
                     btn.style.display = 'none';
                     document.getElementById('subtitle').style.display = 'none';
-                    document.getElementById('successMsg').innerText = "✓ Job completed and review invite sent.";
+                    document.getElementById('successMsg').innerText = "✓ Job marked as completed.";
                     document.getElementById('successMsg').style.display = 'block';
                     document.getElementById('title').innerText = "Job Complete";
                 } else {

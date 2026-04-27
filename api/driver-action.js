@@ -5,7 +5,7 @@ export default async function handler(req, res) {
 
     const { ref, action } = req.body;
 
-    if (!ref || (action !== 'on-the-way' && action !== 'complete-job')) {
+    if (!ref || (action !== 'on-the-way' && action !== 'complete-job' && action !== 'close-job')) {
         return res.status(400).json({ error: 'Invalid request' });
     }
 
@@ -48,7 +48,7 @@ export default async function handler(req, res) {
 
         if (action === 'on-the-way') {
             messageBody = `Hi ${customerName}, your RM Transfers driver (${driverName}) is on the way to pick you up! See you soon.\n\n(Please do not reply to this automated text. If you have any changes, please call or text your driver directly at ${booking['Driver Phone'] || 'their number'}).`;
-        } else if (action === 'complete-job') {
+        } else if (action === 'close-job') {
             messageBody = `Hi ${customerName},\n\nThank you for traveling with RM Transfers!\n\nWe hope you had a great journey. If you have a moment, we'd really appreciate it if you could leave us a review on Trustpilot:\n\nhttps://uk.trustpilot.com/review/rmtransfers.co.uk?utm_medium=trustbox&utm_source=TrustBoxReviewCollector\n\nThanks again!`;
             
             // Calculate 24 hours from now
@@ -83,7 +83,25 @@ export default async function handler(req, res) {
                 scheduleTime = Math.floor(sendDate.getTime() / 1000);
             }
 
-            // Update Airtable status to Completed
+            // Update Airtable status to Archived
+            const updateRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}/${recordId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    fields: {
+                        'Status': 'Archived'
+                    }
+                })
+            });
+
+            if (!updateRes.ok) {
+                console.error("Airtable update error:", await updateRes.text());
+            }
+        } else if (action === 'complete-job') {
+            // Just update Airtable status to Completed
             const updateRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}/${recordId}`, {
                 method: 'PATCH',
                 headers: {
@@ -99,39 +117,41 @@ export default async function handler(req, res) {
 
             if (!updateRes.ok) {
                 console.error("Airtable update error:", await updateRes.text());
-                // Still proceed to send SMS even if Airtable update fails, or maybe we shouldn't?
-                // It's probably better to proceed to send the review invite anyway.
+                return res.status(500).json({ error: 'Failed to update Airtable' });
             }
+            
+            return res.status(200).json({ success: true, message: 'Job marked as completed' });
         }
 
-        const messagePayload = {
-            to: formattedPhone,
-            body: messageBody
-        };
+        if (messageBody) {
+            const messagePayload = {
+                to: formattedPhone,
+                body: messageBody
+            };
 
-        if (scheduleTime) {
-            messagePayload.schedule = scheduleTime;
+            if (scheduleTime) {
+                messagePayload.schedule = scheduleTime;
+            }
+
+            // 2. Send SMS via ClickSend
+            const smsRes = await fetch('https://rest.clicksend.com/v3/sms/send', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Basic Z3JhaGFtLm0uMjIyQGdtYWlsLmNvbTo2MzREMTAyQi0zMDRFLUI0QTUtQUQzQS1COTRFNDk1QjQ1OEM=',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    messages: [messagePayload]
+                })
+            });
+
+            if (!smsRes.ok) {
+                console.error("ClickSend error:", await smsRes.text());
+                return res.status(500).json({ error: 'Failed to send SMS' });
+            }
+
+            return res.status(200).json({ success: true, message: action === 'close-job' ? 'Job archived and review scheduled' : 'Customer notified' });
         }
-
-        // 2. Send SMS via ClickSend
-        const smsRes = await fetch('https://rest.clicksend.com/v3/sms/send', {
-            method: 'POST',
-            headers: {
-                'Authorization': 'Basic Z3JhaGFtLm0uMjIyQGdtYWlsLmNvbTo2MzREMTAyQi0zMDRFLUI0QTUtQUQzQS1COTRFNDk1QjQ1OEM=',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                messages: [messagePayload]
-            })
-        });
-
-        if (!smsRes.ok) {
-            console.error("ClickSend error:", await smsRes.text());
-            return res.status(500).json({ error: 'Failed to send SMS' });
-        }
-
-        return res.status(200).json({ success: true, message: action === 'complete-job' ? 'Job completed and review scheduled' : 'Customer notified' });
-
     } catch (error) {
         console.error("Server error:", error);
         return res.status(500).json({ error: 'Internal server error' });

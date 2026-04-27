@@ -43,37 +43,42 @@ export default async function handler(req, res) {
 
         // Send Email Confirmation
         if (fields['Customer Email']) {
-            const emailHtml = `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #0E2747; line-height: 1.6; background-color: #f9f9f9; padding: 20px; border-radius: 8px;">
-              <div style="text-align: center; padding: 20px; background: #0B1E37; border-radius: 12px 12px 0 0;">
-                <img src="https://airporttaxitransfersliverpool.co.uk/assets/logo.png" alt="RM Transfers Logo" style="height: 60px; width: auto; object-fit: contain; margin: 10px 0;" />
+            const emailHtml = `<div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #0E2747; line-height: 1.6; background-color: #f9f9f9; padding: 20px; border-radius: 8px;">
+              <div style="text-align: center; padding: 30px 20px; background: #0B1E37; border-radius: 12px 12px 0 0;">
+                <img src="https://airporttaxitransfersliverpool.co.uk/assets/logo.png" alt="RM Transfers Logo" style="height: 50px; width: auto; object-fit: contain;" />
               </div>
               
-              <div style="padding: 30px; background: white; border-radius: 0 0 12px 12px; border: 1px solid #E8E2D4; border-top: none;">
-                <img src="https://airporttaxitransfersliverpool.co.uk/meet_and_greet.png" alt="Happy trip" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; margin-bottom: 20px;" />
+              <div style="padding: 40px 30px; background: white; border-radius: 0 0 12px 12px; border: 1px solid #E8E2D4; border-top: none;">
+                <img src="https://airporttaxitransfersliverpool.co.uk/assets/airport-arrivals-greet.jpg" alt="Your Journey Begins" style="width: 100%; height: auto; object-fit: cover; border-radius: 8px; margin-bottom: 24px;" />
                 
-                <h2 style="color: #0B1E37; margin-top: 0; font-size: 24px;">Your Trip is Confirmed! ✈️</h2>
+                <h2 style="color: #0B1E37; margin-top: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.5px;">You're All Set for a Great Trip! ✈️</h2>
                 
-                <p>Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},</p>
+                <p style="font-size: 16px;">Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},</p>
                 
-                <p>Fantastic news! We have received your payment, and your booking (Ref: <strong>${fields['Booking Ref']}</strong>) is completely confirmed.</p>
+                <p style="font-size: 16px;">Fantastic news! Your payment has been received and your booking (Ref: <strong style="color: #E6B24B;">${fields['Booking Ref']}</strong>) is now <strong>100% confirmed</strong>.</p>
                 
-                <p>We are absolutely thrilled to be taking you on your journey. Whether you're heading off on a well-deserved holiday or returning home, our goal is to make your transfer as smooth, relaxing, and enjoyable as possible!</p>
+                <p style="font-size: 16px;">We are absolutely thrilled to be taking you on your journey. Whether you're heading off on a well-deserved holiday or returning home, our priority is to make your transfer smooth, relaxing, and enjoyable!</p>
                 
-                <div style="background: rgba(31, 122, 76, 0.1); border-left: 4px solid #1f7a4c; padding: 16px; border-radius: 4px; margin: 24px 0;">
-                  <h3 style="margin-top: 0; color: #1f7a4c; font-size: 16px; margin-bottom: 8px;">Your Driver Details</h3>
-                  <p style="margin: 4px 0;"><strong>Driver Name:</strong> ${fields['Driver Name']}</p>
-                  <p style="margin: 4px 0;"><strong>Contact Number:</strong> ${fields['Driver Phone']}</p>
+                <div style="background: #F3EEE4; border-left: 4px solid #C7932F; padding: 20px; border-radius: 6px; margin: 30px 0;">
+                  <h3 style="margin-top: 0; color: #0E2747; font-size: 18px; margin-bottom: 12px;">Your Driver Details</h3>
+                  <p style="margin: 6px 0; font-size: 15px;"><strong>Driver:</strong> ${fields['Driver Name']}</p>
+                  <p style="margin: 6px 0; font-size: 15px;"><strong>Contact:</strong> ${fields['Driver Phone']}</p>
                 </div>
                 
-                <p>Your driver will be ready for your journey on <strong>${fields['Outbound Date']}</strong> at <strong>${fields['Outbound Time']}</strong>.</p>
+                <p style="font-size: 16px;">Your driver will be ready to meet you on <strong>${fields['Outbound Date']}</strong> at <strong>${fields['Outbound Time']}</strong>. They will assist you with your luggage and ensure a comfortable ride in one of our premium vehicles.</p>
                 
-                <div style="text-align: center; margin: 30px 0;">
-                  <a href="https://airporttaxitransfersliverpool.co.uk/portal.html?ref=${fields['Booking Ref']}" style="background: #E6B24B; color: #0B1E37; font-weight: bold; padding: 14px 28px; text-decoration: none; border-radius: 6px; display: inline-block; text-transform: uppercase; letter-spacing: 0.5px;">View Your Itinerary</a>
+                <div style="text-align: center; margin: 40px 0;">
+                  <a href="https://airporttaxitransfersliverpool.co.uk/portal.html?ref=${fields['Booking Ref']}" style="background: #0B1E37; color: #ffffff; font-weight: 600; padding: 16px 32px; text-decoration: none; border-radius: 8px; display: inline-block; font-size: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">View Your Full Itinerary</a>
                 </div>
+
+                <img src="https://airporttaxitransfersliverpool.co.uk/assets/airport-transfers-fleet.jpg" alt="Our Premium Fleet" style="width: 100%; height: auto; object-fit: cover; border-radius: 8px; margin-bottom: 24px;" />
                 
-                <p>If you need anything before your trip, please don't hesitate to reach out. We can't wait to see you!</p>
+                <p style="font-size: 16px;">If you need anything at all before your trip, please don't hesitate to reach out to us or your driver. We can't wait to see you!</p>
                 
-                <p style="color: #5b6472; font-size: 14px; margin-top: 30px;">Warm regards,<br><strong>The RM Transfers Team</strong><br>Liverpool's Premier Airport Transfer Service</p>
+                <div style="margin-top: 40px; border-top: 1px solid #E8E2D4; padding-top: 20px;">
+                  <p style="color: #5b6472; font-size: 14px; margin-bottom: 4px;">Warm regards,</p>
+                  <p style="color: #0E2747; font-size: 16px; font-weight: bold; margin-top: 0;">The RM Transfers Team<br><span style="font-size: 14px; font-weight: normal; color: #5b6472;">Liverpool's Premium Airport Transfer Service</span></p>
+                </div>
               </div>
             </div>`;
 
