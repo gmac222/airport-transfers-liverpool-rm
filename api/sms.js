@@ -35,10 +35,24 @@ export default async function handler(req, res) {
 
     if (action === 'send-confirmation') {
         if (!formattedCustomerPhone) return res.status(400).json({ error: 'Missing customer phone' });
+
+        const outDate = fields['Outbound Date'];
+        const outTime = fields['Outbound Time'];
+        const retDate = fields['Return Date'];
+        const retTime = fields['Return Time'];
+        
+        let tripDetails = '';
+        if (outDate && outTime) {
+            tripDetails += `Outbound: ${outDate} at ${outTime}`;
+        }
+        if (retDate && retTime) {
+            tripDetails += (tripDetails ? `\nReturn: ` : `Pickup: `) + `${retDate} at ${retTime}`;
+        }
+
         messages.push({
             to: formattedCustomerPhone,
             from: 'RMTransfers',
-            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nPayment received! Your RM Transfers booking (${fields['Booking Ref']}) is confirmed.\n\nYour driver is ${fields['Driver Name']} (${fields['Driver Phone']}).\n\n(Please do not reply to this text. Text your driver directly.)`
+            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nPayment received! Your RM Transfers booking (${fields['Booking Ref']}) is fully confirmed.\n\n${tripDetails}\n\nDriver: ${fields['Driver Name']} (${fields['Driver Phone']})\n\nWe have also sent an email with your full itinerary.\n\n(Please do not reply to this text. Text your driver directly.)`
         });
 
         // Send Email Confirmation
