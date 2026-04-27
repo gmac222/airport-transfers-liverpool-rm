@@ -218,16 +218,73 @@
             font-family: inherit;
         }
 
-        .filter-btn:hover:not(.active) {
-            border-color: var(--muted);
+        /* Filter specific colors (Traffic Light System) */
+        
+        /* All Active - Default/Navy */
+        .filter-btn.filter-all {
             color: var(--navy-ink);
+            background: rgba(14, 39, 71, 0.03);
+            border-color: transparent;
         }
-
-        .filter-btn.active {
+        .filter-btn.filter-all:hover:not(.active) {
+            background: rgba(14, 39, 71, 0.08);
+        }
+        .filter-btn.filter-all.active {
             background: var(--navy-ink);
             color: white;
             border-color: var(--navy-ink);
-            box-shadow: 0 2px 4px rgba(11, 30, 55, 0.2);
+            box-shadow: 0 2px 6px rgba(11, 30, 55, 0.25);
+        }
+
+        /* Enquiries - Red (Attention) */
+        .filter-btn.filter-enquiries {
+            color: #d92d20; /* Red-600 */
+            background: #fef3f2; /* Red-50 */
+            border-color: #fecdca; /* Red-200 */
+        }
+        .filter-btn.filter-enquiries:hover:not(.active) {
+            background: #fee4e2; /* Red-100 */
+            border-color: #fca5a5;
+        }
+        .filter-btn.filter-enquiries.active {
+            background: #d92d20;
+            color: white;
+            border-color: #d92d20;
+            box-shadow: 0 2px 6px rgba(217, 45, 32, 0.25);
+        }
+
+        /* Awaiting Payment - Amber/Yellow (Wait) */
+        .filter-btn.filter-awaiting {
+            color: #b54708; /* Orange-700 */
+            background: #fffaeb; /* Warning-50 */
+            border-color: #fedf89; /* Warning-200 */
+        }
+        .filter-btn.filter-awaiting:hover:not(.active) {
+            background: #fef0c7; /* Warning-100 */
+            border-color: #fec84b;
+        }
+        .filter-btn.filter-awaiting.active {
+            background: #f79009; /* Warning-500 */
+            color: white;
+            border-color: #f79009;
+            box-shadow: 0 2px 6px rgba(247, 144, 9, 0.25);
+        }
+
+        /* Paid - Green (Go) */
+        .filter-btn.filter-paid {
+            color: #027a48; /* Success-700 */
+            background: #ecfdf3; /* Success-50 */
+            border-color: #a6f4c5; /* Success-200 */
+        }
+        .filter-btn.filter-paid:hover:not(.active) {
+            background: #d1fadf; /* Success-100 */
+            border-color: #6ce9a6;
+        }
+        .filter-btn.filter-paid.active {
+            background: #12b76a; /* Success-500 */
+            color: white;
+            border-color: #12b76a;
+            box-shadow: 0 2px 6px rgba(18, 183, 106, 0.25);
         }
 
         .loading { text-align: center; padding: 40px; color: var(--muted); }

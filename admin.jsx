@@ -608,25 +608,25 @@ function AdminApp() {
                             <span style={{fontWeight: '600', marginRight: '8px', color: 'var(--navy-ink)', fontSize: '14px'}}>Filter:</span>
                             <button 
                                 onClick={() => setActiveFilter('all')} 
-                                className={`filter-btn ${activeFilter === 'all' ? 'active' : ''}`}
+                                className={`filter-btn filter-all ${activeFilter === 'all' ? 'active' : ''}`}
                             >
                                 All Active
                             </button>
                             <button 
                                 onClick={() => setActiveFilter('enquiries')} 
-                                className={`filter-btn ${activeFilter === 'enquiries' ? 'active' : ''}`}
+                                className={`filter-btn filter-enquiries ${activeFilter === 'enquiries' ? 'active' : ''}`}
                             >
                                 Enquiries
                             </button>
                             <button 
                                 onClick={() => setActiveFilter('awaiting_payment')} 
-                                className={`filter-btn ${activeFilter === 'awaiting_payment' ? 'active' : ''}`}
+                                className={`filter-btn filter-awaiting ${activeFilter === 'awaiting_payment' ? 'active' : ''}`}
                             >
                                 Awaiting Payment
                             </button>
                             <button 
                                 onClick={() => setActiveFilter('paid')} 
-                                className={`filter-btn ${activeFilter === 'paid' ? 'active' : ''}`}
+                                className={`filter-btn filter-paid ${activeFilter === 'paid' ? 'active' : ''}`}
                             >
                                 Paid
                             </button>
