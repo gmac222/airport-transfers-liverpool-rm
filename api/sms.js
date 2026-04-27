@@ -42,11 +42,13 @@ export default async function handler(req, res) {
         const retTime = fields['Return Time'];
         
         let tripDetails = '';
-        if (outDate && outTime) {
-            tripDetails += `Outbound: ${outDate} at ${outTime}`;
-        }
-        if (retDate && retTime) {
-            tripDetails += (tripDetails ? `\nReturn: ` : `Pickup: `) + `${retDate} at ${retTime}`;
+        if (fields['Trip Type'] === 'return') {
+            tripDetails += `From: ${fields['Home Address']}\nTo: ${fields['Airport Name']} (Return)\nOutbound: ${outDate} at ${outTime}\nReturn: ${retDate} at ${retTime}`;
+        } else {
+            const isFromAirport = fields['Oneway Direction'] === 'from';
+            const pickup = isFromAirport ? fields['Airport Name'] : fields['Home Address'];
+            const dropoff = isFromAirport ? fields['Home Address'] : fields['Airport Name'];
+            tripDetails += `From: ${pickup}\nTo: ${dropoff}\nDate: ${outDate} at ${outTime}`;
         }
 
         messages.push({
@@ -79,7 +81,15 @@ export default async function handler(req, res) {
                   <p style="margin: 6px 0; font-size: 15px;"><strong>Contact:</strong> ${fields['Driver Phone']}</p>
                 </div>
                 
-                <p style="font-size: 16px;">Your driver will be ready to meet you on <strong>${fields['Outbound Date']}</strong> at <strong>${fields['Outbound Time']}</strong>. They will assist you with your luggage and ensure a comfortable ride in one of our premium vehicles.</p>
+                <div style="background: #F8F9FA; border-left: 4px solid #0B1E37; padding: 20px; border-radius: 6px; margin: 30px 0;">
+                  <h3 style="margin-top: 0; color: #0E2747; font-size: 18px; margin-bottom: 12px;">Trip Summary</h3>
+                  <p style="margin: 6px 0; font-size: 15px;"><strong>From:</strong> ${fields['Trip Type'] === 'return' ? fields['Home Address'] : (fields['Oneway Direction'] === 'from' ? fields['Airport Name'] : fields['Home Address'])}</p>
+                  <p style="margin: 6px 0; font-size: 15px;"><strong>To:</strong> ${fields['Trip Type'] === 'return' ? fields['Airport Name'] + ' (Return)' : (fields['Oneway Direction'] === 'from' ? fields['Home Address'] : fields['Airport Name'])}</p>
+                  <p style="margin: 6px 0; font-size: 15px;"><strong>Outbound:</strong> ${fields['Outbound Date']} at ${fields['Outbound Time']}</p>
+                  ${fields['Trip Type'] === 'return' && fields['Return Date'] ? `<p style="margin: 6px 0; font-size: 15px;"><strong>Return:</strong> ${fields['Return Date']} at ${fields['Return Time']}</p>` : ''}
+                </div>
+                
+                <p style="font-size: 16px;">Your driver will be ready to meet you on time at your pickup location. They will assist you with your luggage and ensure a comfortable ride in one of our premium vehicles.</p>
                 
                 <div style="text-align: center; margin: 40px 0;">
                   <a href="https://airporttaxitransfersliverpool.co.uk/portal.html?ref=${fields['Booking Ref']}" style="background: #0B1E37; color: #ffffff; font-weight: 600; padding: 16px 32px; text-decoration: none; border-radius: 8px; display: inline-block; font-size: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">View Your Full Itinerary</a>
