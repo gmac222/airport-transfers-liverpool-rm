@@ -8,7 +8,7 @@ function AdminApp() {
     const [isLoggingIn, setIsLoggingIn] = useState(false);
 
     const [bookings, setBookings] = useState([]);
-    const [searchQuery, setSearchQuery] = useState('');
+    const [searchQuery, setSearchQuery] = useState(new URLSearchParams(window.location.search).get('ref') || '');
     const [viewMode, setViewMode] = useState('active');
     const [activeFilter, setActiveFilter] = useState('all');
     const [loading, setLoading] = useState(true);
@@ -271,6 +271,9 @@ function AdminApp() {
                             'Total Price': parseFloat(price)
                         }
                     })
+                }).then(async res => {
+                    const smsData = await res.json();
+                    if (smsData.error) alert('Error sending payment link SMS: ' + smsData.error);
                 }).catch(err => console.error('Error triggering sms:', err));
             }
 
@@ -307,6 +310,9 @@ function AdminApp() {
                         action: 'send-confirmation',
                         fields: record.fields
                     })
+                }).then(async res => {
+                    const smsData = await res.json();
+                    if (smsData.error) alert('Error sending confirmation SMS: ' + smsData.error);
                 }).catch(err => console.error('Error triggering sms:', err));
             }
 
@@ -573,110 +579,58 @@ function AdminApp() {
             </div>
             
             <div className="wrap">
-                <div style={{ marginBottom: '20px', display: 'flex', gap: '10px' }}>
-                    <button 
-                        onClick={() => setViewMode('active')} 
-                        style={{ 
-                            background: viewMode === 'active' ? 'var(--navy)' : 'transparent', 
-                            color: viewMode === 'active' ? 'white' : 'var(--navy)', 
-                            border: '1px solid var(--navy)', 
-                            padding: '8px 16px', 
-                            borderRadius: '8px', 
-                            cursor: 'pointer',
-                            fontWeight: 'bold'
-                        }}
-                    >
-                        Active Jobs
-                    </button>
-                    <button 
-                        onClick={() => setViewMode('calendar')} 
-                        style={{ 
-                            background: viewMode === 'calendar' ? 'var(--navy)' : 'transparent', 
-                            color: viewMode === 'calendar' ? 'white' : 'var(--navy)', 
-                            border: '1px solid var(--navy)', 
-                            padding: '8px 16px', 
-                            borderRadius: '8px', 
-                            cursor: 'pointer',
-                            fontWeight: 'bold'
-                        }}
-                    >
-                        Calendar
-                    </button>
-                    <button 
-                        onClick={() => setViewMode('archive')} 
-                        style={{ 
-                            background: viewMode === 'archive' ? 'var(--navy)' : 'transparent', 
-                            color: viewMode === 'archive' ? 'white' : 'var(--navy)', 
-                            border: '1px solid var(--navy)', 
-                            padding: '8px 16px', 
-                            borderRadius: '8px', 
-                            cursor: 'pointer',
-                            fontWeight: 'bold'
-                        }}
-                    >
-                        Archive
-                    </button>
+                <div style={{ marginBottom: '24px' }}>
+                    <div className="segmented-control">
+                        <button 
+                            onClick={() => setViewMode('active')} 
+                            className={`segmented-btn ${viewMode === 'active' ? 'active' : ''}`}
+                        >
+                            Active Jobs
+                        </button>
+                        <button 
+                            onClick={() => setViewMode('calendar')} 
+                            className={`segmented-btn ${viewMode === 'calendar' ? 'active' : ''}`}
+                        >
+                            Calendar
+                        </button>
+                        <button 
+                            onClick={() => setViewMode('archive')} 
+                            className={`segmented-btn ${viewMode === 'archive' ? 'active' : ''}`}
+                        >
+                            Archive
+                        </button>
+                    </div>
                 </div>
 
                 {viewMode === 'active' && (
-                    <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', padding: '10px', background: 'var(--cream)', borderRadius: '8px', flexWrap: 'wrap' }}>
-                        <span style={{fontWeight: 'bold', alignSelf: 'center', marginRight: '10px', color: 'var(--navy)'}}>Filter:</span>
-                        <button 
-                            onClick={() => setActiveFilter('all')} 
-                            style={{ 
-                                background: activeFilter === 'all' ? 'var(--navy)' : 'transparent', 
-                                color: activeFilter === 'all' ? 'white' : 'var(--navy)', 
-                                border: '1px solid var(--navy)', 
-                                padding: '6px 12px', 
-                                borderRadius: '6px', 
-                                cursor: 'pointer',
-                                fontSize: '13px'
-                            }}
-                        >
-                            All Active
-                        </button>
-                        <button 
-                            onClick={() => setActiveFilter('enquiries')} 
-                            style={{ 
-                                background: activeFilter === 'enquiries' ? 'var(--navy)' : 'transparent', 
-                                color: activeFilter === 'enquiries' ? 'white' : 'var(--navy)', 
-                                border: '1px solid var(--navy)', 
-                                padding: '6px 12px', 
-                                borderRadius: '6px', 
-                                cursor: 'pointer',
-                                fontSize: '13px'
-                            }}
-                        >
-                            Enquiries
-                        </button>
-                        <button 
-                            onClick={() => setActiveFilter('awaiting_payment')} 
-                            style={{ 
-                                background: activeFilter === 'awaiting_payment' ? 'var(--navy)' : 'transparent', 
-                                color: activeFilter === 'awaiting_payment' ? 'white' : 'var(--navy)', 
-                                border: '1px solid var(--navy)', 
-                                padding: '6px 12px', 
-                                borderRadius: '6px', 
-                                cursor: 'pointer',
-                                fontSize: '13px'
-                            }}
-                        >
-                            Awaiting Payment
-                        </button>
-                        <button 
-                            onClick={() => setActiveFilter('paid')} 
-                            style={{ 
-                                background: activeFilter === 'paid' ? 'var(--navy)' : 'transparent', 
-                                color: activeFilter === 'paid' ? 'white' : 'var(--navy)', 
-                                border: '1px solid var(--navy)', 
-                                padding: '6px 12px', 
-                                borderRadius: '6px', 
-                                cursor: 'pointer',
-                                fontSize: '13px'
-                            }}
-                        >
-                            Paid
-                        </button>
+                    <div style={{ marginBottom: '24px' }}>
+                        <div className="filter-control">
+                            <span style={{fontWeight: '600', marginRight: '8px', color: 'var(--navy-ink)', fontSize: '14px'}}>Filter:</span>
+                            <button 
+                                onClick={() => setActiveFilter('all')} 
+                                className={`filter-btn ${activeFilter === 'all' ? 'active' : ''}`}
+                            >
+                                All Active
+                            </button>
+                            <button 
+                                onClick={() => setActiveFilter('enquiries')} 
+                                className={`filter-btn ${activeFilter === 'enquiries' ? 'active' : ''}`}
+                            >
+                                Enquiries
+                            </button>
+                            <button 
+                                onClick={() => setActiveFilter('awaiting_payment')} 
+                                className={`filter-btn ${activeFilter === 'awaiting_payment' ? 'active' : ''}`}
+                            >
+                                Awaiting Payment
+                            </button>
+                            <button 
+                                onClick={() => setActiveFilter('paid')} 
+                                className={`filter-btn ${activeFilter === 'paid' ? 'active' : ''}`}
+                            >
+                                Paid
+                            </button>
+                        </div>
                     </div>
                 )}
 

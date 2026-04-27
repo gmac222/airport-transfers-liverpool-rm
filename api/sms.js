@@ -9,11 +9,18 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Invalid request' });
     }
 
-    const customerPhone = fields['Customer Phone'];
-    const formattedCustomerPhone = customerPhone ? customerPhone.replace(/\s+/g, '').replace(/^0/, '+44') : null;
-    
-    const driverPhone = fields['Driver Phone'];
-    const formattedDriverPhone = driverPhone ? driverPhone.replace(/\s+/g, '').replace(/^0/, '+44') : null;
+    const formatPhone = (phone) => {
+        if (!phone) return null;
+        let p = String(phone).replace(/\s+/g, '').replace(/[^0-9+]/g, '');
+        if (p.startsWith('0')) return '+44' + p.substring(1);
+        if (p.startsWith('44')) return '+' + p;
+        if (!p.startsWith('+') && p.length === 10) return '+44' + p;
+        if (!p.startsWith('+')) return '+' + p;
+        return p;
+    };
+
+    const formattedCustomerPhone = formatPhone(fields['Customer Phone']);
+    const formattedDriverPhone = formatPhone(fields['Driver Phone']);
 
     const messages = [];
 
@@ -21,7 +28,8 @@ export default async function handler(req, res) {
         if (!formattedCustomerPhone) return res.status(400).json({ error: 'Missing customer phone' });
         messages.push({
             to: formattedCustomerPhone,
-            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nA driver has been assigned to your RM Transfers booking (${fields['Booking Ref']}).\n\nThe total price for your journey is £${fields['Total Price']}.\n\nPlease go to airporttaxitransfersliverpool.co.uk/portal.html?ref=${fields['Booking Ref']} to securely pay and confirm.\n\n(Please do not reply to this text)`
+            from: 'RMTransfers',
+            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nA driver has been assigned to your RM Transfers booking (${fields['Booking Ref']}).\n\nThe total price for your journey is £${fields['Total Price']}.\n\nPlease go to https://airporttaxitransfersliverpool.co.uk/portal.html?ref=${fields['Booking Ref']} to securely pay and confirm.\n\n(Please do not reply to this text)`
         });
     }
 
@@ -29,6 +37,7 @@ export default async function handler(req, res) {
         if (!formattedCustomerPhone) return res.status(400).json({ error: 'Missing customer phone' });
         messages.push({
             to: formattedCustomerPhone,
+            from: 'RMTransfers',
             body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nPayment received! Your RM Transfers booking (${fields['Booking Ref']}) is confirmed.\n\nYour driver is ${fields['Driver Name']} (${fields['Driver Phone']}).\n\n(Please do not reply to this text. Text your driver directly.)`
         });
     }
@@ -37,7 +46,8 @@ export default async function handler(req, res) {
         if (!formattedCustomerPhone) return res.status(400).json({ error: 'Missing customer phone' });
         messages.push({
             to: formattedCustomerPhone,
-            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nThis is a resent confirmation for RM Transfers booking (${fields['Booking Ref']}).\n\nYour driver is ${fields['Driver Name'] || 'not yet assigned'}.\n\nView details: airporttaxitransfersliverpool.co.uk/portal.html?ref=${fields['Booking Ref']}\n\n(Please do not reply to this text)`
+            from: 'RMTransfers',
+            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nThis is a resent confirmation for RM Transfers booking (${fields['Booking Ref']}).\n\nYour driver is ${fields['Driver Name'] || 'not yet assigned'}.\n\nView details: https://airporttaxitransfersliverpool.co.uk/portal.html?ref=${fields['Booking Ref']}\n\n(Please do not reply to this text)`
         });
     }
 
@@ -45,7 +55,8 @@ export default async function handler(req, res) {
         if (!formattedDriverPhone) return res.status(400).json({ error: 'Missing driver phone' });
         messages.push({
             to: formattedDriverPhone,
-            body: `RESEND JOB: ${fields['Trip Type'] === 'return' ? 'RETURN' : 'ONE WAY'} for ${fields['Customer Name']}\nPickup: ${fields['Home Address']}\nDate: ${fields['Outbound Date']} @ ${fields['Outbound Time']}\nFlight: ${fields['Outbound Flight'] || 'N/A'}\nCustomer: ${fields['Customer Phone']}\nPrice: £${fields['Total Price']}\nPortal: airporttaxitransfersliverpool.co.uk/driver-action.html?ref=${fields['Booking Ref']}`
+            from: 'RMTransfers',
+            body: `RESEND JOB: ${fields['Trip Type'] === 'return' ? 'RETURN' : 'ONE WAY'} for ${fields['Customer Name']}\nPickup: ${fields['Home Address']}\nDate: ${fields['Outbound Date']} @ ${fields['Outbound Time']}\nFlight: ${fields['Outbound Flight'] || 'N/A'}\nCustomer: ${fields['Customer Phone']}\nPrice: £${fields['Total Price']}\nPortal: https://airporttaxitransfersliverpool.co.uk/driver-action.html?ref=${fields['Booking Ref']}`
         });
     }
 
@@ -53,6 +64,7 @@ export default async function handler(req, res) {
         if (!formattedCustomerPhone) return res.status(400).json({ error: 'Missing customer phone' });
         messages.push({
             to: formattedCustomerPhone,
+            from: 'RMTransfers',
             body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nYour RM Transfers driver, ${fields['Driver Name']}, is on the way for your booking (${fields['Booking Ref']})!\n\nYou can contact them directly on ${fields['Driver Phone']}.`
         });
     }
@@ -61,6 +73,7 @@ export default async function handler(req, res) {
         if (!formattedCustomerPhone) return res.status(400).json({ error: 'Missing customer phone' });
         messages.push({
             to: formattedCustomerPhone,
+            from: 'RMTransfers',
             body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nYour RM Transfers driver, ${fields['Driver Name']}, is waiting outside.\n\nPlease come out when you are ready.`
         });
     }
@@ -69,6 +82,7 @@ export default async function handler(req, res) {
         if (!formattedCustomerPhone) return res.status(400).json({ error: 'Missing customer phone' });
         messages.push({
             to: formattedCustomerPhone,
+            from: 'RMTransfers',
             body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nThank you for traveling with RM Transfers!\n\nWe hope you had a great journey. If you have a moment, we'd really appreciate it if you could leave us a review on Trustpilot:\n\nhttps://uk.trustpilot.com/review/rmtransfers.co.uk?utm_medium=trustbox&utm_source=TrustBoxReviewCollector\n\nThanks again!`
         });
     }
@@ -77,6 +91,7 @@ export default async function handler(req, res) {
         if (!formattedCustomerPhone) return res.status(400).json({ error: 'Missing customer phone' });
         messages.push({
             to: formattedCustomerPhone,
+            from: 'RMTransfers',
             body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nFriendly reminder from RM Transfers!\n\nYour booking (${fields['Booking Ref']}) is scheduled for ${fields['Outbound Date']} at ${fields['Outbound Time']}.\n\nYour driver will be ${fields['Driver Name'] || 'assigned shortly'}.`
         });
     }
@@ -86,7 +101,8 @@ export default async function handler(req, res) {
         adminNumbers.forEach(num => {
             messages.push({
                 to: num,
-                body: `NEW BOOKING: ${fields['Booking Ref']}\nName: ${fields['Customer Name']}\nFrom: ${fields['Home Address']}\nTo: ${fields['Airport Name']}\nType: ${fields['Trip Type']}\nPax: ${fields['Passengers']} Bags: ${fields['Luggage']}\nPhone: ${fields['Customer Phone']}`
+                from: 'RMTransfers',
+                body: `NEW BOOKING: ${fields['Booking Ref']}\nName: ${fields['Customer Name']}\nFrom: ${fields['Home Address']}\nTo: ${fields['Airport Name']}\nType: ${fields['Trip Type']}\nPax: ${fields['Passengers']} Bags: ${fields['Luggage']}\nPhone: ${fields['Customer Phone']}\nAdmin: https://airporttaxitransfersliverpool.co.uk/admin.html?ref=${fields['Booking Ref']}`
             });
         });
     }
