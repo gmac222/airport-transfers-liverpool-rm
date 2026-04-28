@@ -211,21 +211,30 @@ function PortalApp() {
                             <p style={{ margin: '0 0 24px 0', fontSize: '15px', color: 'rgba(255,255,255,0.8)', lineHeight: 1.5 }}>
                                 Please secure your booking by completing the fixed-price payment below.
                             </p>
-                            <a href={fields['Payment Link']?.startsWith('http') ? fields['Payment Link'] : `https://${fields['Payment Link']}`} target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{
-                                width: '100%', 
-                                textAlign: 'center', 
-                                display: 'flex', 
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                background: 'var(--amber)', 
-                                color: 'var(--navy-ink)', 
-                                fontSize: '16px',
-                                padding: '16px',
-                                borderRadius: '12px',
-                                fontWeight: '700',
-                                boxShadow: '0 10px 20px -5px rgba(230, 178, 75, 0.4)',
-                                transition: 'all 0.3s ease'
-                            }}>
+                            <a
+                                href={fields['Payment Link']?.startsWith('http') ? fields['Payment Link'] : `https://${fields['Payment Link']}`}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    const raw = fields['Payment Link'] || '';
+                                    const url = raw.startsWith('http') ? raw : `https://${raw}`;
+                                    window.location.href = url;
+                                }}
+                                className="btn btn-primary"
+                                style={{
+                                    width: '100%',
+                                    textAlign: 'center',
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    background: 'var(--amber)',
+                                    color: 'var(--navy-ink)',
+                                    fontSize: '16px',
+                                    padding: '16px',
+                                    borderRadius: '12px',
+                                    fontWeight: '700',
+                                    boxShadow: '0 10px 20px -5px rgba(230, 178, 75, 0.4)',
+                                    transition: 'all 0.3s ease'
+                                }}>
                                 Complete Payment Now
                             </a>
                             <p style={{fontSize: '13px', color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginTop: '16px', marginBottom: '0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'}}>
