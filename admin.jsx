@@ -23,6 +23,8 @@ function AdminApp() {
 
     const [newDriverName, setNewDriverName] = useState('');
     const [newDriverPhone, setNewDriverPhone] = useState('');
+    const [newDriverUsername, setNewDriverUsername] = useState('');
+    const [newDriverPassword, setNewDriverPassword] = useState('');
     const [isAddingDriver, setIsAddingDriver] = useState(false);
 
     const [driverNames, setDriverNames] = useState({});
@@ -171,16 +173,24 @@ function AdminApp() {
     const handleAddDriver = async (e) => {
         e.preventDefault();
         if (!newDriverName.trim()) return alert("Driver name is required.");
-        
+        if (!newDriverUsername.trim() || !newDriverPassword.trim()) {
+            return alert("Username and password are required for portal login.");
+        }
+
         setIsAddingDriver(true);
         try {
             const res = await fetch('/api/drivers', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: newDriverName.trim(), phone: newDriverPhone.trim() })
+                body: JSON.stringify({
+                    name: newDriverName.trim(),
+                    phone: newDriverPhone.trim(),
+                    username: newDriverUsername.trim(),
+                    password: newDriverPassword.trim()
+                })
             });
             const data = await res.json();
-            
+
             if (data.error) throw new Error(data.error);
 
             // Add the new driver to the list locally or refetch
@@ -192,6 +202,8 @@ function AdminApp() {
 
             setNewDriverName('');
             setNewDriverPhone('');
+            setNewDriverUsername('');
+            setNewDriverPassword('');
             alert('Driver added successfully!');
         } catch (err) {
             alert('Error adding driver: ' + err.message);
@@ -653,23 +665,41 @@ function AdminApp() {
                             />
                         </div>
                         
-                        <form onSubmit={handleAddDriver} style={{ flex: '1 1 400px', display: 'flex', gap: '10px', background: 'var(--cream)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--line)' }}>
-                            <input 
-                                type="text" 
-                                placeholder="New Driver Name" 
+                        <form onSubmit={handleAddDriver} style={{ flex: '1 1 400px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', background: 'var(--cream)', padding: '12px 14px', borderRadius: '8px', border: '1px solid var(--line)' }}>
+                            <input
+                                type="text"
+                                placeholder="Driver Name"
                                 value={newDriverName}
                                 onChange={e => setNewDriverName(e.target.value)}
-                                style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--line)' }}
+                                style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--line)' }}
                                 required
                             />
-                            <input 
-                                type="tel" 
-                                placeholder="Phone Number" 
+                            <input
+                                type="tel"
+                                placeholder="Phone Number"
                                 value={newDriverPhone}
                                 onChange={e => setNewDriverPhone(e.target.value)}
-                                style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--line)' }}
+                                style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--line)' }}
                             />
-                            <button type="submit" disabled={isAddingDriver} className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '14px' }}>
+                            <input
+                                type="text"
+                                placeholder="Portal Username"
+                                value={newDriverUsername}
+                                onChange={e => setNewDriverUsername(e.target.value)}
+                                autoCapitalize="none"
+                                autoCorrect="off"
+                                style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--line)' }}
+                                required
+                            />
+                            <input
+                                type="text"
+                                placeholder="Portal Password"
+                                value={newDriverPassword}
+                                onChange={e => setNewDriverPassword(e.target.value)}
+                                style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--line)' }}
+                                required
+                            />
+                            <button type="submit" disabled={isAddingDriver} className="btn btn-primary" style={{ gridColumn: '1 / -1', padding: '10px 16px', fontSize: '14px' }}>
                                 {isAddingDriver ? 'Adding...' : 'Add Driver'}
                             </button>
                         </form>

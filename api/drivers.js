@@ -48,9 +48,12 @@ module.exports = async (req, res) => {
     }
 
     if (req.method === 'POST') {
-        const { name, phone } = req.body;
+        const { name, phone, username, password } = req.body;
         if (!name) {
             return res.status(400).json({ error: 'Driver name is required' });
+        }
+        if (!username || !password) {
+            return res.status(400).json({ error: 'Username and password are required' });
         }
 
         try {
@@ -66,7 +69,9 @@ module.exports = async (req, res) => {
                         {
                             fields: {
                                 'Name': name,
-                                'Phone': phone || ''
+                                'Phone': phone || '',
+                                'Username': username,
+                                'Password': password
                             }
                         }
                     ]
