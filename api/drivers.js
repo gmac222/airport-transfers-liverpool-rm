@@ -79,12 +79,16 @@ module.exports = async (req, res) => {
             });
 
             const data = await response.json();
-            if (data.error) throw new Error(data.error.message || 'Failed to add driver');
+            if (!response.ok || data.error) {
+                const msg = (data.error && (data.error.message || data.error.type)) || `Airtable ${response.status}`;
+                console.error('Airtable add driver failed:', JSON.stringify(data));
+                return res.status(response.status || 500).json({ error: msg });
+            }
 
             return res.status(201).json({ success: true, driver: data.records[0] });
         } catch (error) {
-            console.error(error);
-            return res.status(500).json({ error: 'Internal server error while adding driver' });
+            console.error('add driver exception:', error);
+            return res.status(500).json({ error: error.message || 'Internal server error while adding driver' });
         }
     }
 
