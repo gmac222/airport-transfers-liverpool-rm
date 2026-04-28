@@ -211,7 +211,7 @@ function PortalApp() {
                             <p style={{ margin: '0 0 24px 0', fontSize: '15px', color: 'rgba(255,255,255,0.8)', lineHeight: 1.5 }}>
                                 Please secure your booking by completing the fixed-price payment below.
                             </p>
-                            <a href={fields['Payment Link']} target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{
+                            <a href={fields['Payment Link']?.startsWith('http') ? fields['Payment Link'] : `https://${fields['Payment Link']}`} target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{
                                 width: '100%', 
                                 textAlign: 'center', 
                                 display: 'flex', 
