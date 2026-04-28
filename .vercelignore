@@ -1,0 +1,10 @@
+# The driver-app source dir should NOT be deployed —
+# it's the Vite source, not the built output.
+# The built version lives at /driver-app-build/ and is mapped
+# to /driver-app/ via vercel.json rewrites.
+driver-app/
+
+# Capacitor scratch dirs
+driver-app/android/
+driver-app/ios/
+driver-app/node_modules/
