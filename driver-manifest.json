@@ -1,14 +1,15 @@
 {
   "name": "RM Driver App",
   "short_name": "RM Driver",
-  "start_url": "/driver-portal.html",
+  "start_url": "/driver-app/",
+  "scope": "/driver-app/",
   "display": "standalone",
   "background_color": "#0E2747",
   "theme_color": "#0E2747",
   "description": "RM Transfers Driver Portal — View and manage your assigned jobs.",
   "icons": [
     {
-      "src": "./assets/logo.png",
+      "src": "/assets/logo.png",
       "sizes": "512x512",
       "type": "image/png"
     }
