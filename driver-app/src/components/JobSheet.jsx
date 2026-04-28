@@ -4,9 +4,29 @@ import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { driverAction } from '../api.js';
 import { formatDateLong } from '../utils/dates.js';
 
+const ACTION_LABELS = {
+  'on-the-way': '🚗 On the way',
+  'arrived': '📍 Arrived',
+  'complete-job': '✓ Complete',
+  'close-job': '📦 Archive + review'
+};
+
+function actionsForStatus(status) {
+  // Mirrors what driver-action.html exposes today.
+  switch (status) {
+    case 'Pending':
+    case 'Accepted':
+      return ['on-the-way', 'arrived', 'complete-job'];
+    case 'Completed':
+      return ['close-job'];
+    default:
+      return [];
+  }
+}
+
 export default function JobSheet({ booking, onClose, onAfterAction }) {
   const f = booking.fields;
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
 
   const haptic = async () => {
@@ -16,7 +36,7 @@ export default function JobSheet({ booking, onClose, onAfterAction }) {
   };
 
   const act = async (action) => {
-    setBusy(true);
+    setBusy(action);
     setError('');
     haptic();
     try {
@@ -24,13 +44,14 @@ export default function JobSheet({ booking, onClose, onAfterAction }) {
       onAfterAction();
     } catch (err) {
       setError(err.message || 'Action failed');
-      setBusy(false);
+      setBusy('');
     }
   };
 
   const phone = (f['Customer Phone'] || '').replace(/\s+/g, '');
   const status = f['Status'] || 'Pending';
   const mapsQuery = encodeURIComponent(f['Home Address'] || '');
+  const actions = actionsForStatus(status);
 
   const rows = [
     ['Customer', f['Customer Name']],
@@ -84,21 +105,16 @@ export default function JobSheet({ booking, onClose, onAfterAction }) {
               rel="noreferrer"
             >🗺️ Map</a>
           )}
-          {status === 'Pending' && (
-            <>
-              <button className="btn primary" disabled={busy} onClick={() => act('accept')}>
-                ✓ Accept
-              </button>
-              <button className="btn danger" disabled={busy} onClick={() => act('decline')}>
-                ✕ Decline
-              </button>
-            </>
-          )}
-          {status === 'Accepted' && (
-            <button className="btn primary" disabled={busy} onClick={() => act('start')}>
-              🚗 Start Job
+          {actions.map((a) => (
+            <button
+              key={a}
+              className="btn primary"
+              disabled={!!busy}
+              onClick={() => act(a)}
+            >
+              {busy === a ? '…' : ACTION_LABELS[a]}
             </button>
-          )}
+          ))}
         </div>
       </div>
     </div>
