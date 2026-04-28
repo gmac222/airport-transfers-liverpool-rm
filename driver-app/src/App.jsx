@@ -1,122 +1,53 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useEffect, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { SplashScreen } from '@capacitor/splash-screen';
+import Login from './screens/Login.jsx';
+import JobsScreen from './screens/JobsScreen.jsx';
+import { getItem, setItem, removeItem } from './storage.js';
+import { registerPush } from './push.js';
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const [authed, setAuthed] = useState(null);
+  const [driverName, setDriverName] = useState('');
 
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+  useEffect(() => {
+    (async () => {
+      if (Capacitor.isNativePlatform()) {
+        try {
+          await StatusBar.setStyle({ style: Style.Dark });
+          await StatusBar.setBackgroundColor({ color: '#0E2747' });
+        } catch {}
+        SplashScreen.hide();
+      }
+      const flag = await getItem('driverLoggedIn');
+      const name = await getItem('driverName');
+      if (flag === 'true' && name) {
+        setDriverName(name);
+        setAuthed(true);
+        registerPush();
+      } else {
+        setAuthed(false);
+      }
+    })();
+  }, []);
 
-      <div className="ticks"></div>
+  const handleLoggedIn = async (name) => {
+    await setItem('driverLoggedIn', 'true');
+    await setItem('driverName', name);
+    setDriverName(name);
+    setAuthed(true);
+    registerPush();
+  };
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+  const handleLogout = async () => {
+    await removeItem('driverLoggedIn');
+    await removeItem('driverName');
+    setDriverName('');
+    setAuthed(false);
+  };
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+  if (authed === null) return <div className="boot" />;
+  if (!authed) return <Login onLoggedIn={handleLoggedIn} />;
+  return <JobsScreen driverName={driverName} onLogout={handleLogout} />;
 }
-
-export default App

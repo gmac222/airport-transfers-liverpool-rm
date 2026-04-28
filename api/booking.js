@@ -167,6 +167,24 @@ module.exports = async (req, res) => {
 
         try {
             const url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}/${id}`;
+
+            // ─── Step 1: Fetch the EXISTING record so we can detect driver changes ───
+            let oldRecord = {};
+            if (fields['Driver Name'] !== undefined || fields['Return Driver Name'] !== undefined) {
+                try {
+                    const existingRes = await fetch(url, {
+                        headers: { 'Authorization': `Bearer ${AIRTABLE_API_KEY}` }
+                    });
+                    if (existingRes.ok) {
+                        const existingData = await existingRes.json();
+                        oldRecord = existingData.fields || {};
+                    }
+                } catch (fetchErr) {
+                    console.error('Failed to fetch existing record (non-blocking):', fetchErr);
+                }
+            }
+
+            // ─── Step 2: Apply the update ─────────────────────────────────────
             const response = await fetch(url, {
                 method: 'PATCH',
                 headers: {
@@ -182,59 +200,75 @@ module.exports = async (req, res) => {
                 return res.status(response.status).json({ error: msg });
             }
 
-            // If a driver was reassigned, send SMS to the new driver
-            if (fields['Driver Name'] && fields['Driver Phone']) {
-                try {
-                    const rec = data.fields || {};
-                    const driverPhone = fields['Driver Phone'].replace(/\s+/g, '');
-                    const phone = driverPhone.startsWith('+') ? driverPhone : (driverPhone.startsWith('0') ? '+44' + driverPhone.slice(1) : '+44' + driverPhone);
-                    const smsBody = `RM TRANSFERS – New Job Assigned\n\nRef: ${rec['Booking Ref'] || '—'}\nCustomer: ${rec['Customer Name'] || '—'}\nPickup: ${rec['Home Address'] || '—'}\nAirport: ${rec['Airport'] || '—'}\nDate: ${rec['Outbound Date'] || '—'} at ${rec['Outbound Time'] || '—'}\nPax: ${rec['Passengers'] || '—'} | Bags: ${rec['Luggage'] || '—'}\n\nView your jobs: https://airporttaxitransfersliverpool.co.uk/driver-portal.html`;
+            const rec = data.fields || {};
+            const CLICKSEND_AUTH = 'Basic Z3JhaGFtLm0uMjIyQGdtYWlsLmNvbTo2MzREMTAyQi0zMDRFLUI0QTUtQUQzQS1COTRFNDk1QjQ1OEM=';
 
+            // Helper: format phone to E.164
+            const formatPhone = (raw) => {
+                if (!raw) return null;
+                const cleaned = raw.replace(/\s+/g, '');
+                if (cleaned.startsWith('+')) return cleaned;
+                if (cleaned.startsWith('0')) return '+44' + cleaned.slice(1);
+                return '+44' + cleaned;
+            };
+
+            // Helper: send SMS (non-blocking)
+            const sendSms = async (to, body) => {
+                try {
                     await fetch('https://rest.clicksend.com/v3/sms/send', {
                         method: 'POST',
-                        headers: {
-                            'Authorization': 'Basic Z3JhaGFtLm0uMjIyQGdtYWlsLmNvbTo2MzREMTAyQi0zMDRFLUI0QTUtQUQzQS1COTRFNDk1QjQ1OEM=',
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            messages: [{
-                                to: phone,
-                                from: 'RMTransfers',
-                                body: smsBody
-                            }]
-                        })
+                        headers: { 'Authorization': CLICKSEND_AUTH, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ messages: [{ to, from: 'RMTransfers', body }] })
                     });
-                    console.log(`Driver reassignment SMS sent to ${phone}`);
-                } catch (smsErr) {
-                    console.error('Driver reassignment SMS failed (non-blocking):', smsErr);
+                    console.log(`SMS sent to ${to}`);
+                } catch (err) {
+                    console.error(`SMS to ${to} failed (non-blocking):`, err);
+                }
+            };
+
+            // ─── Step 3: Outbound driver notifications ────────────────────────
+            if (fields['Driver Name'] && fields['Driver Phone']) {
+                const newDriverPhone = formatPhone(fields['Driver Phone']);
+
+                // 3a. SMS to the NEW driver
+                if (newDriverPhone) {
+                    const driverMsg = `RM TRANSFERS – New Job Assigned\n\nRef: ${rec['Booking Ref'] || '—'}\nCustomer: ${rec['Customer Name'] || '—'}\nPickup: ${rec['Home Address'] || '—'}\nAirport: ${rec['Airport'] || '—'}\nDate: ${rec['Outbound Date'] || '—'} at ${rec['Outbound Time'] || '—'}\nPax: ${rec['Passengers'] || '—'} | Bags: ${rec['Luggage'] || '—'}\n\nView your jobs: https://airporttaxitransfersliverpool.co.uk/driver-portal.html`;
+                    sendSms(newDriverPhone, driverMsg);
+                }
+
+                // 3b. SMS to CUSTOMER if driver was CHANGED (not first assignment)
+                const oldDriverName = oldRecord['Driver Name'] || '';
+                const newDriverName = fields['Driver Name'] || '';
+                if (oldDriverName && oldDriverName !== newDriverName) {
+                    const customerPhone = formatPhone(rec['Phone'] || rec['Customer Phone'] || '');
+                    if (customerPhone) {
+                        const custMsg = `RM TRANSFERS – Driver Update\n\nHi ${rec['Customer Name'] || 'there'},\n\nApologies, the driver for your upcoming transfer has been changed.\n\nYour new driver is: ${newDriverName}\nDriver contact: ${fields['Driver Phone'] || '—'}\n\nBooking Ref: ${rec['Booking Ref'] || '—'}\nDate: ${rec['Outbound Date'] || '—'} at ${rec['Outbound Time'] || '—'}\nPickup: ${rec['Home Address'] || '—'}\n\nWe apologise for any inconvenience.\n\nRM Transfers`;
+                        sendSms(customerPhone, custMsg);
+                        console.log(`Customer notified of driver change: ${oldDriverName} → ${newDriverName}`);
+                    }
                 }
             }
 
-            // If a RETURN driver was assigned/reassigned, send SMS to the return driver
+            // ─── Step 4: Return driver notifications ──────────────────────────
             if (fields['Return Driver Name'] && fields['Return Driver Phone']) {
-                try {
-                    const rec = data.fields || {};
-                    const retPhone = fields['Return Driver Phone'].replace(/\s+/g, '');
-                    const phone = retPhone.startsWith('+') ? retPhone : (retPhone.startsWith('0') ? '+44' + retPhone.slice(1) : '+44' + retPhone);
-                    const smsBody = `RM TRANSFERS – Return Leg Assigned\n\nRef: ${rec['Booking Ref'] || '—'}\nCustomer: ${rec['Customer Name'] || '—'}\nPickup: ${rec['Airport'] || '—'} Airport\nDrop-off: ${rec['Home Address'] || '—'}\nReturn Date: ${rec['Return Date'] || '—'} at ${rec['Return Time'] || '—'}\nPax: ${rec['Passengers'] || '—'} | Bags: ${rec['Luggage'] || '—'}\n\nView your jobs: https://airporttaxitransfersliverpool.co.uk/driver-portal.html`;
+                const retPhone = formatPhone(fields['Return Driver Phone']);
 
-                    await fetch('https://rest.clicksend.com/v3/sms/send', {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': 'Basic Z3JhaGFtLm0uMjIyQGdtYWlsLmNvbTo2MzREMTAyQi0zMDRFLUI0QTUtQUQzQS1COTRFNDk1QjQ1OEM=',
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            messages: [{
-                                to: phone,
-                                from: 'RMTransfers',
-                                body: smsBody
-                            }]
-                        })
-                    });
-                    console.log(`Return driver SMS sent to ${phone}`);
-                } catch (smsErr) {
-                    console.error('Return driver SMS failed (non-blocking):', smsErr);
+                // 4a. SMS to the NEW return driver
+                if (retPhone) {
+                    const retMsg = `RM TRANSFERS – Return Leg Assigned\n\nRef: ${rec['Booking Ref'] || '—'}\nCustomer: ${rec['Customer Name'] || '—'}\nPickup: ${rec['Airport'] || '—'} Airport\nDrop-off: ${rec['Home Address'] || '—'}\nReturn Date: ${rec['Return Date'] || '—'} at ${rec['Return Time'] || '—'}\nPax: ${rec['Passengers'] || '—'} | Bags: ${rec['Luggage'] || '—'}\n\nView your jobs: https://airporttaxitransfersliverpool.co.uk/driver-portal.html`;
+                    sendSms(retPhone, retMsg);
+                }
+
+                // 4b. SMS to CUSTOMER if return driver was CHANGED
+                const oldRetDriver = oldRecord['Return Driver Name'] || '';
+                const newRetDriver = fields['Return Driver Name'] || '';
+                if (oldRetDriver && oldRetDriver !== newRetDriver) {
+                    const customerPhone = formatPhone(rec['Phone'] || rec['Customer Phone'] || '');
+                    if (customerPhone) {
+                        const custRetMsg = `RM TRANSFERS – Return Driver Update\n\nHi ${rec['Customer Name'] || 'there'},\n\nApologies, the driver for your return transfer has been changed.\n\nYour new return driver is: ${newRetDriver}\nDriver contact: ${fields['Return Driver Phone'] || '—'}\n\nBooking Ref: ${rec['Booking Ref'] || '—'}\nReturn Date: ${rec['Return Date'] || '—'} at ${rec['Return Time'] || '—'}\n\nWe apologise for any inconvenience.\n\nRM Transfers`;
+                        sendSms(customerPhone, custRetMsg);
+                        console.log(`Customer notified of return driver change: ${oldRetDriver} → ${newRetDriver}`);
+                    }
                 }
             }
 
