@@ -180,6 +180,24 @@ function AdminApp() {
         }
     };
 
+    const handleReassignReturnDriver = async (bookingId, driverName) => {
+        const matched = driversList.find(d => d.name === driverName);
+        const fields = {
+            'Return Driver Name': driverName || '',
+            'Return Driver Phone': matched ? matched.phone : ''
+        };
+        try {
+            await fetch('/api/booking', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: bookingId, fields })
+            });
+            fetchBookings();
+        } catch (err) {
+            alert('Error: ' + err.message);
+        }
+    };
+
     const startEditPrice = (b) => {
         setEditingPriceId(b.id);
         setCostPriceVal(b.fields['Cost Price'] ?? '');
@@ -368,8 +386,10 @@ function AdminApp() {
                                             <th style={{ padding: '8px' }}>Status</th>
                                             <th style={{ padding: '8px' }}>Cost Price</th>
                                             <th style={{ padding: '8px' }}>Operator Price</th>
-                                            <th style={{ padding: '8px' }}>Driver</th>
+                                            <th style={{ padding: '8px' }}>Outbound Driver</th>
                                             <th style={{ padding: '8px' }}>Reassign Driver</th>
+                                            <th style={{ padding: '8px' }}>Return Driver</th>
+                                            <th style={{ padding: '8px' }}>Reassign Return</th>
                                             <th style={{ padding: '8px' }}>Assigned To</th>
                                             <th style={{ padding: '8px' }}>Reassign Operator</th>
                                         </tr>
@@ -415,6 +435,22 @@ function AdminApp() {
                                                             {driversList.map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
                                                         </select>
                                                     </td>
+                                                    <td style={{ padding: '8px', color: b.fields['Trip Type'] === 'return' ? '#7c3aed' : '#9ca3af' }}>
+                                                        {b.fields['Trip Type'] === 'return' 
+                                                            ? (b.fields['Return Driver Name'] || b.fields['Driver Name'] || <span style={{color:'#9ca3af'}}>–</span>)
+                                                            : <span style={{color:'#d1d5db'}}>N/A</span>
+                                                        }
+                                                    </td>
+                                                    <td style={{ padding: '8px' }}>
+                                                        {b.fields['Trip Type'] === 'return' ? (
+                                                            <select value={b.fields['Return Driver Name'] || ''} onChange={e => handleReassignReturnDriver(b.id, e.target.value)} style={{ padding: '4px 8px', border: '1px solid #c4b5fd', borderRadius: '4px', fontSize: '12px', fontFamily: 'inherit', background: '#faf5ff' }}>
+                                                                <option value="">Same as outbound</option>
+                                                                {driversList.map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
+                                                            </select>
+                                                        ) : (
+                                                            <span style={{color:'#d1d5db', fontSize: '11px'}}>N/A</span>
+                                                        )}
+                                                    </td>
                                                     <td style={{ padding: '8px', fontWeight: currentOp ? 600 : 400, color: currentOp ? 'var(--navy-ink)' : '#e53e3e' }}>{currentOp || 'Unassigned'}</td>
                                                     <td style={{ padding: '8px' }}>
                                                         <select value={currentOp} onChange={e => handleReassignSingle(b.id, e.target.value)} style={{ padding: '4px 8px', border: '1px solid var(--line)', borderRadius: '4px', fontSize: '12px', fontFamily: 'inherit' }}>
@@ -426,7 +462,7 @@ function AdminApp() {
                                             );
                                         })}
                                         {activeBookings.length === 0 && (
-                                            <tr><td colSpan="10" style={{ padding: '30px', textAlign: 'center', color: 'var(--muted)' }}>No active bookings.</td></tr>
+                                            <tr><td colSpan="12" style={{ padding: '30px', textAlign: 'center', color: 'var(--muted)' }}>No active bookings.</td></tr>
                                         )}
                                     </tbody>
                                 </table>

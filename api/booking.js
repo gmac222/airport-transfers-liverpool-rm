@@ -207,7 +207,34 @@ module.exports = async (req, res) => {
                     console.log(`Driver reassignment SMS sent to ${phone}`);
                 } catch (smsErr) {
                     console.error('Driver reassignment SMS failed (non-blocking):', smsErr);
-                    // Non-blocking – don't fail the PATCH response
+                }
+            }
+
+            // If a RETURN driver was assigned/reassigned, send SMS to the return driver
+            if (fields['Return Driver Name'] && fields['Return Driver Phone']) {
+                try {
+                    const rec = data.fields || {};
+                    const retPhone = fields['Return Driver Phone'].replace(/\s+/g, '');
+                    const phone = retPhone.startsWith('+') ? retPhone : (retPhone.startsWith('0') ? '+44' + retPhone.slice(1) : '+44' + retPhone);
+                    const smsBody = `RM TRANSFERS – Return Leg Assigned\n\nRef: ${rec['Booking Ref'] || '—'}\nCustomer: ${rec['Customer Name'] || '—'}\nPickup: ${rec['Airport'] || '—'} Airport\nDrop-off: ${rec['Home Address'] || '—'}\nReturn Date: ${rec['Return Date'] || '—'} at ${rec['Return Time'] || '—'}\nPax: ${rec['Passengers'] || '—'} | Bags: ${rec['Luggage'] || '—'}\n\nView your jobs: https://airporttaxitransfersliverpool.co.uk/driver-portal.html`;
+
+                    await fetch('https://rest.clicksend.com/v3/sms/send', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': 'Basic Z3JhaGFtLm0uMjIyQGdtYWlsLmNvbTo2MzREMTAyQi0zMDRFLUI0QTUtQUQzQS1COTRFNDk1QjQ1OEM=',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            messages: [{
+                                to: phone,
+                                from: 'RMTransfers',
+                                body: smsBody
+                            }]
+                        })
+                    });
+                    console.log(`Return driver SMS sent to ${phone}`);
+                } catch (smsErr) {
+                    console.error('Return driver SMS failed (non-blocking):', smsErr);
                 }
             }
 

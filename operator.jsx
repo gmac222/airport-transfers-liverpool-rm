@@ -30,6 +30,8 @@ function AdminApp() {
 
     const [driverNames, setDriverNames] = useState({});
     const [driverPhones, setDriverPhones] = useState({});
+    const [returnDriverNames, setReturnDriverNames] = useState({});
+    const [returnDriverPhones, setReturnDriverPhones] = useState({});
     const [paymentLinks, setPaymentLinks] = useState({});
     const [prices, setPrices] = useState({});
     const [selectedDriver, setSelectedDriver] = useState(null);
@@ -162,6 +164,7 @@ function AdminApp() {
                                 <strong>${part.toUpperCase()}</strong>: ${direction} ${airport}<br/>
                                 ${flight ? `✈️ ${flight}<br/>` : ''}
                                 ${f['Driver Name'] ? `🚗 ${f['Driver Name']}` : '🚗 <i>Unassigned</i>'}
+                                ${part === 'Return' && f['Return Driver Name'] ? `<br/>🔄 Ret: ${f['Return Driver Name']}` : ''}
                             </div>
                         `;
                         return { html: html };
@@ -228,12 +231,30 @@ function AdminApp() {
         }
     };
 
+    const handleReturnDriverSelection = (id, e) => {
+        const selectedName = e.target.value;
+        setReturnDriverNames(prev => ({ ...prev, [id]: selectedName }));
+        
+        const foundDriver = driversList.find(d => d.name === selectedName);
+        if (foundDriver && foundDriver.phone) {
+            setReturnDriverPhones(prev => ({ ...prev, [id]: foundDriver.phone }));
+        }
+    };
+
     const handleDriverNameChange = (id, name) => {
         setDriverNames(prev => ({ ...prev, [id]: name }));
     };
 
     const handleDriverPhoneChange = (id, phone) => {
         setDriverPhones(prev => ({ ...prev, [id]: phone }));
+    };
+
+    const handleReturnDriverNameChange = (id, name) => {
+        setReturnDriverNames(prev => ({ ...prev, [id]: name }));
+    };
+
+    const handleReturnDriverPhoneChange = (id, phone) => {
+        setReturnDriverPhones(prev => ({ ...prev, [id]: phone }));
     };
 
     const handlePaymentLinkChange = (id, link) => {
@@ -255,17 +276,30 @@ function AdminApp() {
 
         setAssigningId(id);
 
+        // Build fields — include return driver if it's a return trip and one was selected
+        const booking = bookings.find(b => b.id === id);
+        const isReturn = booking && booking.fields['Trip Type'] === 'return';
+        const assignFields = {
+            'Status': 'Awaiting Payment',
+            'Driver Name': driverName.trim(),
+            'Driver Phone': driverPhone.trim(),
+            'Payment Link': paymentLink.trim()
+        };
+        if (isReturn) {
+            const retName = returnDriverNames[id];
+            const retPhone = returnDriverPhones[id];
+            if (retName && retName.trim()) {
+                assignFields['Return Driver Name'] = retName.trim();
+                assignFields['Return Driver Phone'] = retPhone ? retPhone.trim() : '';
+            }
+        }
+
         fetch('/api/booking', {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 id: id,
-                fields: {
-                    'Status': 'Awaiting Payment',
-                    'Driver Name': driverName.trim(),
-                    'Driver Phone': driverPhone.trim(),
-                    'Payment Link': paymentLink.trim()
-                }
+                fields: assignFields
             })
         })
         .then(res => res.json())
@@ -1066,6 +1100,10 @@ function AdminApp() {
 
                                     {isPending ? (
                                         <div className="job-actions" style={{ flexDirection: 'column', gap: '10px' }}>
+                                            {/* Outbound Driver */}
+                                            <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--navy-ink)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                                {fields['Trip Type'] === 'return' ? '🚗 Outbound Driver' : '🚗 Assign Driver'}
+                                            </div>
                                             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                                                 <select 
                                                     value={driverNames[id] || ''}
@@ -1094,6 +1132,45 @@ function AdminApp() {
                                                     onChange={e => handleDriverPhoneChange(id, e.target.value)}
                                                     style={{ flex: '1 1 150px' }}
                                                 />
+                                            </div>
+
+                                            {/* Return Driver — only for return trips */}
+                                            {fields['Trip Type'] === 'return' && (
+                                                <>
+                                                    <div style={{ fontSize: '12px', fontWeight: 700, color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: '6px', borderTop: '1px dashed #e2e8f0', paddingTop: '10px' }}>
+                                                        🔄 Return Driver
+                                                    </div>
+                                                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                                        <select 
+                                                            value={returnDriverNames[id] || ''}
+                                                            onChange={e => handleReturnDriverSelection(id, e)}
+                                                            style={{ flex: '1 1 200px', padding: '10px', borderRadius: '6px', border: '1px solid #c4b5fd', fontFamily: 'inherit', background: '#faf5ff' }}
+                                                        >
+                                                            <option value="">Same as outbound driver</option>
+                                                            {driversList.filter(d => d.name !== 'Select a driver...').map((d, index) => (
+                                                                <option key={index} value={d.name}>{d.name}</option>
+                                                            ))}
+                                                        </select>
+                                                        {returnDriverNames[id] === 'Custom Driver' && (
+                                                            <input 
+                                                                type="text" 
+                                                                placeholder="Enter Custom Name..." 
+                                                                onChange={e => handleReturnDriverNameChange(id, e.target.value)}
+                                                                style={{ flex: '1 1 150px' }}
+                                                            />
+                                                        )}
+                                                        <input 
+                                                            type="tel" 
+                                                            placeholder="Return Driver Phone..." 
+                                                            value={returnDriverPhones[id] || ''}
+                                                            onChange={e => handleReturnDriverPhoneChange(id, e.target.value)}
+                                                            style={{ flex: '1 1 150px' }}
+                                                        />
+                                                    </div>
+                                                </>
+                                            )}
+
+                                            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                                                 <input 
                                                     type="url" 
                                                     placeholder="Paste Revolut Payment Link..." 
@@ -1113,7 +1190,10 @@ function AdminApp() {
                                     ) : isAwaitingPayment ? (
                                         <div className="job-actions" style={{background: '#fffbf0', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--amber)', display: 'flex', flexDirection: 'column', gap: '8px'}}>
                                             <span style={{fontSize: '14px', fontWeight: 600, color: 'var(--amber-deep)'}}>Awaiting Payment</span>
-                                            <span style={{fontSize: '14px'}}>Driver: {fields['Driver Name']} {fields['Driver Phone'] ? `(${fields['Driver Phone']})` : ''}</span>
+                                            <span style={{fontSize: '14px'}}>Outbound Driver: {fields['Driver Name']} {fields['Driver Phone'] ? `(${fields['Driver Phone']})` : ''}</span>
+                                            {fields['Trip Type'] === 'return' && (
+                                                <span style={{fontSize: '14px', color: '#7c3aed'}}>Return Driver: {fields['Return Driver Name'] || fields['Driver Name']} {fields['Return Driver Phone'] ? `(${fields['Return Driver Phone']})` : fields['Driver Phone'] ? `(${fields['Driver Phone']})` : ''}</span>
+                                            )}
                                             {fields['Payment Link'] && <span style={{fontSize: '14px', color: 'var(--muted)'}}>Payment Link: <a href={fields['Payment Link']?.startsWith('http') ? fields['Payment Link'] : `https://${fields['Payment Link']}`} target="_blank" rel="noreferrer" style={{color: 'var(--navy)'}}>{fields['Payment Link']}</a></span>}
                                             <button 
                                                 onClick={() => handleAcknowledgePayment(id)}
@@ -1269,7 +1349,7 @@ function AdminApp() {
                             </div>
 
                             <div style={{ background: '#f0fdf4', padding: '15px', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
-                                <h4 style={{ margin: '0 0 10px 0', color: '#166534' }}>Driver Assignment</h4>
+                                <h4 style={{ margin: '0 0 10px 0', color: '#166534' }}>{editForm['Trip Type'] === 'return' ? 'Outbound Driver' : 'Driver Assignment'}</h4>
                                 <div style={{ display: 'flex', gap: '15px', alignItems: 'end' }}>
                                     <div style={{ flex: 2 }}>
                                         <label style={{ fontSize: '13px', fontWeight: 600 }}>Assigned Driver</label>
@@ -1302,10 +1382,52 @@ function AdminApp() {
                                 )}
                                 {editForm['Driver Name'] && editForm['Driver Name'] !== '__custom__' && (
                                     <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: '#166534' }}>
-                                        This driver will see this job in their portal at <strong>/portal.html</strong>
+                                        This driver will see this job in their portal at <strong>/driver-portal.html</strong>
                                     </p>
                                 )}
                             </div>
+
+                            {/* Return Driver — only for return trips */}
+                            {editForm['Trip Type'] === 'return' && (
+                                <div style={{ background: '#faf5ff', padding: '15px', borderRadius: '8px', border: '1px solid #c4b5fd' }}>
+                                    <h4 style={{ margin: '0 0 10px 0', color: '#7c3aed' }}>🔄 Return Driver</h4>
+                                    <div style={{ display: 'flex', gap: '15px', alignItems: 'end' }}>
+                                        <div style={{ flex: 2 }}>
+                                            <label style={{ fontSize: '13px', fontWeight: 600 }}>Return Driver</label>
+                                            <select value={editForm['Return Driver Name'] || ''} onChange={e => {
+                                                const selectedName = e.target.value;
+                                                const matchedDriver = driversList.find(d => d.name === selectedName);
+                                                setEditForm({
+                                                    ...editForm,
+                                                    'Return Driver Name': selectedName,
+                                                    'Return Driver Phone': matchedDriver ? matchedDriver.phone : editForm['Return Driver Phone'] || ''
+                                                });
+                                            }} style={{width:'100%', padding:'8px', borderRadius: '6px', border: '1px solid #c4b5fd', background: 'white'}}>
+                                                <option value="">Same as outbound driver</option>
+                                                {driversList.filter(d => d.name !== 'Select a driver...' && d.name !== 'Custom Driver').map(d => (
+                                                    <option key={d.name} value={d.name}>{d.name}</option>
+                                                ))}
+                                                <option value="__custom__">Custom Driver</option>
+                                            </select>
+                                        </div>
+                                        <div style={{ flex: 1 }}>
+                                            <label style={{ fontSize: '13px', fontWeight: 600 }}>Return Driver Phone</label>
+                                            <input type="text" value={editForm['Return Driver Phone'] || ''} onChange={e => setEditForm({...editForm, 'Return Driver Phone': e.target.value})} placeholder="07..." style={{width:'100%', padding:'8px', borderRadius: '6px', border: '1px solid #c4b5fd'}} />
+                                        </div>
+                                    </div>
+                                    {editForm['Return Driver Name'] === '__custom__' && (
+                                        <div style={{ marginTop: '10px' }}>
+                                            <label style={{ fontSize: '13px', fontWeight: 600 }}>Custom Return Driver Name</label>
+                                            <input type="text" onChange={e => setEditForm({...editForm, 'Return Driver Name': e.target.value})} placeholder="Enter driver name" style={{width:'100%', padding:'8px', borderRadius: '6px', border: '1px solid #c4b5fd'}} />
+                                        </div>
+                                    )}
+                                    {editForm['Return Driver Name'] && editForm['Return Driver Name'] !== '__custom__' && (
+                                        <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: '#7c3aed' }}>
+                                            Return driver will see this job in their portal
+                                        </p>
+                                    )}
+                                </div>
+                            )}
 
                             {editingJob !== 'new' && (
                                 <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0', marginTop: '10px' }}>
