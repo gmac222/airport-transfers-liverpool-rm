@@ -32,6 +32,30 @@ module.exports = async (req, res) => {
 
     try {
         // Determine which table to check based on portal type
+        if (portal === 'driver') {
+            // Driver login – check Drivers table
+            const TABLE_ID = 'tblgM0WSDVJUbbjS2';
+            const formula = `AND(LOWER({Username})='${cleanUsername.toLowerCase()}', {Password}='${cleanPassword}')`;
+            const url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}?filterByFormula=` + encodeURIComponent(formula);
+            const response = await fetch(url, {
+                headers: { 'Authorization': `Bearer ${AIRTABLE_API_KEY}` }
+            });
+
+            const data = await response.json();
+
+            if (!data.records || data.records.length === 0) {
+                return res.status(401).json({ error: 'Invalid driver username or password' });
+            }
+
+            const record = data.records[0];
+            return res.status(200).json({
+                success: true,
+                token: 'driver-auth-ok',
+                role: 'driver',
+                driverName: record.fields['Name'] || cleanUsername
+            });
+        }
+
         if (portal === 'operator') {
             // Operator login – check Operators table
             const TABLE_ID = 'Operators';
