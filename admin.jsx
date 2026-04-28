@@ -31,6 +31,7 @@ function AdminApp() {
     const [driverPhones, setDriverPhones] = useState({});
     const [paymentLinks, setPaymentLinks] = useState({});
     const [prices, setPrices] = useState({});
+    const [selectedDriver, setSelectedDriver] = useState(null);
 
     const handleLogin = (e) => {
         e.preventDefault();
@@ -564,6 +565,216 @@ function AdminApp() {
         return dateTimeA - dateTimeB;
     });
 
+    // ── Drivers View ──────────────────────────────────────────────────────
+    const renderDriversView = () => {
+        // Build driver → jobs map from ALL bookings (not just filtered)
+        const driverJobMap = {};
+        bookings.forEach(b => {
+            const dName = b.fields['Driver Name'];
+            if (!dName) return;
+            if (!driverJobMap[dName]) driverJobMap[dName] = { phone: b.fields['Driver Phone'] || '', jobs: [] };
+            driverJobMap[dName].jobs.push(b);
+        });
+
+        // Also include drivers from the drivers list that may have zero jobs
+        driversList.forEach(d => {
+            if (d.name === 'Select a driver...' || d.name === 'Custom Driver') return;
+            if (!driverJobMap[d.name]) driverJobMap[d.name] = { phone: d.phone || '', jobs: [] };
+            if (!driverJobMap[d.name].phone && d.phone) driverJobMap[d.name].phone = d.phone;
+        });
+
+        const driverEntries = Object.entries(driverJobMap).sort((a, b) => a[0].localeCompare(b[0]));
+
+        const statusColor = (s) => {
+            if (s === 'Pending') return '#f59e0b';
+            if (s === 'Awaiting Payment') return '#f59e0b';
+            if (s === 'Accepted') return '#10b981';
+            if (s === 'Completed') return '#3b82f6';
+            if (s === 'Archived') return '#9ca3af';
+            if (s === 'Cancelled') return '#e53e3e';
+            return '#6b7280';
+        };
+
+        // If a driver is selected, show their jobs
+        if (selectedDriver && driverJobMap[selectedDriver]) {
+            const driverData = driverJobMap[selectedDriver];
+            const activeJobs = driverData.jobs.filter(b => !['Archived', 'Cancelled'].includes(b.fields['Status']));
+            const archivedJobs = driverData.jobs.filter(b => ['Archived', 'Cancelled'].includes(b.fields['Status']));
+
+            return (
+                <div>
+                    <button 
+                        onClick={() => setSelectedDriver(null)} 
+                        style={{ background: 'transparent', border: '1px solid var(--line)', borderRadius: '6px', padding: '8px 16px', cursor: 'pointer', fontWeight: 600, fontSize: '14px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                    >
+                        ← Back to All Drivers
+                    </button>
+
+                    <div style={{ background: 'var(--navy)', color: 'white', padding: '20px 24px', borderRadius: '12px', marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                        <div>
+                            <h2 style={{ margin: 0, fontSize: '22px' }}>🚗 {selectedDriver}</h2>
+                            {driverData.phone && <div style={{ marginTop: '4px', fontSize: '14px', opacity: 0.8 }}>📞 {driverData.phone}</div>}
+                        </div>
+                        <div style={{ display: 'flex', gap: '16px', fontSize: '14px' }}>
+                            <div style={{ textAlign: 'center' }}>
+                                <div style={{ fontSize: '24px', fontWeight: 700 }}>{activeJobs.length}</div>
+                                <div style={{ opacity: 0.7 }}>Active</div>
+                            </div>
+                            <div style={{ textAlign: 'center' }}>
+                                <div style={{ fontSize: '24px', fontWeight: 700 }}>{driverData.jobs.length}</div>
+                                <div style={{ opacity: 0.7 }}>Total</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {activeJobs.length > 0 && (
+                        <div>
+                            <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '12px', color: 'var(--navy-ink)' }}>Active Jobs</h3>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+                                {activeJobs.sort((a, b) => new Date(a.fields['Outbound Date'] + 'T' + (a.fields['Outbound Time'] || '00:00')) - new Date(b.fields['Outbound Date'] + 'T' + (b.fields['Outbound Time'] || '00:00'))).map(b => (
+                                    <div key={b.id} style={{ background: 'white', border: '1px solid var(--line)', borderRadius: '10px', padding: '16px', borderLeft: `4px solid ${statusColor(b.fields['Status'])}` }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                <strong style={{ fontSize: '15px' }}>{b.fields['Booking Ref']}</strong>
+                                                <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '4px', background: statusColor(b.fields['Status']), color: 'white', fontWeight: 600 }}>{b.fields['Status']}</span>
+                                            </div>
+                                            <span style={{ fontSize: '13px', color: 'var(--muted)' }}>{b.fields['Outbound Date']} @ {b.fields['Outbound Time']}</span>
+                                        </div>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px', fontSize: '13px' }}>
+                                            <div><span style={{ color: 'var(--muted)' }}>Customer:</span> <strong>{b.fields['Customer Name']}</strong></div>
+                                            <div><span style={{ color: 'var(--muted)' }}>Phone:</span> {b.fields['Customer Phone']}</div>
+                                            <div><span style={{ color: 'var(--muted)' }}>Pickup:</span> {b.fields['Home Address']}</div>
+                                            <div><span style={{ color: 'var(--muted)' }}>Airport:</span> {b.fields['Airport'] === 'Manchester' ? 'Manchester' : 'Liverpool'}</div>
+                                            <div><span style={{ color: 'var(--muted)' }}>Flight:</span> {b.fields['Outbound Flight'] || 'N/A'}</div>
+                                            <div><span style={{ color: 'var(--muted)' }}>Price:</span> £{b.fields['Total Price'] || '–'}</div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {archivedJobs.length > 0 && (
+                        <div>
+                            <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '12px', color: 'var(--muted)' }}>Past Jobs ({archivedJobs.length})</h3>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                {archivedJobs.sort((a, b) => new Date(b.fields['Outbound Date'] + 'T' + (b.fields['Outbound Time'] || '00:00')) - new Date(a.fields['Outbound Date'] + 'T' + (a.fields['Outbound Time'] || '00:00'))).map(b => (
+                                    <div key={b.id} style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '12px 16px', opacity: 0.7, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', fontSize: '13px' }}>
+                                        <div>
+                                            <strong>{b.fields['Booking Ref']}</strong> — {b.fields['Customer Name']}
+                                        </div>
+                                        <div style={{ color: 'var(--muted)' }}>{b.fields['Outbound Date']} | £{b.fields['Total Price'] || '–'}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {driverData.jobs.length === 0 && (
+                        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--muted)', fontSize: '15px' }}>
+                            No jobs assigned to this driver yet.
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // Overview: all drivers grid
+        return (
+            <div>
+                <h2 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '16px', color: 'var(--navy-ink)' }}>Driver Overview</h2>
+                
+                {/* Summary table */}
+                <div style={{ background: 'white', borderRadius: '12px', border: '1px solid var(--line)', overflow: 'hidden', marginBottom: '32px' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+                        <thead>
+                            <tr style={{ background: 'var(--navy)', color: 'white', textAlign: 'left' }}>
+                                <th style={{ padding: '12px 16px', fontWeight: 600 }}>Driver</th>
+                                <th style={{ padding: '12px 16px', fontWeight: 600 }}>Phone</th>
+                                <th style={{ padding: '12px 16px', fontWeight: 600, textAlign: 'center' }}>Active</th>
+                                <th style={{ padding: '12px 16px', fontWeight: 600, textAlign: 'center' }}>Total</th>
+                                <th style={{ padding: '12px 16px', fontWeight: 600 }}>Next Job</th>
+                                <th style={{ padding: '12px 16px', fontWeight: 600, textAlign: 'center' }}></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {driverEntries.map(([name, data], i) => {
+                                const activeJobs = data.jobs.filter(b => !['Archived', 'Cancelled'].includes(b.fields['Status']));
+                                const upcoming = activeJobs
+                                    .filter(b => b.fields['Outbound Date'])
+                                    .sort((a, b) => new Date(a.fields['Outbound Date'] + 'T' + (a.fields['Outbound Time'] || '00:00')) - new Date(b.fields['Outbound Date'] + 'T' + (b.fields['Outbound Time'] || '00:00')))[0];
+
+                                return (
+                                    <tr key={name} style={{ borderBottom: '1px solid var(--line)', background: i % 2 === 0 ? 'white' : '#fafafa', cursor: 'pointer' }} onClick={() => setSelectedDriver(name)}>
+                                        <td style={{ padding: '12px 16px', fontWeight: 600 }}>{name}</td>
+                                        <td style={{ padding: '12px 16px', color: 'var(--muted)' }}>{data.phone || '–'}</td>
+                                        <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                                            <span style={{ background: activeJobs.length > 0 ? '#dcfce7' : '#f3f4f6', color: activeJobs.length > 0 ? '#166534' : '#9ca3af', padding: '2px 10px', borderRadius: '12px', fontWeight: 600, fontSize: '13px' }}>{activeJobs.length}</span>
+                                        </td>
+                                        <td style={{ padding: '12px 16px', textAlign: 'center', color: 'var(--muted)' }}>{data.jobs.length}</td>
+                                        <td style={{ padding: '12px 16px', fontSize: '13px' }}>
+                                            {upcoming ? (
+                                                <span>
+                                                    <strong>{upcoming.fields['Booking Ref']}</strong> — {upcoming.fields['Outbound Date']} @ {upcoming.fields['Outbound Time']}
+                                                </span>
+                                            ) : (
+                                                <span style={{ color: '#9ca3af' }}>No upcoming jobs</span>
+                                            )}
+                                        </td>
+                                        <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                                            <span style={{ fontSize: '12px', color: 'var(--amber-deep)', fontWeight: 600 }}>View →</span>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                            {driverEntries.length === 0 && (
+                                <tr>
+                                    <td colSpan="6" style={{ padding: '30px', textAlign: 'center', color: 'var(--muted)' }}>No drivers found. Add drivers from the Active Jobs view.</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Upcoming jobs across all drivers - next 7 days */}
+                <h2 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '16px', color: 'var(--navy-ink)' }}>Upcoming Jobs (All Drivers)</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {bookings
+                        .filter(b => {
+                            const status = b.fields['Status'];
+                            if (['Archived', 'Cancelled'].includes(status)) return false;
+                            if (!b.fields['Driver Name']) return false;
+                            return true;
+                        })
+                        .sort((a, b) => new Date(a.fields['Outbound Date'] + 'T' + (a.fields['Outbound Time'] || '00:00')) - new Date(b.fields['Outbound Date'] + 'T' + (b.fields['Outbound Time'] || '00:00')))
+                        .slice(0, 20)
+                        .map(b => (
+                            <div key={b.id} style={{ background: 'white', border: '1px solid var(--line)', borderRadius: '10px', padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', borderLeft: `4px solid ${statusColor(b.fields['Status'])}` }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px' }}>
+                                    <strong>{b.fields['Outbound Date']} @ {b.fields['Outbound Time']}</strong>
+                                    <span style={{ fontSize: '12px', padding: '2px 8px', borderRadius: '4px', background: statusColor(b.fields['Status']), color: 'white', fontWeight: 600 }}>{b.fields['Status']}</span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '20px', fontSize: '13px', flexWrap: 'wrap' }}>
+                                    <span><strong>{b.fields['Booking Ref']}</strong></span>
+                                    <span>{b.fields['Customer Name']}</span>
+                                    <span style={{ color: 'var(--muted)' }}>{b.fields['Home Address']?.substring(0, 30)}...</span>
+                                    <span style={{ background: 'rgba(230,178,75,0.15)', color: 'var(--amber-deep)', padding: '2px 10px', borderRadius: '12px', fontWeight: 700, fontSize: '12px' }}>
+                                        🚗 {b.fields['Driver Name']}
+                                    </span>
+                                </div>
+                            </div>
+                        ))
+                    }
+                    {bookings.filter(b => !['Archived', 'Cancelled'].includes(b.fields['Status']) && b.fields['Driver Name']).length === 0 && (
+                        <div style={{ textAlign: 'center', padding: '30px', color: 'var(--muted)', fontSize: '14px' }}>
+                            No upcoming jobs with assigned drivers.
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    };
+
     return (
         <div>
             <div className="header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -611,6 +822,12 @@ function AdminApp() {
                             className={`segmented-btn ${viewMode === 'archive' ? 'active' : ''}`}
                         >
                             Archive
+                        </button>
+                        <button 
+                            onClick={() => { setViewMode('drivers'); setSelectedDriver(null); }} 
+                            className={`segmented-btn ${viewMode === 'drivers' ? 'active' : ''}`}
+                        >
+                            Drivers
                         </button>
                     </div>
                 </div>
@@ -710,6 +927,8 @@ function AdminApp() {
                 
                 {loading ? (
                     <div className="loading">Loading...</div>
+                ) : viewMode === 'drivers' ? (
+                    renderDriversView()
                 ) : viewMode === 'calendar' ? (
                     <div id="calendar" style={{ background: 'white', padding: '20px', borderRadius: '12px', border: '1px solid var(--line)' }}></div>
                 ) : (
