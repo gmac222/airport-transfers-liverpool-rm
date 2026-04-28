@@ -20,6 +20,9 @@ function AdminApp() {
     const [assignOperator, setAssignOperator] = useState('RM Transfers');
     const [isAssigning, setIsAssigning] = useState(false);
 
+    // Drivers list
+    const [driversList, setDriversList] = useState([]);
+
     const handleLogin = (e) => {
         e.preventDefault();
         setIsLoggingIn(true);
@@ -51,6 +54,13 @@ function AdminApp() {
             .catch(err => console.error('Failed to fetch operators:', err));
     };
 
+    const fetchDrivers = () => {
+        fetch('/api/drivers')
+            .then(r => r.json())
+            .then(data => setDriversList(data.drivers || []))
+            .catch(err => console.error('Failed to fetch drivers:', err));
+    };
+
     const fetchBookings = () => {
         fetch('/api/booking?action=list', { method: 'POST' })
             .then(r => r.json())
@@ -66,6 +76,7 @@ function AdminApp() {
         if (isLoggedIn) {
             fetchOperators();
             fetchBookings();
+            fetchDrivers();
         }
     }, [isLoggedIn]);
 
@@ -138,6 +149,24 @@ function AdminApp() {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id: bookingId, fields: { 'Operator': opName } })
+            });
+            fetchBookings();
+        } catch (err) {
+            alert('Error: ' + err.message);
+        }
+    };
+
+    const handleReassignDriver = async (bookingId, driverName) => {
+        const matched = driversList.find(d => d.name === driverName);
+        const fields = {
+            'Driver Name': driverName || '',
+            'Driver Phone': matched ? matched.phone : ''
+        };
+        try {
+            await fetch('/api/booking', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: bookingId, fields })
             });
             fetchBookings();
         } catch (err) {
@@ -306,8 +335,9 @@ function AdminApp() {
                                             <th style={{ padding: '8px' }}>Date</th>
                                             <th style={{ padding: '8px' }}>Status</th>
                                             <th style={{ padding: '8px' }}>Driver</th>
+                                            <th style={{ padding: '8px' }}>Reassign Driver</th>
                                             <th style={{ padding: '8px' }}>Assigned To</th>
-                                            <th style={{ padding: '8px' }}>Reassign</th>
+                                            <th style={{ padding: '8px' }}>Reassign Operator</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -322,6 +352,12 @@ function AdminApp() {
                                                         <span style={{ fontSize: '11px', padding: '2px 6px', borderRadius: '4px', background: b.fields['Status'] === 'Accepted' ? '#dcfce7' : '#fef3c7', color: b.fields['Status'] === 'Accepted' ? '#166534' : '#92400e', fontWeight: 600 }}>{b.fields['Status']}</span>
                                                     </td>
                                                     <td style={{ padding: '8px' }}>{b.fields['Driver Name'] || <span style={{color:'#9ca3af'}}>–</span>}</td>
+                                                    <td style={{ padding: '8px' }}>
+                                                        <select value={b.fields['Driver Name'] || ''} onChange={e => handleReassignDriver(b.id, e.target.value)} style={{ padding: '4px 8px', border: '1px solid var(--line)', borderRadius: '4px', fontSize: '12px', fontFamily: 'inherit' }}>
+                                                            <option value="">No driver</option>
+                                                            {driversList.map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
+                                                        </select>
+                                                    </td>
                                                     <td style={{ padding: '8px', fontWeight: currentOp ? 600 : 400, color: currentOp ? 'var(--navy-ink)' : '#e53e3e' }}>{currentOp || 'Unassigned'}</td>
                                                     <td style={{ padding: '8px' }}>
                                                         <select value={currentOp} onChange={e => handleReassignSingle(b.id, e.target.value)} style={{ padding: '4px 8px', border: '1px solid var(--line)', borderRadius: '4px', fontSize: '12px', fontFamily: 'inherit' }}>
@@ -333,7 +369,7 @@ function AdminApp() {
                                             );
                                         })}
                                         {activeBookings.length === 0 && (
-                                            <tr><td colSpan="7" style={{ padding: '30px', textAlign: 'center', color: 'var(--muted)' }}>No active bookings.</td></tr>
+                                            <tr><td colSpan="8" style={{ padding: '30px', textAlign: 'center', color: 'var(--muted)' }}>No active bookings.</td></tr>
                                         )}
                                     </tbody>
                                 </table>

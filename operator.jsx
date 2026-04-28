@@ -1276,7 +1276,44 @@ function AdminApp() {
                                 <textarea value={editForm['Notes'] || ''} onChange={e => setEditForm({...editForm, 'Notes': e.target.value})} style={{width:'100%', padding:'8px', minHeight: '80px', fontFamily: 'inherit', borderRadius: '4px', border: '1px solid var(--line)'}} />
                             </div>
 
-
+                            <div style={{ background: '#f0fdf4', padding: '15px', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
+                                <h4 style={{ margin: '0 0 10px 0', color: '#166534' }}>Driver Assignment</h4>
+                                <div style={{ display: 'flex', gap: '15px', alignItems: 'end' }}>
+                                    <div style={{ flex: 2 }}>
+                                        <label style={{ fontSize: '13px', fontWeight: 600 }}>Assigned Driver</label>
+                                        <select value={editForm['Driver Name'] || ''} onChange={e => {
+                                            const selectedName = e.target.value;
+                                            const matchedDriver = driversList.find(d => d.name === selectedName);
+                                            setEditForm({
+                                                ...editForm,
+                                                'Driver Name': selectedName,
+                                                'Driver Phone': matchedDriver ? matchedDriver.phone : editForm['Driver Phone'] || ''
+                                            });
+                                        }} style={{width:'100%', padding:'8px', borderRadius: '6px', border: '1px solid #d1d5db'}}>
+                                            <option value="">No driver assigned</option>
+                                            {driversList.filter(d => d.name !== 'Select a driver...' && d.name !== 'Custom Driver').map(d => (
+                                                <option key={d.name} value={d.name}>{d.name}</option>
+                                            ))}
+                                            <option value="__custom__">Custom Driver</option>
+                                        </select>
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                        <label style={{ fontSize: '13px', fontWeight: 600 }}>Driver Phone</label>
+                                        <input type="text" value={editForm['Driver Phone'] || ''} onChange={e => setEditForm({...editForm, 'Driver Phone': e.target.value})} placeholder="07..." style={{width:'100%', padding:'8px', borderRadius: '6px', border: '1px solid #d1d5db'}} />
+                                    </div>
+                                </div>
+                                {editForm['Driver Name'] === '__custom__' && (
+                                    <div style={{ marginTop: '10px' }}>
+                                        <label style={{ fontSize: '13px', fontWeight: 600 }}>Custom Driver Name</label>
+                                        <input type="text" value="" onChange={e => setEditForm({...editForm, 'Driver Name': e.target.value})} placeholder="Enter driver name" style={{width:'100%', padding:'8px', borderRadius: '6px', border: '1px solid #d1d5db'}} />
+                                    </div>
+                                )}
+                                {editForm['Driver Name'] && editForm['Driver Name'] !== '__custom__' && (
+                                    <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: '#166534' }}>
+                                        This driver will see this job in their portal at <strong>/portal.html</strong>
+                                    </p>
+                                )}
+                            </div>
 
                             {editingJob !== 'new' && (
                                 <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0', marginTop: '10px' }}>
