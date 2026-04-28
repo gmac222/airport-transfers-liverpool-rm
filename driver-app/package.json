@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:capacitor": "node -e \"process.env.CAPACITOR='1';require('child_process').execSync('vite build',{stdio:'inherit',env:process.env})\"",
     "lint": "eslint .",
     "preview": "vite preview"
   },

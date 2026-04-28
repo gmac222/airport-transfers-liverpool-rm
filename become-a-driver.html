@@ -21,8 +21,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     </script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Terms & Conditions — Airport Transfers Liverpool</title>
-    <meta name="description" content="Read our terms and conditions. We offer fixed-price private airport transfers to Liverpool and Manchester Airports." />
+    <title>Become a Driver — Airport Transfers Liverpool</title>
+    <meta name="description" content="Interested in driving for RM Transfers? We're not currently recruiting but check back soon. Existing drivers can download the Driver App here." />
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
     <link rel="alternate icon" type="image/png" href="assets/logo.png" />
     <link rel="apple-touch-icon" href="assets/logo.png" />
@@ -123,11 +123,175 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             text-decoration: none
         }
 
+        .nav-links {
+            display: none;
+            gap: 28px;
+            font-size: 14px;
+            color: var(--navy);
+            font-weight: 500;
+        }
+
+        @media (min-width:900px) {
+            .nav-links {
+                display: flex
+            }
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            font-weight: 500
+        }
+
+        .nav-links a:hover {
+            color: var(--amber-deep)
+        }
+
         /* ---------- MAIN CONTENT ---------- */
         .main {
             flex: 1;
             padding: 64px 0;
             background: var(--cream);
+        }
+
+        .page-content {
+            max-width: 700px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 48px;
+            border-radius: 20px;
+            border: 1px solid var(--line);
+            box-shadow: 0 10px 30px -10px rgba(14, 39, 71, .05);
+            text-align: center;
+        }
+
+        @media (max-width: 600px) {
+            .page-content {
+                padding: 32px 20px;
+            }
+        }
+
+        .page-content h1 {
+            color: var(--navy-ink);
+            font-size: clamp(28px, 5vw, 40px);
+            margin: 0 0 8px;
+            letter-spacing: -0.02em;
+        }
+
+        .page-content .subtitle {
+            color: var(--muted);
+            font-size: 15px;
+            margin: 0 0 40px;
+            font-weight: 500;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 999px;
+            background: rgba(230, 178, 75, 0.12);
+            border: 1px solid rgba(230, 178, 75, 0.4);
+            color: var(--navy-ink);
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 32px;
+        }
+
+        .status-badge .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--amber);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1 }
+            50% { opacity: .4 }
+        }
+
+        .info-card {
+            background: var(--cream);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 32px;
+            margin: 32px 0;
+            text-align: left;
+        }
+
+        .info-card h2 {
+            font-size: 18px;
+            color: var(--navy-ink);
+            margin: 0 0 12px;
+        }
+
+        .info-card p {
+            color: var(--muted);
+            margin: 0;
+            line-height: 1.65;
+        }
+
+        .divider {
+            width: 48px;
+            height: 2px;
+            background: var(--line);
+            margin: 40px auto;
+            border-radius: 2px;
+        }
+
+        .driver-section h2 {
+            font-size: 22px;
+            color: var(--navy-ink);
+            margin: 0 0 8px;
+        }
+
+        .driver-section p {
+            color: var(--muted);
+            font-size: 15px;
+            margin: 0 0 24px;
+        }
+
+        .btn-download {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            height: 52px;
+            padding: 0 28px;
+            border-radius: 12px;
+            border: 0;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            text-decoration: none;
+            background: var(--navy);
+            color: #fff;
+            transition: background .2s ease, transform .08s ease;
+            box-shadow: 0 4px 14px -4px rgba(14, 39, 71, .4);
+        }
+
+        .btn-download:hover {
+            background: var(--navy-2);
+        }
+
+        .btn-download:active {
+            transform: translateY(1px);
+        }
+
+        .btn-download svg {
+            flex-shrink: 0;
+        }
+
+        .install-hint {
+            margin-top: 16px;
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .install-hint strong {
+            color: var(--ink);
         }
 
         /* ---------- FOOTER ---------- */
@@ -167,70 +331,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             font-size: 13px;
             color: var(--muted)
         }
-
-        .policy-content {
-            max-width: 800px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 48px;
-            border-radius: 20px;
-            border: 1px solid var(--line);
-            box-shadow: 0 10px 30px -10px rgba(14, 39, 71, .05);
-        }
-        .policy-content h2 {
-            font-family: 'Lexend', sans-serif;
-            color: var(--navy-ink);
-            margin-top: 32px;
-            margin-bottom: 16px;
-        }
-        .policy-content p, .policy-content ul {
-            margin-bottom: 24px;
-        }
-        .policy-content ul {
-            padding-left: 24px;
-        }
-        .policy-content li {
-            margin-bottom: 8px;
-        }
-        
-        .nav-links {
-            display: none;
-            gap: 28px;
-            font-size: 14px;
-            color: var(--navy);
-            font-weight: 500;
-        }
-
-        @media (min-width:900px) {
-            .nav-links {
-                display: flex
-            }
-        }
-        
-        .nav-links a {
-            text-decoration: none;
-            font-weight: 500
-        }
-
-        .nav-links a:hover {
-            color: var(--amber-deep)
-        }
     </style>
-
-    <!-- Schema Markup -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebPage",
-      "name": "Terms & Conditions — Airport Transfers Liverpool",
-      "url": "https://airporttaxitransfersliverpool.co.uk/terms.html",
-      "publisher": {
-        "@type": "LocalBusiness",
-        "name": "RM Transfers",
-        "alternateName": "Airport Transfers Liverpool"
-      }
-    }
-    </script>
 </head>
 
 <body>
@@ -238,6 +339,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PD63KLP9"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
+
     <nav class="nav">
         <div class="wrap nav-inner">
             <a href="/" class="brand" aria-label="Airport Transfers Liverpool home">
@@ -248,30 +350,51 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <a href="/#prices">Prices</a>
                 <a href="/#faq">FAQ</a>
             </div>
-            </div>
         </div>
     </nav>
 
     <main class="main">
         <div class="wrap">
-            <div class="policy-content">
-                <h1 class="h1">Terms &amp; Conditions</h1>
-                <p>Welcome to RM Transfers (trading as Airport Transfers Liverpool). These terms and conditions govern your use of our website and services.</p>
+            <div class="page-content">
+                <h1>Become a Driver</h1>
+                <p class="subtitle">Join the RM Transfers team</p>
 
-                <h2>1. Bookings and Pricing</h2>
-                <p>All bookings must be made in advance. The price quoted is fixed and includes all taxes and tolls. There are no hidden fees or surge pricing.</p>
+                <div class="status-badge">
+                    <span class="dot"></span>
+                    Not currently recruiting
+                </div>
 
-                <h2>2. Payments</h2>
-                <p>Payment can be made securely online via our payment gateway or directly to the driver upon request. Full payment is required to confirm your booking.</p>
+                <div class="info-card">
+                    <h2>We're not looking for drivers right now</h2>
+                    <p>Thank you for your interest in driving for RM Transfers. We aren't currently recruiting new drivers, however we do expand our team periodically to meet demand. Please bookmark this page and check back soon — we'll update it here when new positions become available.</p>
+                </div>
 
-                <h2>3. Cancellations and Refunds</h2>
-                <p>You may cancel your booking up to 24 hours before the scheduled pickup time for a full refund. Cancellations made within 24 hours are non-refundable.</p>
+                <div class="info-card" style="background: rgba(14, 39, 71, 0.03); border-color: rgba(14, 39, 71, 0.1);">
+                    <h2>What we look for</h2>
+                    <p>When we do recruit, we look for licensed private hire drivers with a clean driving record, excellent customer service skills, and a commitment to punctuality. All drivers must hold a valid council-issued private hire licence and be DBS checked.</p>
+                </div>
 
-                <h2>4. Flight Monitoring and Wait Times</h2>
-                <p>We monitor your flight to adjust for any delays. The driver will wait for a reasonable amount of time after your flight has landed. If you are significantly delayed at baggage claim or customs, please contact us.</p>
+                <div class="divider"></div>
 
-                <h2>5. Luggage and Passengers</h2>
-                <p>Please ensure you book a vehicle suitable for the number of passengers and luggage. Our 8-seater minibuses provide ample space for typical holiday luggage.</p>
+                <div class="driver-section">
+                    <h2>Already a driver?</h2>
+                    <p>Access your job assignments, manage trips, and stay connected with the operations team.</p>
+
+                    <a href="/driver-portal.html" class="btn-download" id="download-driver-app">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        Download Driver App
+                    </a>
+
+                    <p class="install-hint">
+                        <strong>Tip:</strong> On your phone, tap the button above then use your browser's
+                        <strong>"Add to Home Screen"</strong> option to install the Driver App as a shortcut.
+                        On desktop, look for the install icon in your address bar.
+                    </p>
+                </div>
             </div>
         </div>
     </main>
@@ -292,7 +415,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <a href="/#reviews" style="color: #fff; text-decoration: none; font-weight: 500;">Reviews</a>
                 <a href="/about-us.html" style="color: #fff; text-decoration: none; font-weight: 500;">About Us</a>
                 <a href="/contact.html" style="color: #fff; text-decoration: none; font-weight: 500;">Contact Us</a>
-                <a href="/terms.html" style="color: #fff; text-decoration: none; font-weight: 500;">Terms & Conditions</a>
+                <a href="/terms.html" style="color: #fff; text-decoration: none; font-weight: 500;">Terms &amp; Conditions</a>
                 <a href="/privacy.html" style="color: #fff; text-decoration: none; font-weight: 500;">Privacy Policy</a>
                 <a href="/become-a-driver.html" style="color: #fff; text-decoration: none; font-weight: 500;">Become a Driver</a>
             </div>
@@ -301,5 +424,28 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             </div>
         </div>
     </footer>
+
+    <script>
+    // PWA Install Prompt — "Download Driver App" button
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+    });
+
+    document.getElementById('download-driver-app').addEventListener('click', async (e) => {
+        // If native PWA install prompt is available, use it
+        if (deferredPrompt) {
+            e.preventDefault();
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log('Install prompt outcome:', outcome);
+            deferredPrompt = null;
+            return;
+        }
+        // Otherwise the link navigates to the driver portal normally
+        // The user can then use "Add to Home Screen" from their browser
+    });
+    </script>
 </body>
 </html>

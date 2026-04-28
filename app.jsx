@@ -1254,6 +1254,7 @@ function Footer() {
           <a href="/contact.html" style={{ color: "#fff", textDecoration: "none", fontWeight: 500 }}>Contact Us</a>
           <a href="/terms.html" style={{ color: "#fff", textDecoration: "none", fontWeight: 500 }}>Terms & Conditions</a>
           <a href="/privacy.html" style={{ color: "#fff", textDecoration: "none", fontWeight: 500 }}>Privacy Policy</a>
+          <a href="/become-a-driver.html" style={{ color: "#fff", textDecoration: "none", fontWeight: 500 }}>Become a Driver</a>
         </div>
         <div style={{ marginTop: "32px", fontSize: "13px", color: "rgba(255, 255, 255, 0.4)", borderTop: "1px solid rgba(255, 255, 255, 0.1)", paddingTop: "32px", width: "100%" }}>
           &copy; {new Date().getFullYear()} RM Transfers. All rights reserved.
