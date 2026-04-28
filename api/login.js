@@ -33,9 +33,9 @@ module.exports = async (req, res) => {
     try {
         // Determine which table to check based on portal type
         if (portal === 'operator') {
-            // Operator login – check Admins table (same credentials as admin)
-            const TABLE_ID = 'Admins';
-            const formula = `AND(LOWER({Name})='${cleanUsername.toLowerCase()}', {Password}='${cleanPassword}')`;
+            // Operator login – check Operators table
+            const TABLE_ID = 'Operators';
+            const formula = `AND(LOWER({Username})='${cleanUsername.toLowerCase()}', {Password}='${cleanPassword}')`;
             const url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}?filterByFormula=` + encodeURIComponent(formula);
             const response = await fetch(url, {
                 headers: { 'Authorization': `Bearer ${AIRTABLE_API_KEY}` }
