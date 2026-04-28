@@ -12,7 +12,7 @@ module.exports = async (req, res) => {
 
     const AIRTABLE_API_KEY = process.env.AIRTABLE_PERSONAL_ACCESS_TOKEN || process.env.AIRTABLE_API_KEY;
     const BASE_ID = 'appzmLNDAsk6m06Ae';
-    const TABLE_ID = 'Operators';
+    const TABLE_ID = 'Admins';  // Admins = Operators (same table)
 
     if (!AIRTABLE_API_KEY) {
         return res.status(500).json({ error: 'Airtable API key is not configured.' });
@@ -35,7 +35,7 @@ module.exports = async (req, res) => {
             const operators = data.records.map(record => ({
                 id: record.id,
                 name: record.fields['Name'] || 'Unnamed',
-                username: record.fields['Username'] || '',
+                username: record.fields['Name'] || '',
                 phone: record.fields['Phone'] || '',
                 email: record.fields['Email'] || ''
             }));
