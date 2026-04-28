@@ -185,19 +185,53 @@ module.exports = async (req, res) => {
             }
 
             // ─── Step 2: Apply the update ─────────────────────────────────────
-            const response = await fetch(url, {
-                method: 'PATCH',
-                headers: {
-                    'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ fields })
-            });
+            // If Airtable rejects an unknown field (e.g. a column that hasn't
+            // been added to the base yet), drop it and retry instead of failing
+            // the whole assignment. Up to a few retries in case multiple
+            // unknown fields are present.
+            const patchAirtable = async (fieldsToSend) => {
+                const r = await fetch(url, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ fields: fieldsToSend })
+                });
+                const j = await r.json();
+                return { r, j };
+            };
 
-            const data = await response.json();
+            let attemptFields = { ...fields };
+            const droppedFields = [];
+            let response, data;
+            for (let attempt = 0; attempt < 6; attempt++) {
+                ({ r: response, j: data } = await patchAirtable(attemptFields));
+                if (response.ok) break;
+
+                const errMsg = (data.error && (data.error.message || data.error.type)) || '';
+                const unknownMatch = errMsg.match(/unknown field name[:]?\s*"([^"]+)"/i);
+                if (!unknownMatch) break; // not an unknown-field error, give up
+
+                const badNameLower = unknownMatch[1].toLowerCase();
+                const realKey = Object.keys(attemptFields).find(k => k.toLowerCase() === badNameLower);
+                if (!realKey) break; // can't locate the offender, give up
+                droppedFields.push(realKey);
+                delete attemptFields[realKey];
+                if (Object.keys(attemptFields).length === 0) break;
+            }
+
             if (!response.ok) {
                 const msg = (data.error && (data.error.message || data.error.type)) || `Airtable ${response.status}`;
                 return res.status(response.status).json({ error: msg });
+            }
+            if (droppedFields.length) {
+                console.warn('Airtable PATCH succeeded after dropping unknown fields:', droppedFields);
+            }
+            // Reflect the actually-saved fields downstream (so SMS logic doesn't
+            // try to use a value that wasn't persisted).
+            for (const f of droppedFields) {
+                delete fields[f];
             }
 
             const rec = data.fields || {};
