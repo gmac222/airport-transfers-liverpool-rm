@@ -212,11 +212,13 @@ function PortalApp() {
                                 Please secure your booking by completing the fixed-price payment below.
                             </p>
                             <a
-                                href={fields['Payment Link']?.startsWith('http') ? fields['Payment Link'] : `https://${fields['Payment Link']}`}
+                                href="#"
                                 onClick={(e) => {
                                     e.preventDefault();
                                     const raw = fields['Payment Link'] || '';
-                                    const url = raw.startsWith('http') ? raw : `https://${raw}`;
+                                    // Extract URL from the field - it may contain surrounding text
+                                    const urlMatch = raw.match(/https?:\/\/[^\s]+/);
+                                    const url = urlMatch ? urlMatch[0] : (raw.startsWith('http') ? raw : `https://${raw}`);
                                     window.location.href = url;
                                 }}
                                 className="btn btn-primary"
