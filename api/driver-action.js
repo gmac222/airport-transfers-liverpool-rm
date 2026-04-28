@@ -19,7 +19,7 @@ export default async function handler(req, res) {
 
     try {
         // 1. Fetch booking from Airtable by ref
-        const queryUrl = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}?filterByFormula=({Booking Ref}='${ref}')&maxRecords=1`;
+        const queryUrl = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}?filterByFormula=` + encodeURIComponent(`{Booking Ref}='${ref}'`) + `&maxRecords=1`;
         const airtableRes = await fetch(queryUrl, {
             headers: { 'Authorization': `Bearer ${AIRTABLE_API_KEY}` }
         });
