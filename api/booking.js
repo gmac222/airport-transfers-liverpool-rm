@@ -182,6 +182,35 @@ module.exports = async (req, res) => {
                 return res.status(response.status).json({ error: msg });
             }
 
+            // If a driver was reassigned, send SMS to the new driver
+            if (fields['Driver Name'] && fields['Driver Phone']) {
+                try {
+                    const rec = data.fields || {};
+                    const driverPhone = fields['Driver Phone'].replace(/\s+/g, '');
+                    const phone = driverPhone.startsWith('+') ? driverPhone : (driverPhone.startsWith('0') ? '+44' + driverPhone.slice(1) : '+44' + driverPhone);
+                    const smsBody = `RM TRANSFERS – New Job Assigned\n\nRef: ${rec['Booking Ref'] || '—'}\nCustomer: ${rec['Customer Name'] || '—'}\nPickup: ${rec['Home Address'] || '—'}\nAirport: ${rec['Airport'] || '—'}\nDate: ${rec['Outbound Date'] || '—'} at ${rec['Outbound Time'] || '—'}\nPax: ${rec['Passengers'] || '—'} | Bags: ${rec['Luggage'] || '—'}\n\nView your jobs: https://airporttaxitransfersliverpool.co.uk/driver-portal.html`;
+
+                    await fetch('https://rest.clicksend.com/v3/sms/send', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': 'Basic Z3JhaGFtLm0uMjIyQGdtYWlsLmNvbTo2MzREMTAyQi0zMDRFLUI0QTUtQUQzQS1COTRFNDk1QjQ1OEM=',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            messages: [{
+                                to: phone,
+                                from: 'RMTransfers',
+                                body: smsBody
+                            }]
+                        })
+                    });
+                    console.log(`Driver reassignment SMS sent to ${phone}`);
+                } catch (smsErr) {
+                    console.error('Driver reassignment SMS failed (non-blocking):', smsErr);
+                    // Non-blocking – don't fail the PATCH response
+                }
+            }
+
             return res.status(200).json({ success: true, record: data });
         } catch (error) {
             console.error('PATCH booking error:', error);
