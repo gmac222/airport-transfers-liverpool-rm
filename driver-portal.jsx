@@ -137,6 +137,13 @@ function JobCard({ job, onAction }) {
                 <button
                     className="btn btn-secondary"
                     disabled={busy !== null}
+                    onClick={() => handle('arrived', 'Arrived SMS')}
+                >
+                    {busy === 'arrived' ? 'Sending…' : "📍 Arrived"}
+                </button>
+                <button
+                    className="btn btn-secondary"
+                    disabled={busy !== null}
                     onClick={() => handle('complete-job', 'Mark complete')}
                 >
                     {busy === 'complete-job' ? 'Updating…' : "✓ Complete"}

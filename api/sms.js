@@ -180,6 +180,15 @@ export default async function handler(req, res) {
         });
     }
 
+    if (action === 'driver-reminder') {
+        if (!formattedDriverPhone) return res.status(400).json({ error: 'Missing driver phone' });
+        messages.push({
+            to: formattedDriverPhone,
+            from: 'RMTransfers',
+            body: `REMINDER: Job tomorrow for ${fields['Customer Name']}\nRef: ${fields['Booking Ref']}\nPickup: ${fields['Home Address']}\nDestination: ${fields['Airport Name'] || 'See booking'}\nDate: ${fields['Outbound Date']} @ ${fields['Outbound Time']}\nFlight: ${fields['Outbound Flight'] || 'N/A'}\nPax: ${fields['Passengers'] || '?'} Bags: ${fields['Luggage'] || '?'}\nCustomer: ${fields['Customer Phone']}\n\nDriver Portal: https://airporttaxitransfersliverpool.co.uk/driver-action.html?ref=${fields['Booking Ref']}`
+        });
+    }
+
     if (action === 'new-booking-operator-alert') {
         const adminNumbers = ['+447398233859', '+447746899644'];
         adminNumbers.forEach(num => {
