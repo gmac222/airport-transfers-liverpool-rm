@@ -1,0 +1,1005 @@
+﻿{
+    "updatedAt":  "2026-04-27T17:19:02.550Z",
+    "createdAt":  "2026-04-24T17:09:30.773Z",
+    "id":  "E0sHFHX850tQffIk",
+    "name":  "Airport Transfers Liverpool",
+    "description":  null,
+    "active":  true,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "httpMethod":  "POST",
+                                         "path":  "3c702483-e68c-428a-8c2c-429cbdf61668",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       0,
+                                       0
+                                   ],
+                      "id":  "4fa55b83-a311-4fca-a0dc-e946c5baea7a",
+                      "name":  "Webhook",
+                      "webhookId":  "3c702483-e68c-428a-8c2c-429cbdf61668"
+                  },
+                  {
+                      "parameters":  {
+                                         "assignments":  {
+                                                             "assignments":  [
+                                                                                 {
+                                                                                     "id":  "1",
+                                                                                     "name":  "Booking Ref",
+                                                                                     "value":  "={{ $json.body.ref }}",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "2",
+                                                                                     "name":  "Submitted At",
+                                                                                     "value":  "={{ $json.body.submittedAt }}",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "3",
+                                                                                     "name":  "Trip Type",
+                                                                                     "value":  "={{ $json.body.tripType }}",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "4",
+                                                                                     "name":  "Oneway Direction",
+                                                                                     "value":  "={{ $json.body.onewayDir }}",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "5",
+                                                                                     "name":  "Airport",
+                                                                                     "value":  "={{ $json.body.airport }}",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "6",
+                                                                                     "name":  "Passengers",
+                                                                                     "value":  "={{ $json.body.passengers }}",
+                                                                                     "type":  "number"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "7",
+                                                                                     "name":  "Luggage",
+                                                                                     "value":  "={{ $json.body.luggage }}",
+                                                                                     "type":  "number"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "8",
+                                                                                     "name":  "Total Price",
+                                                                                     "value":  "={{ $json.body.priceGBP }}",
+                                                                                     "type":  "number"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "9",
+                                                                                     "name":  "Customer Name",
+                                                                                     "value":  "={{ $json.body.customer?.name }}",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "10",
+                                                                                     "name":  "Customer Phone",
+                                                                                     "value":  "={{ $json.body.customer?.phone }}",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "11",
+                                                                                     "name":  "Customer Email",
+                                                                                     "value":  "={{ $json.body.customer?.email }}",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "12",
+                                                                                     "name":  "Home Address",
+                                                                                     "value":  "={{ $json.body.customer?.address }}",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "13",
+                                                                                     "name":  "Outbound Date",
+                                                                                     "value":  "={{ $json.body.outbound?.date }}",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "14",
+                                                                                     "name":  "Outbound Time",
+                                                                                     "value":  "={{ $json.body.outbound?.time }}",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "15",
+                                                                                     "name":  "Outbound Flight",
+                                                                                     "value":  "={{ $json.body.outbound?.flight }}",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "16",
+                                                                                     "name":  "Return Date",
+                                                                                     "value":  "={{ $json.body.return?.date }}",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "17",
+                                                                                     "name":  "Return Time",
+                                                                                     "value":  "={{ $json.body.return?.time }}",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "18",
+                                                                                     "name":  "Return Flight",
+                                                                                     "value":  "={{ $json.body.return?.flight }}",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "19",
+                                                                                     "name":  "Notes",
+                                                                                     "value":  "={{ $json.body.notes }}",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "20",
+                                                                                     "name":  "Page URL",
+                                                                                     "value":  "={{ $json.body.pageUrl }}",
+                                                                                     "type":  "string"
+                                                                                 }
+                                                                             ]
+                                                         },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.set",
+                      "typeVersion":  3.4,
+                      "position":  [
+                                       208,
+                                       0
+                                   ],
+                      "id":  "8f91c6b9-8138-45c4-b6da-643ff8a5a0ea",
+                      "name":  "Edit Fields"
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "create",
+                                         "base":  {
+                                                      "__rl":  true,
+                                                      "value":  "appzmLNDAsk6m06Ae",
+                                                      "mode":  "id",
+                                                      "__alias":  "Airport Transfers Liverpool"
+                                                  },
+                                         "table":  {
+                                                       "__rl":  true,
+                                                       "value":  "tblAIQuXsh9MPtsSC",
+                                                       "mode":  "id",
+                                                       "__alias":  "Bookings"
+                                                   },
+                                         "columns":  {
+                                                         "mappingMode":  "defineBelow",
+                                                         "value":  {
+                                                                       "Booking Ref":  "={{ $json[\"Booking Ref\"] }}",
+                                                                       "Submitted At":  "={{ $json[\"Submitted At\"] }}",
+                                                                       "Trip Type":  "={{ $json[\"Trip Type\"] }}",
+                                                                       "Oneway Direction":  "={{ $json[\"Oneway Direction\"] }}",
+                                                                       "Airport":  "={{ $json[\"Airport\"] }}",
+                                                                       "Passengers":  "={{ $json[\"Passengers\"] }}",
+                                                                       "Luggage":  "={{ $json[\"Luggage\"] }}",
+                                                                       "Total Price":  "={{ $json[\"Total Price\"] }}",
+                                                                       "Customer Name":  "={{ $json[\"Customer Name\"] }}",
+                                                                       "Customer Phone":  "={{ $json[\"Customer Phone\"] }}",
+                                                                       "Customer Email":  "={{ $json[\"Customer Email\"] }}",
+                                                                       "Home Address":  "={{ $json[\"Home Address\"] }}",
+                                                                       "Outbound Date":  "={{ $json[\"Outbound Date\"] }}",
+                                                                       "Outbound Time":  "={{ $json[\"Outbound Time\"] }}",
+                                                                       "Outbound Flight":  "={{ $json[\"Outbound Flight\"] }}",
+                                                                       "Return Date":  "={{ $json[\"Return Date\"] }}",
+                                                                       "Return Time":  "={{ $json[\"Return Time\"] }}",
+                                                                       "Return Flight":  "={{ $json[\"Return Flight\"] }}",
+                                                                       "Notes":  "={{ $json[\"Notes\"] }}",
+                                                                       "Page URL":  "={{ $json[\"Page URL\"] }}"
+                                                                   }
+                                                     },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "e67b2d5d-c692-4d0f-a316-9dc9bb1bc75d",
+                      "name":  "Airtable",
+                      "type":  "n8n-nodes-base.airtable",
+                      "typeVersion":  2,
+                      "position":  [
+                                       432,
+                                       0
+                                   ],
+                      "credentials":  {
+                                          "airtableTokenApi":  {
+                                                                   "id":  "PAYJ8atu75xLv55R",
+                                                                   "name":  "Airtable PAT"
+                                                               }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.resend.com/emails",
+                                         "authentication":  "none",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Authorization",
+                                                                                         "value":  "Bearer re_FXQGg4UN_LdgUL9U3j8jL2vhPmdpVqw8g"
+                                                                                     },
+                                                                                     {
+                                                                                         "name":  "Content-Type",
+                                                                                         "value":  "application/json"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={{ { \"from\": \"bookings@airporttaxitransfersliverpool.co.uk\", \"to\": $json.fields[\u0027Customer Email\u0027], \"subject\": \"Booking Received - RM Transfers (Liverpool)\", \"html\": `\u003cdiv style=\"font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #0E2747; line-height: 1.5;\"\u003e\n  \u003cdiv style=\"text-align: center; padding: 20px; background: #0B1E37; border-radius: 12px 12px 0 0;\"\u003e\n    \u003cimg src=\"https://airporttaxitransfersliverpool.co.uk/assets/logo.png\" alt=\"RM Transfers Logo\" style=\"height: 60px; width: auto; object-fit: contain; margin: 10px 0;\" /\u003e\n  \u003c/div\u003e\n  \u003cdiv style=\"padding: 30px; border: 1px solid #E8E2D4; border-top: none; border-radius: 0 0 12px 12px;\"\u003e\n    \u003ch2 style=\"color: #0E2747; margin-top: 0;\"\u003eBooking Received!\u003c/h2\u003e\n    \u003cp\u003eHi ${$json.fields[\u0027Customer Name\u0027]},\u003c/p\u003e\n    \u003cp\u003eThank you for booking with Airport Transfers Liverpool. We have received your booking request and our team is currently reviewing it to assign one of our professional drivers.\u003c/p\u003e\n    \n    \u003cdiv style=\"background: #FAF7F2; padding: 20px; border-radius: 8px; margin: 24px 0; border: 1px solid #E8E2D4;\"\u003e\n      \u003ch3 style=\"margin-top: 0; color: #E6B24B; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;\"\u003eTrip Summary\u003c/h3\u003e\n      \u003cp style=\"margin: 8px 0;\"\u003e\u003cstrong\u003eBooking Reference:\u003c/strong\u003e ${$json.fields[\u0027Booking Ref\u0027]}\u003c/p\u003e\n      \u003cp style=\"margin: 8px 0;\"\u003e\u003cstrong\u003ePickup Location:\u003c/strong\u003e ${$json.fields[\u0027Home Address\u0027]}\u003c/p\u003e\n      \u003cp style=\"margin: 8px 0;\"\u003e\u003cstrong\u003eDestination:\u003c/strong\u003e ${$json.fields[\u0027Airport\u0027]}\u003c/p\u003e\n      \u003cp style=\"margin: 8px 0;\"\u003e\u003cstrong\u003eDate \u0026 Time:\u003c/strong\u003e ${$json.fields[\u0027Outbound Date\u0027]} at ${$json.fields[\u0027Outbound Time\u0027]}\u003c/p\u003e\n      \u003cp style=\"margin: 8px 0;\"\u003e\u003cstrong\u003ePassengers:\u003c/strong\u003e ${$json.fields[\u0027Passengers\u0027]}\u003c/p\u003e\n    \u003c/div\u003e\n    \n    \u003cp\u003eYou can track the live status of your booking at any time via your personal tracking portal:\u003c/p\u003e\n    \n    \u003cdiv style=\"text-align: center; margin: 30px 0;\"\u003e\n      \u003ca href=\"https://airporttaxitransfersliverpool.co.uk/portal.html?ref=${$json.fields[\u0027Booking Ref\u0027]}\" style=\"background: #E6B24B; color: #0B1E37; font-weight: bold; padding: 14px 28px; text-decoration: none; border-radius: 6px; display: inline-block;\"\u003eView Booking Portal\u003c/a\u003e\n    \u003c/div\u003e\n    \n    \u003cp\u003eWe will send you another notification (SMS \u0026 Email) as soon as your driver is confirmed.\u003c/p\u003e\n    \u003cp style=\"color: #5b6472; font-size: 14px;\"\u003eThanks,\u003cbr\u003eThe Airport Transfers Liverpool Team\u003c/p\u003e\n  \u003c/div\u003e\n\u003c/div\u003e` } }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "resend-customer-email",
+                      "name":  "Resend Customer Email",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.1,
+                      "position":  [
+                                       640,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://rest.clicksend.com/v3/sms/send",
+                                         "authentication":  "none",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Authorization",
+                                                                                         "value":  "Basic Z3JhaGFtLm0uMjIyQGdtYWlsLmNvbTo2MzREMTAyQi0zMDRFLUI0QTUtQUQzQS1COTRFNDk1QjQ1OEM="
+                                                                                     },
+                                                                                     {
+                                                                                         "name":  "Content-Type",
+                                                                                         "value":  "application/json"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={{ { \"messages\": [ { \"to\": \"+447398233859\", \"body\": \"New Booking Received! Ref: \" + $json.fields[\u0027Booking Ref\u0027] + \"\\nAdmin: https://airporttaxitransfersliverpool.co.uk/admin.html?ref=\" + $json.fields[\u0027Booking Ref\u0027] }, { \"to\": \"+447746899644\", \"body\": \"New Booking Received! Ref: \" + $json.fields[\u0027Booking Ref\u0027] + \"\\nAdmin: https://airporttaxitransfersliverpool.co.uk/admin.html?ref=\" + $json.fields[\u0027Booking Ref\u0027] } ] } }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "clicksend-operator-node",
+                      "name":  "ClickSend Operator SMS",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.1,
+                      "position":  [
+                                       640,
+                                       -100
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://rest.clicksend.com/v3/sms/send",
+                                         "authentication":  "none",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Authorization",
+                                                                                         "value":  "Basic Z3JhaGFtLm0uMjIyQGdtYWlsLmNvbTo2MzREMTAyQi0zMDRFLUI0QTUtQUQzQS1COTRFNDk1QjQ1OEM="
+                                                                                     },
+                                                                                     {
+                                                                                         "name":  "Content-Type",
+                                                                                         "value":  "application/json"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={{ { \"messages\": [ { \"to\": $json.fields[\u0027Customer Phone\u0027].replace(/\\s+/g, \u0027\u0027).replace(/^0/, \u0027+44\u0027), \"body\": \"Hi \" + $json.fields[\u0027Customer Name\u0027] + \", your Airport Transfers Liverpool booking (Ref: \" + $json.fields[\u0027Booking Ref\u0027] + \") has been received! We will be in touch shortly to confirm.\" } ] } }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "clicksend-customer-node",
+                      "name":  "ClickSend Customer SMS",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.1,
+                      "position":  [
+                                       640,
+                                       100
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "update",
+                                         "base":  {
+                                                      "__rl":  true,
+                                                      "value":  "appzmLNDAsk6m06Ae",
+                                                      "mode":  "id",
+                                                      "__alias":  "Airport Transfers Liverpool"
+                                                  },
+                                         "table":  {
+                                                       "__rl":  true,
+                                                       "value":  "tblAIQuXsh9MPtsSC",
+                                                       "mode":  "id",
+                                                       "__alias":  "Bookings"
+                                                   },
+                                         "id":  "={{ $(\u0027Airtable\u0027).item.json.id }}",
+                                         "columns":  {
+                                                         "mappingMode":  "defineBelow",
+                                                         "value":  {
+                                                                       "Initial SMS Sent":  true
+                                                                   },
+                                                         "matchingColumns":  [
+
+                                                                             ]
+                                                     },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "airtable-update-sms-node",
+                      "name":  "Update Airtable SMS Sent",
+                      "type":  "n8n-nodes-base.airtable",
+                      "typeVersion":  2,
+                      "position":  [
+                                       840,
+                                       100
+                                   ],
+                      "credentials":  {
+                                          "airtableTokenApi":  {
+                                                                   "id":  "PAYJ8atu75xLv55R",
+                                                                   "name":  "Airtable PAT"
+                                                               }
+                                      }
+                  }
+              ],
+    "connections":  {
+                        "Webhook":  {
+                                        "main":  [
+                                                     [
+                                                         {
+                                                             "node":  "Edit Fields",
+                                                             "type":  "main",
+                                                             "index":  0
+                                                         }
+                                                     ]
+                                                 ]
+                                    },
+                        "Edit Fields":  {
+                                            "main":  [
+                                                         [
+                                                             {
+                                                                 "node":  "Airtable",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                        },
+                        "Airtable":  {
+                                         "main":  [
+                                                      [
+                                                          {
+                                                              "node":  "ClickSend Operator SMS",
+                                                              "type":  "main",
+                                                              "index":  0
+                                                          },
+                                                          {
+                                                              "node":  "ClickSend Customer SMS",
+                                                              "type":  "main",
+                                                              "index":  0
+                                                          }
+                                                      ]
+                                                  ]
+                                     },
+                        "ClickSend Customer SMS":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "Update Airtable SMS Sent",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                   }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "binaryMode":  "separate"
+                 },
+    "staticData":  null,
+    "meta":  {
+                 "templateCredsSetupCompleted":  true
+             },
+    "pinData":  {
+                    "Webhook":  [
+                                    {
+                                        "json":  {
+                                                     "headers":  {
+                                                                     "host":  "gmac222.app.n8n.cloud",
+                                                                     "user-agent":  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+                                                                     "content-length":  "484",
+                                                                     "accept":  "*/*",
+                                                                     "accept-encoding":  "gzip, br",
+                                                                     "accept-language":  "en-GB,en-US;q=0.9,en;q=0.8",
+                                                                     "cdn-loop":  "cloudflare; loops=1; subreqs=1",
+                                                                     "cf-connecting-ip":  "86.171.167.44",
+                                                                     "cf-ew-via":  "15",
+                                                                     "cf-ipcountry":  "GB",
+                                                                     "cf-ray":  "9f17313f3e17a17a-LHR",
+                                                                     "cf-visitor":  "{\"scheme\":\"https\"}",
+                                                                     "cf-worker":  "n8n.cloud",
+                                                                     "content-type":  "application/json",
+                                                                     "origin":  "http://127.0.0.1:8080",
+                                                                     "priority":  "u=1, i",
+                                                                     "referer":  "http://127.0.0.1:8080/",
+                                                                     "sec-ch-ua":  "\"Google Chrome\";v=\"147\", \"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"147\"",
+                                                                     "sec-ch-ua-mobile":  "?0",
+                                                                     "sec-ch-ua-platform":  "\"Windows\"",
+                                                                     "sec-fetch-dest":  "empty",
+                                                                     "sec-fetch-mode":  "cors",
+                                                                     "sec-fetch-site":  "cross-site",
+                                                                     "x-forwarded-for":  "86.171.167.44, 172.64.192.45",
+                                                                     "x-forwarded-host":  "gmac222.app.n8n.cloud",
+                                                                     "x-forwarded-port":  "443",
+                                                                     "x-forwarded-proto":  "https",
+                                                                     "x-forwarded-server":  "traefik-prod-users-gwc-123-57df655446-ldmhk",
+                                                                     "x-is-trusted":  "yes",
+                                                                     "x-real-ip":  "86.171.167.44"
+                                                                 },
+                                                     "params":  {
+
+                                                                },
+                                                     "query":  {
+
+                                                               },
+                                                     "body":  {
+                                                                  "ref":  "ATL-236858",
+                                                                  "submittedAt":  "2026-04-24T18:32:44.825Z",
+                                                                  "tripType":  "oneway",
+                                                                  "onewayDir":  "to",
+                                                                  "airport":  "LJLA",
+                                                                  "airportName":  "Liverpool John Lennon",
+                                                                  "passengers":  3,
+                                                                  "luggage":  3,
+                                                                  "priceGBP":  65,
+                                                                  "legPriceGBP":  65,
+                                                                  "customer":  {
+                                                                                   "name":  "Demo Video User",
+                                                                                   "phone":  "07123456789",
+                                                                                   "email":  "demo@example.com",
+                                                                                   "address":  "99 Demo Street"
+                                                                               },
+                                                                  "outbound":  {
+                                                                                   "date":  "2026-07-01",
+                                                                                   "time":  "10:00",
+                                                                                   "flight":  "DEMO123"
+                                                                               },
+                                                                  "return":  null,
+                                                                  "notes":  "Live demonstration booking!",
+                                                                  "pageUrl":  "http://127.0.0.1:8080/#book"
+                                                              },
+                                                     "webhookUrl":  "https://gmac222.app.n8n.cloud/webhook/3c702483-e68c-428a-8c2c-429cbdf61668",
+                                                     "executionMode":  "production"
+                                                 },
+                                        "pairedItem":  {
+                                                           "item":  0
+                                                       }
+                                    }
+                                ],
+                    "Twilio SMS":  [
+                                       {
+                                           "json":  {
+                                                        "id":  "recsPpledWwVS7Ttn",
+                                                        "createdTime":  "2026-04-24T18:32:45.000Z",
+                                                        "fields":  {
+                                                                       "Booking Ref":  "ATL-236858",
+                                                                       "Submitted At":  "2026-04-24T18:32:44.825Z",
+                                                                       "Trip Type":  "oneway",
+                                                                       "Oneway Direction":  "to",
+                                                                       "Airport":  "LJLA",
+                                                                       "Passengers":  3,
+                                                                       "Luggage":  3,
+                                                                       "Total Price":  65,
+                                                                       "Customer Name":  "Demo Video User",
+                                                                       "Customer Phone":  "07123456789",
+                                                                       "Customer Email":  "demo@example.com",
+                                                                       "Home Address":  "99 Demo Street",
+                                                                       "Outbound Date":  "2026-07-01",
+                                                                       "Outbound Time":  "10:00",
+                                                                       "Outbound Flight":  "DEMO123",
+                                                                       "Notes":  "Live demonstration booking!",
+                                                                       "Page URL":  "http://127.0.0.1:8080/#book"
+                                                                   }
+                                                    }
+                                       }
+                                   ]
+                },
+    "versionId":  "c101afe8-be18-42dc-a61f-2616953f2269",
+    "activeVersionId":  "c101afe8-be18-42dc-a61f-2616953f2269",
+    "versionCounter":  114,
+    "triggerCount":  1,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-04-24T17:09:30.775Z",
+                       "createdAt":  "2026-04-24T17:09:30.775Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "E0sHFHX850tQffIk",
+                       "projectId":  "trBQBbx05zTHquzM",
+                       "project":  {
+                                       "updatedAt":  "2026-03-07T09:18:48.202Z",
+                                       "createdAt":  "2026-03-07T09:18:42.251Z",
+                                       "id":  "trBQBbx05zTHquzM",
+                                       "name":  "Graham   \u003cgraham.m.222@gmail.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "creatorId":  "3afabf35-e268-4ee5-b408-bfb9cd612d82"
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  {
+                          "updatedAt":  "2026-04-27T17:19:02.551Z",
+                          "createdAt":  "2026-04-27T17:19:02.551Z",
+                          "versionId":  "c101afe8-be18-42dc-a61f-2616953f2269",
+                          "workflowId":  "E0sHFHX850tQffIk",
+                          "nodes":  [
+                                        {
+                                            "parameters":  {
+                                                               "httpMethod":  "POST",
+                                                               "path":  "3c702483-e68c-428a-8c2c-429cbdf61668",
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "type":  "n8n-nodes-base.webhook",
+                                            "typeVersion":  2.1,
+                                            "position":  [
+                                                             0,
+                                                             0
+                                                         ],
+                                            "id":  "4fa55b83-a311-4fca-a0dc-e946c5baea7a",
+                                            "name":  "Webhook",
+                                            "webhookId":  "3c702483-e68c-428a-8c2c-429cbdf61668"
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "assignments":  {
+                                                                                   "assignments":  [
+                                                                                                       {
+                                                                                                           "id":  "1",
+                                                                                                           "name":  "Booking Ref",
+                                                                                                           "value":  "={{ $json.body.ref }}",
+                                                                                                           "type":  "string"
+                                                                                                       },
+                                                                                                       {
+                                                                                                           "id":  "2",
+                                                                                                           "name":  "Submitted At",
+                                                                                                           "value":  "={{ $json.body.submittedAt }}",
+                                                                                                           "type":  "string"
+                                                                                                       },
+                                                                                                       {
+                                                                                                           "id":  "3",
+                                                                                                           "name":  "Trip Type",
+                                                                                                           "value":  "={{ $json.body.tripType }}",
+                                                                                                           "type":  "string"
+                                                                                                       },
+                                                                                                       {
+                                                                                                           "id":  "4",
+                                                                                                           "name":  "Oneway Direction",
+                                                                                                           "value":  "={{ $json.body.onewayDir }}",
+                                                                                                           "type":  "string"
+                                                                                                       },
+                                                                                                       {
+                                                                                                           "id":  "5",
+                                                                                                           "name":  "Airport",
+                                                                                                           "value":  "={{ $json.body.airport }}",
+                                                                                                           "type":  "string"
+                                                                                                       },
+                                                                                                       {
+                                                                                                           "id":  "6",
+                                                                                                           "name":  "Passengers",
+                                                                                                           "value":  "={{ $json.body.passengers }}",
+                                                                                                           "type":  "number"
+                                                                                                       },
+                                                                                                       {
+                                                                                                           "id":  "7",
+                                                                                                           "name":  "Luggage",
+                                                                                                           "value":  "={{ $json.body.luggage }}",
+                                                                                                           "type":  "number"
+                                                                                                       },
+                                                                                                       {
+                                                                                                           "id":  "8",
+                                                                                                           "name":  "Total Price",
+                                                                                                           "value":  "={{ $json.body.priceGBP }}",
+                                                                                                           "type":  "number"
+                                                                                                       },
+                                                                                                       {
+                                                                                                           "id":  "9",
+                                                                                                           "name":  "Customer Name",
+                                                                                                           "value":  "={{ $json.body.customer?.name }}",
+                                                                                                           "type":  "string"
+                                                                                                       },
+                                                                                                       {
+                                                                                                           "id":  "10",
+                                                                                                           "name":  "Customer Phone",
+                                                                                                           "value":  "={{ $json.body.customer?.phone }}",
+                                                                                                           "type":  "string"
+                                                                                                       },
+                                                                                                       {
+                                                                                                           "id":  "11",
+                                                                                                           "name":  "Customer Email",
+                                                                                                           "value":  "={{ $json.body.customer?.email }}",
+                                                                                                           "type":  "string"
+                                                                                                       },
+                                                                                                       {
+                                                                                                           "id":  "12",
+                                                                                                           "name":  "Home Address",
+                                                                                                           "value":  "={{ $json.body.customer?.address }}",
+                                                                                                           "type":  "string"
+                                                                                                       },
+                                                                                                       {
+                                                                                                           "id":  "13",
+                                                                                                           "name":  "Outbound Date",
+                                                                                                           "value":  "={{ $json.body.outbound?.date }}",
+                                                                                                           "type":  "string"
+                                                                                                       },
+                                                                                                       {
+                                                                                                           "id":  "14",
+                                                                                                           "name":  "Outbound Time",
+                                                                                                           "value":  "={{ $json.body.outbound?.time }}",
+                                                                                                           "type":  "string"
+                                                                                                       },
+                                                                                                       {
+                                                                                                           "id":  "15",
+                                                                                                           "name":  "Outbound Flight",
+                                                                                                           "value":  "={{ $json.body.outbound?.flight }}",
+                                                                                                           "type":  "string"
+                                                                                                       },
+                                                                                                       {
+                                                                                                           "id":  "16",
+                                                                                                           "name":  "Return Date",
+                                                                                                           "value":  "={{ $json.body.return?.date }}",
+                                                                                                           "type":  "string"
+                                                                                                       },
+                                                                                                       {
+                                                                                                           "id":  "17",
+                                                                                                           "name":  "Return Time",
+                                                                                                           "value":  "={{ $json.body.return?.time }}",
+                                                                                                           "type":  "string"
+                                                                                                       },
+                                                                                                       {
+                                                                                                           "id":  "18",
+                                                                                                           "name":  "Return Flight",
+                                                                                                           "value":  "={{ $json.body.return?.flight }}",
+                                                                                                           "type":  "string"
+                                                                                                       },
+                                                                                                       {
+                                                                                                           "id":  "19",
+                                                                                                           "name":  "Notes",
+                                                                                                           "value":  "={{ $json.body.notes }}",
+                                                                                                           "type":  "string"
+                                                                                                       },
+                                                                                                       {
+                                                                                                           "id":  "20",
+                                                                                                           "name":  "Page URL",
+                                                                                                           "value":  "={{ $json.body.pageUrl }}",
+                                                                                                           "type":  "string"
+                                                                                                       }
+                                                                                                   ]
+                                                                               },
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "type":  "n8n-nodes-base.set",
+                                            "typeVersion":  3.4,
+                                            "position":  [
+                                                             208,
+                                                             0
+                                                         ],
+                                            "id":  "8f91c6b9-8138-45c4-b6da-643ff8a5a0ea",
+                                            "name":  "Edit Fields"
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "operation":  "create",
+                                                               "base":  {
+                                                                            "__rl":  true,
+                                                                            "value":  "appzmLNDAsk6m06Ae",
+                                                                            "mode":  "id",
+                                                                            "__alias":  "Airport Transfers Liverpool"
+                                                                        },
+                                                               "table":  {
+                                                                             "__rl":  true,
+                                                                             "value":  "tblAIQuXsh9MPtsSC",
+                                                                             "mode":  "id",
+                                                                             "__alias":  "Bookings"
+                                                                         },
+                                                               "columns":  {
+                                                                               "mappingMode":  "defineBelow",
+                                                                               "value":  {
+                                                                                             "Booking Ref":  "={{ $json[\"Booking Ref\"] }}",
+                                                                                             "Submitted At":  "={{ $json[\"Submitted At\"] }}",
+                                                                                             "Trip Type":  "={{ $json[\"Trip Type\"] }}",
+                                                                                             "Oneway Direction":  "={{ $json[\"Oneway Direction\"] }}",
+                                                                                             "Airport":  "={{ $json[\"Airport\"] }}",
+                                                                                             "Passengers":  "={{ $json[\"Passengers\"] }}",
+                                                                                             "Luggage":  "={{ $json[\"Luggage\"] }}",
+                                                                                             "Total Price":  "={{ $json[\"Total Price\"] }}",
+                                                                                             "Customer Name":  "={{ $json[\"Customer Name\"] }}",
+                                                                                             "Customer Phone":  "={{ $json[\"Customer Phone\"] }}",
+                                                                                             "Customer Email":  "={{ $json[\"Customer Email\"] }}",
+                                                                                             "Home Address":  "={{ $json[\"Home Address\"] }}",
+                                                                                             "Outbound Date":  "={{ $json[\"Outbound Date\"] }}",
+                                                                                             "Outbound Time":  "={{ $json[\"Outbound Time\"] }}",
+                                                                                             "Outbound Flight":  "={{ $json[\"Outbound Flight\"] }}",
+                                                                                             "Return Date":  "={{ $json[\"Return Date\"] }}",
+                                                                                             "Return Time":  "={{ $json[\"Return Time\"] }}",
+                                                                                             "Return Flight":  "={{ $json[\"Return Flight\"] }}",
+                                                                                             "Notes":  "={{ $json[\"Notes\"] }}",
+                                                                                             "Page URL":  "={{ $json[\"Page URL\"] }}"
+                                                                                         }
+                                                                           },
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "id":  "e67b2d5d-c692-4d0f-a316-9dc9bb1bc75d",
+                                            "name":  "Airtable",
+                                            "type":  "n8n-nodes-base.airtable",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             432,
+                                                             0
+                                                         ],
+                                            "credentials":  {
+                                                                "airtableTokenApi":  {
+                                                                                         "id":  "PAYJ8atu75xLv55R",
+                                                                                         "name":  "Airtable PAT"
+                                                                                     }
+                                                            }
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "method":  "POST",
+                                                               "url":  "https://api.resend.com/emails",
+                                                               "authentication":  "none",
+                                                               "sendHeaders":  true,
+                                                               "headerParameters":  {
+                                                                                        "parameters":  [
+                                                                                                           {
+                                                                                                               "name":  "Authorization",
+                                                                                                               "value":  "Bearer re_FXQGg4UN_LdgUL9U3j8jL2vhPmdpVqw8g"
+                                                                                                           },
+                                                                                                           {
+                                                                                                               "name":  "Content-Type",
+                                                                                                               "value":  "application/json"
+                                                                                                           }
+                                                                                                       ]
+                                                                                    },
+                                                               "sendBody":  true,
+                                                               "specifyBody":  "json",
+                                                               "jsonBody":  "={{ { \"from\": \"bookings@airporttaxitransfersliverpool.co.uk\", \"to\": $json.fields[\u0027Customer Email\u0027], \"subject\": \"Booking Received - RM Transfers (Liverpool)\", \"html\": `\u003cdiv style=\"font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #0E2747; line-height: 1.5;\"\u003e\n  \u003cdiv style=\"text-align: center; padding: 20px; background: #0B1E37; border-radius: 12px 12px 0 0;\"\u003e\n    \u003cimg src=\"https://airporttaxitransfersliverpool.co.uk/assets/logo.png\" alt=\"RM Transfers Logo\" style=\"height: 60px; width: auto; object-fit: contain; margin: 10px 0;\" /\u003e\n  \u003c/div\u003e\n  \u003cdiv style=\"padding: 30px; border: 1px solid #E8E2D4; border-top: none; border-radius: 0 0 12px 12px;\"\u003e\n    \u003ch2 style=\"color: #0E2747; margin-top: 0;\"\u003eBooking Received!\u003c/h2\u003e\n    \u003cp\u003eHi ${$json.fields[\u0027Customer Name\u0027]},\u003c/p\u003e\n    \u003cp\u003eThank you for booking with Airport Transfers Liverpool. We have received your booking request and our team is currently reviewing it to assign one of our professional drivers.\u003c/p\u003e\n    \n    \u003cdiv style=\"background: #FAF7F2; padding: 20px; border-radius: 8px; margin: 24px 0; border: 1px solid #E8E2D4;\"\u003e\n      \u003ch3 style=\"margin-top: 0; color: #E6B24B; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;\"\u003eTrip Summary\u003c/h3\u003e\n      \u003cp style=\"margin: 8px 0;\"\u003e\u003cstrong\u003eBooking Reference:\u003c/strong\u003e ${$json.fields[\u0027Booking Ref\u0027]}\u003c/p\u003e\n      \u003cp style=\"margin: 8px 0;\"\u003e\u003cstrong\u003ePickup Location:\u003c/strong\u003e ${$json.fields[\u0027Home Address\u0027]}\u003c/p\u003e\n      \u003cp style=\"margin: 8px 0;\"\u003e\u003cstrong\u003eDestination:\u003c/strong\u003e ${$json.fields[\u0027Airport\u0027]}\u003c/p\u003e\n      \u003cp style=\"margin: 8px 0;\"\u003e\u003cstrong\u003eDate \u0026 Time:\u003c/strong\u003e ${$json.fields[\u0027Outbound Date\u0027]} at ${$json.fields[\u0027Outbound Time\u0027]}\u003c/p\u003e\n      \u003cp style=\"margin: 8px 0;\"\u003e\u003cstrong\u003ePassengers:\u003c/strong\u003e ${$json.fields[\u0027Passengers\u0027]}\u003c/p\u003e\n    \u003c/div\u003e\n    \n    \u003cp\u003eYou can track the live status of your booking at any time via your personal tracking portal:\u003c/p\u003e\n    \n    \u003cdiv style=\"text-align: center; margin: 30px 0;\"\u003e\n      \u003ca href=\"https://airporttaxitransfersliverpool.co.uk/portal.html?ref=${$json.fields[\u0027Booking Ref\u0027]}\" style=\"background: #E6B24B; color: #0B1E37; font-weight: bold; padding: 14px 28px; text-decoration: none; border-radius: 6px; display: inline-block;\"\u003eView Booking Portal\u003c/a\u003e\n    \u003c/div\u003e\n    \n    \u003cp\u003eWe will send you another notification (SMS \u0026 Email) as soon as your driver is confirmed.\u003c/p\u003e\n    \u003cp style=\"color: #5b6472; font-size: 14px;\"\u003eThanks,\u003cbr\u003eThe Airport Transfers Liverpool Team\u003c/p\u003e\n  \u003c/div\u003e\n\u003c/div\u003e` } }}",
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "id":  "resend-customer-email",
+                                            "name":  "Resend Customer Email",
+                                            "type":  "n8n-nodes-base.httpRequest",
+                                            "typeVersion":  4.1,
+                                            "position":  [
+                                                             640,
+                                                             300
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "method":  "POST",
+                                                               "url":  "https://rest.clicksend.com/v3/sms/send",
+                                                               "authentication":  "none",
+                                                               "sendHeaders":  true,
+                                                               "headerParameters":  {
+                                                                                        "parameters":  [
+                                                                                                           {
+                                                                                                               "name":  "Authorization",
+                                                                                                               "value":  "Basic Z3JhaGFtLm0uMjIyQGdtYWlsLmNvbTo2MzREMTAyQi0zMDRFLUI0QTUtQUQzQS1COTRFNDk1QjQ1OEM="
+                                                                                                           },
+                                                                                                           {
+                                                                                                               "name":  "Content-Type",
+                                                                                                               "value":  "application/json"
+                                                                                                           }
+                                                                                                       ]
+                                                                                    },
+                                                               "sendBody":  true,
+                                                               "specifyBody":  "json",
+                                                               "jsonBody":  "={{ { \"messages\": [ { \"to\": \"+447398233859\", \"body\": \"New Booking Received! Ref: \" + $json.fields[\u0027Booking Ref\u0027] + \"\\nAdmin: https://airporttaxitransfersliverpool.co.uk/admin.html?ref=\" + $json.fields[\u0027Booking Ref\u0027] }, { \"to\": \"+447746899644\", \"body\": \"New Booking Received! Ref: \" + $json.fields[\u0027Booking Ref\u0027] + \"\\nAdmin: https://airporttaxitransfersliverpool.co.uk/admin.html?ref=\" + $json.fields[\u0027Booking Ref\u0027] } ] } }}",
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "id":  "clicksend-operator-node",
+                                            "name":  "ClickSend Operator SMS",
+                                            "type":  "n8n-nodes-base.httpRequest",
+                                            "typeVersion":  4.1,
+                                            "position":  [
+                                                             640,
+                                                             -100
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "method":  "POST",
+                                                               "url":  "https://rest.clicksend.com/v3/sms/send",
+                                                               "authentication":  "none",
+                                                               "sendHeaders":  true,
+                                                               "headerParameters":  {
+                                                                                        "parameters":  [
+                                                                                                           {
+                                                                                                               "name":  "Authorization",
+                                                                                                               "value":  "Basic Z3JhaGFtLm0uMjIyQGdtYWlsLmNvbTo2MzREMTAyQi0zMDRFLUI0QTUtQUQzQS1COTRFNDk1QjQ1OEM="
+                                                                                                           },
+                                                                                                           {
+                                                                                                               "name":  "Content-Type",
+                                                                                                               "value":  "application/json"
+                                                                                                           }
+                                                                                                       ]
+                                                                                    },
+                                                               "sendBody":  true,
+                                                               "specifyBody":  "json",
+                                                               "jsonBody":  "={{ { \"messages\": [ { \"to\": $json.fields[\u0027Customer Phone\u0027].replace(/\\s+/g, \u0027\u0027).replace(/^0/, \u0027+44\u0027), \"body\": \"Hi \" + $json.fields[\u0027Customer Name\u0027] + \", your Airport Transfers Liverpool booking (Ref: \" + $json.fields[\u0027Booking Ref\u0027] + \") has been received! We will be in touch shortly to confirm.\" } ] } }}",
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "id":  "clicksend-customer-node",
+                                            "name":  "ClickSend Customer SMS",
+                                            "type":  "n8n-nodes-base.httpRequest",
+                                            "typeVersion":  4.1,
+                                            "position":  [
+                                                             640,
+                                                             100
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "operation":  "update",
+                                                               "base":  {
+                                                                            "__rl":  true,
+                                                                            "value":  "appzmLNDAsk6m06Ae",
+                                                                            "mode":  "id",
+                                                                            "__alias":  "Airport Transfers Liverpool"
+                                                                        },
+                                                               "table":  {
+                                                                             "__rl":  true,
+                                                                             "value":  "tblAIQuXsh9MPtsSC",
+                                                                             "mode":  "id",
+                                                                             "__alias":  "Bookings"
+                                                                         },
+                                                               "id":  "={{ $(\u0027Airtable\u0027).item.json.id }}",
+                                                               "columns":  {
+                                                                               "mappingMode":  "defineBelow",
+                                                                               "value":  {
+                                                                                             "Initial SMS Sent":  true
+                                                                                         },
+                                                                               "matchingColumns":  [
+
+                                                                                                   ]
+                                                                           },
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "id":  "airtable-update-sms-node",
+                                            "name":  "Update Airtable SMS Sent",
+                                            "type":  "n8n-nodes-base.airtable",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             840,
+                                                             100
+                                                         ],
+                                            "credentials":  {
+                                                                "airtableTokenApi":  {
+                                                                                         "id":  "PAYJ8atu75xLv55R",
+                                                                                         "name":  "Airtable PAT"
+                                                                                     }
+                                                            }
+                                        }
+                                    ],
+                          "connections":  {
+                                              "Webhook":  {
+                                                              "main":  [
+                                                                           [
+                                                                               {
+                                                                                   "node":  "Edit Fields",
+                                                                                   "type":  "main",
+                                                                                   "index":  0
+                                                                               }
+                                                                           ]
+                                                                       ]
+                                                          },
+                                              "Edit Fields":  {
+                                                                  "main":  [
+                                                                               [
+                                                                                   {
+                                                                                       "node":  "Airtable",
+                                                                                       "type":  "main",
+                                                                                       "index":  0
+                                                                                   }
+                                                                               ]
+                                                                           ]
+                                                              },
+                                              "Airtable":  {
+                                                               "main":  [
+                                                                            [
+                                                                                {
+                                                                                    "node":  "ClickSend Operator SMS",
+                                                                                    "type":  "main",
+                                                                                    "index":  0
+                                                                                },
+                                                                                {
+                                                                                    "node":  "ClickSend Customer SMS",
+                                                                                    "type":  "main",
+                                                                                    "index":  0
+                                                                                }
+                                                                            ]
+                                                                        ]
+                                                           },
+                                              "ClickSend Customer SMS":  {
+                                                                             "main":  [
+                                                                                          [
+                                                                                              {
+                                                                                                  "node":  "Update Airtable SMS Sent",
+                                                                                                  "type":  "main",
+                                                                                                  "index":  0
+                                                                                              }
+                                                                                          ]
+                                                                                      ]
+                                                                         }
+                                          },
+                          "authors":  "Graham  ",
+                          "name":  null,
+                          "description":  null,
+                          "autosaved":  false,
+                          "workflowPublishHistory":  [
+                                                         {
+                                                             "createdAt":  "2026-04-27T17:19:02.763Z",
+                                                             "id":  72,
+                                                             "workflowId":  "E0sHFHX850tQffIk",
+                                                             "versionId":  "c101afe8-be18-42dc-a61f-2616953f2269",
+                                                             "event":  "activated",
+                                                             "userId":  "3afabf35-e268-4ee5-b408-bfb9cd612d82"
+                                                         },
+                                                         {
+                                                             "createdAt":  "2026-04-27T17:19:02.664Z",
+                                                             "id":  71,
+                                                             "workflowId":  "E0sHFHX850tQffIk",
+                                                             "versionId":  "c101afe8-be18-42dc-a61f-2616953f2269",
+                                                             "event":  "deactivated",
+                                                             "userId":  "3afabf35-e268-4ee5-b408-bfb9cd612d82"
+                                                         }
+                                                     ]
+                      }
+}

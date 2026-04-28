@@ -9,7 +9,7 @@
       "syncFolder": "workflows",
       "verification": {
         "status": "failed",
-        "lastCheckedAt": "2026-04-24T17:12:26.768Z",
+        "lastCheckedAt": "2026-04-28T12:07:05.916Z",
         "lastError": "Unable to resolve the authenticated n8n user."
       }
     }
