@@ -252,7 +252,6 @@ function AdminApp() {
         if (!driverName || driverName.trim() === '') return alert('Please enter a driver name');
         if (!driverPhone || driverPhone.trim() === '') return alert('Please enter a driver phone number');
         if (!paymentLink || paymentLink.trim() === '') return alert('Please enter a payment link');
-        if (!price || price.trim() === '') return alert('Please enter a price');
 
         setAssigningId(id);
 
@@ -265,8 +264,7 @@ function AdminApp() {
                     'Status': 'Awaiting Payment',
                     'Driver Name': driverName.trim(),
                     'Driver Phone': driverPhone.trim(),
-                    'Payment Link': paymentLink.trim(),
-                    'Total Price': parseFloat(price)
+                    'Payment Link': paymentLink.trim()
                 }
             })
         })
@@ -286,7 +284,7 @@ function AdminApp() {
                             'Customer Name': record.fields['Customer Name'],
                             'Customer Phone': record.fields['Customer Phone'],
                             'Payment Link': paymentLink.trim(),
-                            'Total Price': parseFloat(price)
+                            'Total Price': record.fields['Total Price'] || record.fields['Operator Price'] || 0
                         }
                     })
                 }).then(async res => {
@@ -378,6 +376,7 @@ function AdminApp() {
             'Luggage': 0,
             'Notes': '',
             'Total Price': 0,
+            'Operator Price': 0,
             'Status': 'Pending',
             'Submitted At': new Date().toISOString()
         });
@@ -657,7 +656,7 @@ function AdminApp() {
                                             <div><span style={{ color: 'var(--muted)' }}>Pickup:</span> {b.fields['Home Address']}</div>
                                             <div><span style={{ color: 'var(--muted)' }}>Airport:</span> {b.fields['Airport'] === 'Manchester' ? 'Manchester' : 'Liverpool'}</div>
                                             <div><span style={{ color: 'var(--muted)' }}>Flight:</span> {b.fields['Outbound Flight'] || 'N/A'}</div>
-                                            <div><span style={{ color: 'var(--muted)' }}>Price:</span> £{b.fields['Total Price'] || '–'}</div>
+                                            <div><span style={{ color: 'var(--muted)' }}>Price:</span> £{b.fields['Operator Price'] || b.fields['Total Price'] || '–'}</div>
                                         </div>
                                     </div>
                                 ))}
@@ -674,7 +673,7 @@ function AdminApp() {
                                         <div>
                                             <strong>{b.fields['Booking Ref']}</strong> — {b.fields['Customer Name']}
                                         </div>
-                                        <div style={{ color: 'var(--muted)' }}>{b.fields['Outbound Date']} | £{b.fields['Total Price'] || '–'}</div>
+                                        <div style={{ color: 'var(--muted)' }}>{b.fields['Outbound Date']} | £{b.fields['Operator Price'] || b.fields['Total Price'] || '–'}</div>
                                     </div>
                                 ))}
                             </div>
@@ -1096,13 +1095,6 @@ function AdminApp() {
                                                     style={{ flex: '1 1 150px' }}
                                                 />
                                                 <input 
-                                                    type="number" 
-                                                    placeholder="Price (£)..." 
-                                                    value={prices[id] || ''}
-                                                    onChange={e => handlePriceChange(id, e.target.value)}
-                                                    style={{ flex: '1 1 100px' }}
-                                                />
-                                                <input 
                                                     type="url" 
                                                     placeholder="Paste Revolut Payment Link..." 
                                                     value={paymentLinks[id] || ''}
@@ -1266,8 +1258,8 @@ function AdminApp() {
                                     <input type="number" value={editForm['Luggage'] || 0} onChange={e => setEditForm({...editForm, 'Luggage': parseInt(e.target.value)})} style={{width:'100%', padding:'8px'}} />
                                 </div>
                                 <div style={{ flex: 1 }}>
-                                    <label>Total Price (£)</label>
-                                    <input type="number" value={editForm['Total Price'] || 0} onChange={e => setEditForm({...editForm, 'Total Price': parseInt(e.target.value)})} required style={{width:'100%', padding:'8px'}} />
+                                    <label>Operator Price (£) <span style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 400 }}>Set by admin</span></label>
+                                    <input type="number" value={editForm['Operator Price'] || 0} readOnly style={{width:'100%', padding:'8px', background: '#f3f4f6', cursor: 'not-allowed', color: '#6b7280'}} />
                                 </div>
                             </div>
 

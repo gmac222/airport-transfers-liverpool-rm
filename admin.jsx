@@ -23,6 +23,12 @@ function AdminApp() {
     // Drivers list
     const [driversList, setDriversList] = useState([]);
 
+    // Price editing
+    const [editingPriceId, setEditingPriceId] = useState(null);
+    const [costPriceVal, setCostPriceVal] = useState('');
+    const [opPriceVal, setOpPriceVal] = useState('');
+    const [isSavingPrice, setIsSavingPrice] = useState(false);
+
     const handleLogin = (e) => {
         e.preventDefault();
         setIsLoggingIn(true);
@@ -171,6 +177,32 @@ function AdminApp() {
             fetchBookings();
         } catch (err) {
             alert('Error: ' + err.message);
+        }
+    };
+
+    const startEditPrice = (b) => {
+        setEditingPriceId(b.id);
+        setCostPriceVal(b.fields['Cost Price'] ?? '');
+        setOpPriceVal(b.fields['Operator Price'] ?? '');
+    };
+
+    const handleSavePrice = async (bookingId) => {
+        setIsSavingPrice(true);
+        try {
+            await fetch('/api/booking', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: bookingId, fields: {
+                    'Cost Price': costPriceVal !== '' ? parseFloat(costPriceVal) : null,
+                    'Operator Price': opPriceVal !== '' ? parseFloat(opPriceVal) : null
+                }})
+            });
+            setEditingPriceId(null);
+            fetchBookings();
+        } catch (err) {
+            alert('Error: ' + err.message);
+        } finally {
+            setIsSavingPrice(false);
         }
     };
 
@@ -334,6 +366,8 @@ function AdminApp() {
                                             <th style={{ padding: '8px' }}>Customer</th>
                                             <th style={{ padding: '8px' }}>Date</th>
                                             <th style={{ padding: '8px' }}>Status</th>
+                                            <th style={{ padding: '8px' }}>Cost Price</th>
+                                            <th style={{ padding: '8px' }}>Operator Price</th>
                                             <th style={{ padding: '8px' }}>Driver</th>
                                             <th style={{ padding: '8px' }}>Reassign Driver</th>
                                             <th style={{ padding: '8px' }}>Assigned To</th>
@@ -350,6 +384,29 @@ function AdminApp() {
                                                     <td style={{ padding: '8px' }}>{b.fields['Outbound Date']} {b.fields['Outbound Time']}</td>
                                                     <td style={{ padding: '8px' }}>
                                                         <span style={{ fontSize: '11px', padding: '2px 6px', borderRadius: '4px', background: b.fields['Status'] === 'Accepted' ? '#dcfce7' : '#fef3c7', color: b.fields['Status'] === 'Accepted' ? '#166534' : '#92400e', fontWeight: 600 }}>{b.fields['Status']}</span>
+                                                    </td>
+                                                    {/* Inline Price Editing */}
+                                                    <td style={{ padding: '8px' }}>
+                                                        {editingPriceId === b.id ? (
+                                                            <input type="number" step="0.01" value={costPriceVal} onChange={e => setCostPriceVal(e.target.value)} style={{ width: '70px', padding: '4px 6px', border: '1px solid var(--amber)', borderRadius: '4px', fontSize: '12px' }} autoFocus />
+                                                        ) : (
+                                                            <span onClick={() => startEditPrice(b)} style={{ cursor: 'pointer', fontWeight: 600, color: b.fields['Cost Price'] ? 'var(--navy-ink)' : '#9ca3af' }} title="Click to edit">
+                                                                {b.fields['Cost Price'] != null ? `£${Number(b.fields['Cost Price']).toFixed(2)}` : '–'}
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                    <td style={{ padding: '8px' }}>
+                                                        {editingPriceId === b.id ? (
+                                                            <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                                                                <input type="number" step="0.01" value={opPriceVal} onChange={e => setOpPriceVal(e.target.value)} style={{ width: '70px', padding: '4px 6px', border: '1px solid var(--amber)', borderRadius: '4px', fontSize: '12px' }} />
+                                                                <button onClick={() => handleSavePrice(b.id)} disabled={isSavingPrice} style={{ padding: '3px 8px', fontSize: '11px', background: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}>{isSavingPrice ? '...' : '✓'}</button>
+                                                                <button onClick={() => setEditingPriceId(null)} style={{ padding: '3px 8px', fontSize: '11px', background: '#f3f4f6', color: '#6b7280', border: '1px solid #d1d5db', borderRadius: '4px', cursor: 'pointer' }}>✗</button>
+                                                            </div>
+                                                        ) : (
+                                                            <span onClick={() => startEditPrice(b)} style={{ cursor: 'pointer', fontWeight: 600, color: b.fields['Operator Price'] ? 'var(--navy-ink)' : '#9ca3af' }} title="Click to edit">
+                                                                {b.fields['Operator Price'] != null ? `£${Number(b.fields['Operator Price']).toFixed(2)}` : '–'}
+                                                            </span>
+                                                        )}
                                                     </td>
                                                     <td style={{ padding: '8px' }}>{b.fields['Driver Name'] || <span style={{color:'#9ca3af'}}>–</span>}</td>
                                                     <td style={{ padding: '8px' }}>
@@ -369,7 +426,7 @@ function AdminApp() {
                                             );
                                         })}
                                         {activeBookings.length === 0 && (
-                                            <tr><td colSpan="8" style={{ padding: '30px', textAlign: 'center', color: 'var(--muted)' }}>No active bookings.</td></tr>
+                                            <tr><td colSpan="10" style={{ padding: '30px', textAlign: 'center', color: 'var(--muted)' }}>No active bookings.</td></tr>
                                         )}
                                     </tbody>
                                 </table>
