@@ -57,6 +57,15 @@ export default async function handler(req, res) {
             body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nPayment received! Your RM Transfers booking (${fields['Booking Ref']}) is fully confirmed.\n\n${tripDetails}\n\nDriver: ${fields['Driver Name']} (${fields['Driver Phone']})\n\nWe have also sent an email with your full itinerary.\n\n(Please do not reply to this text. Text your driver directly.)`
         });
 
+        // Also notify the driver that payment is confirmed and the job is locked in
+        if (formattedDriverPhone) {
+            messages.push({
+                to: formattedDriverPhone,
+                from: 'RMTransfers',
+                body: `CONFIRMED JOB: Payment received for ${fields['Customer Name']}\nRef: ${fields['Booking Ref']}\nPickup: ${fields['Home Address']}\nDate: ${fields['Outbound Date']} @ ${fields['Outbound Time']}\nFlight: ${fields['Outbound Flight'] || 'N/A'}\nPax: ${fields['Passengers'] || '?'} Bags: ${fields['Luggage'] || '?'}\nCustomer: ${fields['Customer Phone']}\nPrice: £${fields['Total Price']}\n\nDriver Portal: https://airporttaxitransfersliverpool.co.uk/driver-action.html?ref=${fields['Booking Ref']}`
+            });
+        }
+
         // Send Email Confirmation
         if (fields['Customer Email']) {
             const emailHtml = `<div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #0E2747; line-height: 1.6; background-color: #f9f9f9; padding: 20px; border-radius: 8px;">
