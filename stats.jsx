@@ -139,7 +139,7 @@ function StatsDashboard() {
                     <h1>Executive Dashboard</h1>
                 </div>
                 <div style={{ display: 'flex', gap: '15px' }}>
-                    <a href="/admin.html" className="btn" style={{ background: 'rgba(255,255,255,0.1)', color: '#fff' }}>Dispatch Portal</a>
+                    <a href="/operator.html" className="btn" style={{ background: 'rgba(255,255,255,0.1)', color: '#fff' }}>Dispatch Portal</a>
                     <button onClick={handleLogout} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: 'white', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>
                         Log Out
                     </button>

@@ -1,5 +1,6 @@
 User-agent: *
 Disallow: /admin.html
+Disallow: /operator.html
 Disallow: /stats.html
 Disallow: /portal.html
 Disallow: /driver-action.html

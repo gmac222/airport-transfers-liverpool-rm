@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Operator Dashboard | Airport Transfers Liverpool</title>
+    <title>Admin Panel | Airport Transfers Liverpool</title>
     <meta name="robots" content="noindex, nofollow" />
     <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg" />
     <meta name="theme-color" content="#0B1E37" />
@@ -13,16 +13,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Source+Sans+3:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet" />
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-RXMLX8ED9H"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
 
-      gtag('config', 'G-RXMLX8ED9H');
-      gtag('config', 'AW-757671729');
-    </script>
     <style>
         :root {
             --navy: #0E2747;
@@ -39,9 +30,7 @@
             --ok: #1f7a4c;
         }
 
-        * {
-            box-sizing: border-box
-        }
+        * { box-sizing: border-box }
 
         html, body {
             margin: 0;
@@ -63,290 +52,42 @@
             align-items: center;
             justify-content: space-between;
         }
-        .header h1 {
-            margin: 0;
-            font-size: 20px;
-        }
+        .header h1 { margin: 0; font-size: 20px; }
 
         .wrap {
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 40px 20px;
         }
 
-        .jobs-list {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .job-card {
+        .card {
             background: #fff;
             border-radius: 12px;
             border: 1px solid var(--line);
             padding: 24px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.02);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .job-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid var(--line);
-        }
-
-        .job-ref {
-            font-weight: 700;
-            font-size: 18px;
-            color: var(--navy-ink);
-        }
-
-        .badge {
-            font-size: 12px;
-            font-weight: 700;
-            padding: 4px 8px;
-            border-radius: 6px;
-            text-transform: uppercase;
-        }
-        .badge-pending { background: rgba(230, 178, 75, .2); color: var(--amber-deep); }
-        .badge-accepted { background: rgba(31, 122, 76, .1); color: var(--ok); }
-
-        .job-details {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 24px;
-            font-size: 14px;
-        }
-        .detail span {
-            display: block;
-            color: var(--muted);
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        .detail strong {
-            color: var(--navy-ink);
-        }
-
-        .job-actions {
-            margin-top: auto;
-            display: flex;
-            gap: 10px;
-        }
-        .job-actions input {
-            flex: 1;
-            padding: 10px 14px;
-            border: 1px solid var(--line);
-            border-radius: 8px;
-            font-family: inherit;
-            font-size: 14px;
-        }
-        .job-actions button {
-            background: var(--amber);
-            border: none;
-            border-radius: 8px;
-            padding: 0 16px;
-            font-weight: 600;
-            color: var(--navy-ink);
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .job-actions button:hover {
-            background: var(--amber-deep);
-            color: #fff;
-        }
-        .job-actions button:disabled {
-            background: var(--line);
-            color: var(--muted);
-            cursor: not-allowed;
-        }
-
-        .segmented-control {
-            display: inline-flex;
-            background: rgba(14, 39, 71, 0.04);
-            padding: 6px;
-            border-radius: 12px;
-            border: 1px solid rgba(14, 39, 71, 0.04);
-        }
-
-        .segmented-btn {
-            background: transparent;
-            color: var(--muted);
-            border: none;
-            padding: 8px 18px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            font-family: inherit;
-        }
-
-        .segmented-btn:hover:not(.active) {
-            color: var(--navy);
-            background: rgba(14, 39, 71, 0.02);
-        }
-
-        .segmented-btn.active {
-            background: white;
-            color: var(--navy-ink);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.1);
-        }
-
-        .filter-control {
-            display: inline-flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .filter-btn {
-            background: white;
-            color: var(--muted);
-            border: 1px solid var(--line);
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            font-family: inherit;
-        }
-
-        /* Filter specific colors (Traffic Light System) */
-        
-        /* All Active - Default/Navy */
-        .filter-btn.filter-all {
-            color: var(--navy-ink);
-            background: rgba(14, 39, 71, 0.03);
-            border-color: transparent;
-        }
-        .filter-btn.filter-all:hover:not(.active) {
-            background: rgba(14, 39, 71, 0.08);
-        }
-        .filter-btn.filter-all.active {
-            background: var(--navy-ink);
-            color: white;
-            border-color: var(--navy-ink);
-            box-shadow: 0 2px 6px rgba(11, 30, 55, 0.25);
-        }
-
-        /* Enquiries - Red (Attention) */
-        .filter-btn.filter-enquiries {
-            color: #d92d20; /* Red-600 */
-            background: #fef3f2; /* Red-50 */
-            border-color: #fecdca; /* Red-200 */
-        }
-        .filter-btn.filter-enquiries:hover:not(.active) {
-            background: #fee4e2; /* Red-100 */
-            border-color: #fca5a5;
-        }
-        .filter-btn.filter-enquiries.active {
-            background: #d92d20;
-            color: white;
-            border-color: #d92d20;
-            box-shadow: 0 2px 6px rgba(217, 45, 32, 0.25);
-        }
-
-        /* Awaiting Payment - Amber/Yellow (Wait) */
-        .filter-btn.filter-awaiting {
-            color: #b54708; /* Orange-700 */
-            background: #fffaeb; /* Warning-50 */
-            border-color: #fedf89; /* Warning-200 */
-        }
-        .filter-btn.filter-awaiting:hover:not(.active) {
-            background: #fef0c7; /* Warning-100 */
-            border-color: #fec84b;
-        }
-        .filter-btn.filter-awaiting.active {
-            background: #f79009; /* Warning-500 */
-            color: white;
-            border-color: #f79009;
-            box-shadow: 0 2px 6px rgba(247, 144, 9, 0.25);
-        }
-
-        /* Paid - Green (Go) */
-        .filter-btn.filter-paid {
-            color: #027a48; /* Success-700 */
-            background: #ecfdf3; /* Success-50 */
-            border-color: #a6f4c5; /* Success-200 */
-        }
-        .filter-btn.filter-paid:hover:not(.active) {
-            background: #d1fadf; /* Success-100 */
-            border-color: #6ce9a6;
-        }
-        .filter-btn.filter-paid.active {
-            background: #12b76a; /* Success-500 */
-            color: white;
-            border-color: #12b76a;
-            box-shadow: 0 2px 6px rgba(18, 183, 106, 0.25);
         }
 
         .loading { text-align: center; padding: 40px; color: var(--muted); }
 
         @media (max-width: 600px) {
-            .job-details {
-                grid-template-columns: 1fr;
-            }
-            .job-header {
-                flex-direction: column !important;
-                align-items: flex-start !important;
-                gap: 8px;
-            }
             .header {
                 flex-direction: column !important;
                 align-items: flex-start !important;
                 gap: 12px;
             }
-            .job-actions > div {
-                flex-direction: column !important;
-            }
-            .job-actions button {
-                width: 100%;
-                padding: 12px;
-            }
-            form {
-                flex-direction: column !important;
-            }
         }
-
     </style>
-
-    <!-- PWA Meta Tags -->
-    <link rel="manifest" href="/manifest.json" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="RM Transfers" />
-    <link rel="apple-touch-icon" href="/assets/logo.png" />
-
 </head>
 
 <body>
     <script src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
 
     <div id="root"></div>
 
     <script type="text/babel" src="admin.jsx"></script>
-
-    <!-- Service Worker Registration -->
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch(err => {
-            console.log('Service Worker registration failed:', err);
-          });
-        });
-      }
-    </script>
-
 </body>
 
 </html>

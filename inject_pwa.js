@@ -1,5 +1,5 @@
 const fs = require('fs');
-const files = ['index.html', 'portal.html', 'admin.html', 'driver-action.html', 'stats.html', 'thank-you/index.html'];
+const files = ['index.html', 'portal.html', 'admin.html', 'operator.html', 'driver-action.html', 'stats.html', 'thank-you/index.html'];
 
 const metaTags = `
     <!-- PWA Meta Tags -->

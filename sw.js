@@ -4,6 +4,7 @@ const ASSETS = [
   '/index.html',
   '/portal.html',
   '/admin.html',
+  '/operator.html',
   '/assets/logo.png',
   '/assets/favicon.svg'
 ];
