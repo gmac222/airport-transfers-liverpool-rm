@@ -920,6 +920,9 @@ function AdminApp() {
                                                 <button onClick={() => handleDirectSMS(record, 'resend-driver')} style={{ flex: 1, padding: '8px 4px', background: 'white', border: '1px solid var(--amber)', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', color: 'var(--amber-deep)', fontWeight: 'bold' }}>
                                                     Resend Driver Info
                                                 </button>
+                                                <button onClick={() => handleDirectSMS(record, 'send-24h-reminders')} style={{ flex: 1, padding: '8px 4px', background: 'white', border: '1px solid #f59e0b', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', color: '#d97706', fontWeight: 'bold' }}>
+                                                    Send 24h Reminder
+                                                </button>
                                                 <button onClick={() => handleDirectSMS(record, 'driver-on-way')} style={{ flex: 1, padding: '8px 4px', background: 'white', border: '1px solid #10b981', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', color: '#10b981', fontWeight: 'bold' }}>
                                                     Backup: Send 'On Way'
                                                 </button>

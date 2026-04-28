@@ -198,6 +198,24 @@ export default async function handler(req, res) {
         });
     }
 
+    // Combined 24-hour reminder — sends BOTH customer + driver reminders in one go (failsafe button)
+    if (action === 'send-24h-reminders') {
+        if (formattedCustomerPhone) {
+            messages.push({
+                to: formattedCustomerPhone,
+                from: 'RMTransfers',
+                body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nFriendly reminder from RM Transfers!\n\nYour booking (${fields['Booking Ref']}) is scheduled for ${fields['Outbound Date']} at ${fields['Outbound Time']}.\n\nYour driver will be ${fields['Driver Name'] || 'assigned shortly'}.`
+            });
+        }
+        if (formattedDriverPhone) {
+            messages.push({
+                to: formattedDriverPhone,
+                from: 'RMTransfers',
+                body: `REMINDER: Job tomorrow for ${fields['Customer Name']}\nRef: ${fields['Booking Ref']}\nPickup: ${fields['Home Address']}\nDestination: ${fields['Airport Name'] || 'See booking'}\nDate: ${fields['Outbound Date']} @ ${fields['Outbound Time']}\nFlight: ${fields['Outbound Flight'] || 'N/A'}\nPax: ${fields['Passengers'] || '?'} Bags: ${fields['Luggage'] || '?'}\nCustomer: ${fields['Customer Phone']}\n\nDriver Portal: https://airporttaxitransfersliverpool.co.uk/driver-action.html?ref=${fields['Booking Ref']}`
+            });
+        }
+    }
+
     if (action === 'new-booking-operator-alert') {
         const adminNumbers = ['+447398233859', '+447746899644'];
         adminNumbers.forEach(num => {
