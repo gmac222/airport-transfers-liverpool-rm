@@ -1371,13 +1371,9 @@ function AdminApp() {
                                                             Resend Payment Link SMS
                                                         </button>
                                                     </div>
-                                                    <button
-                                                        onClick={() => handleAcknowledgePayment(id)}
-                                                        disabled={acknowledgingId === id}
-                                                        style={{ padding: '10px', width: '100%', background: '#10b981', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', marginTop: '4px' }}
-                                                    >
-                                                        {acknowledgingId === id ? '...' : 'Acknowledge Payment & Send Driver Details to Customer'}
-                                                    </button>
+                                                    <div style={{ padding: '10px', background: '#f3f4f6', borderRadius: '6px', fontSize: '12px', color: 'var(--muted)', textAlign: 'center', marginTop: '4px' }}>
+                                                        Payment is acknowledged by the super admin from the admin portal once the customer pays.
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>

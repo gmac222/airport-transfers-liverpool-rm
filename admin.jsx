@@ -24,6 +24,7 @@ function FocusedJobCard({
     paymentLinkSavingId, paymentLinkSavedFlash, commitPaymentLink,
     handleReassignDriver, handleReassignReturnDriver, handleReassignSingle,
     handleSendQuote, sendingQuote,
+    isSuper, handleAcknowledgePayment, acknowledgingId,
     onClose, onLogout
 }) {
     if (loading) {
@@ -213,6 +214,29 @@ function FocusedJobCard({
                             </button>
                         );
                     })()}
+
+                    {isSuper && status === 'Awaiting Payment' && (
+                        <button
+                            onClick={() => handleAcknowledgePayment(booking)}
+                            disabled={acknowledgingId === booking.id}
+                            style={{
+                                marginTop: '10px',
+                                width: '100%',
+                                padding: '14px',
+                                border: 'none',
+                                borderRadius: '10px',
+                                fontWeight: 700,
+                                fontSize: '15px',
+                                cursor: acknowledgingId === booking.id ? 'wait' : 'pointer',
+                                background: acknowledgingId === booking.id ? '#a7f3d0' : '#10b981',
+                                color: 'white',
+                                fontFamily: 'inherit'
+                            }}>
+                            {acknowledgingId === booking.id
+                                ? 'Acknowledging…'
+                                : `✓ Acknowledge Payment & Send Driver Details${(f['Customer Price'] || f['Total Price']) ? ` (£${f['Customer Price'] || f['Total Price']})` : ''}`}
+                        </button>
+                    )}
                 </div>
 
                 {/* Trip details */}
@@ -319,6 +343,40 @@ function AdminApp() {
 
     // Send-quote state for the focused job card
     const [sendingQuote, setSendingQuote] = useState(false);
+
+    // Acknowledge-payment (super admin only)
+    const [acknowledgingId, setAcknowledgingId] = useState(null);
+    const handleAcknowledgePayment = async (record) => {
+        const f = record.fields;
+        if (!f['Driver Name'] || !f['Driver Phone']) {
+            return alert('Allocate a driver before acknowledging payment — the customer needs the driver details.');
+        }
+        if (!window.confirm(`Acknowledge payment of £${f['Customer Price'] || f['Total Price'] || '?'} from ${f['Customer Name'] || 'customer'}?\n\nThis sets the booking to Accepted and sends the customer the driver details.`)) return;
+        setAcknowledgingId(record.id);
+        try {
+            const patchRes = await fetch('/api/booking', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: record.id, fields: { Status: 'Accepted' } })
+            });
+            const patchData = await patchRes.json();
+            if (patchData.error) throw new Error(patchData.error);
+
+            const smsRes = await fetch('/api/sms', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'send-confirmation', fields: f })
+            });
+            const smsData = await smsRes.json();
+            if (smsData.error) alert('Booking marked Accepted but confirmation SMS failed: ' + smsData.error);
+
+            fetchBookings();
+        } catch (err) {
+            alert('Could not acknowledge payment: ' + err.message);
+        } finally {
+            setAcknowledgingId(null);
+        }
+    };
 
     // Payment link drafts (per booking id) — same blur-to-save pattern as prices
     const [paymentLinkDraft, setPaymentLinkDraft] = useState({});
@@ -661,6 +719,7 @@ function AdminApp() {
     const opNames = operators.map(o => o.name);
     const activeBookings = bookings.filter(b => !['Archived','Cancelled'].includes(b.fields['Status']));
     const unassignedCount = activeBookings.filter(b => !b.fields['Operator']).length;
+    const isSuper = (typeof localStorage !== 'undefined') && localStorage.getItem('adminIsSuper') === 'true';
 
     // ─── SMS deep-link: single-job card view ───────────────────────
     if (focusRef) {
@@ -689,6 +748,9 @@ function AdminApp() {
                 handleReassignSingle={handleReassignSingle}
                 handleSendQuote={handleSendQuote}
                 sendingQuote={sendingQuote}
+                isSuper={isSuper}
+                handleAcknowledgePayment={handleAcknowledgePayment}
+                acknowledgingId={acknowledgingId}
                 onClose={() => {
                     setFocusRef('');
                     // Drop the ref from the URL without a reload
@@ -967,6 +1029,14 @@ function AdminApp() {
                                                         style={{ width: '100%', padding: '12px', background: canSend ? 'var(--amber)' : '#e5e7eb', color: canSend ? 'var(--navy-ink)' : '#6b7280', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '14px', cursor: canSend && !sendingQuote ? 'pointer' : 'not-allowed', fontFamily: 'inherit' }}>
                                                         {sendingQuote ? 'Sending quote…' : sentAlready ? `Quote already sent (${status})` : cpRaw == null || Number(cpRaw) <= 0 ? 'Enter Customer Price first' : `Send Quote to Customer — £${Number(cpRaw).toFixed(2)}`}
                                                     </button>
+
+                                                    {/* Acknowledge Payment — super admin only, shown once status is Awaiting Payment */}
+                                                    {isSuper && status === 'Awaiting Payment' && (
+                                                        <button onClick={() => handleAcknowledgePayment(b)} disabled={acknowledgingId === b.id}
+                                                            style={{ width: '100%', padding: '12px', marginTop: '10px', background: acknowledgingId === b.id ? '#a7f3d0' : '#10b981', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '14px', cursor: acknowledgingId === b.id ? 'wait' : 'pointer', fontFamily: 'inherit' }}>
+                                                            {acknowledgingId === b.id ? 'Acknowledging…' : `✓ Acknowledge Payment & Send Driver Details${(f['Customer Price'] || f['Total Price']) ? ` (£${f['Customer Price'] || f['Total Price']})` : ''}`}
+                                                        </button>
+                                                    )}
                                                 </div>
                                             );
                                         })}
