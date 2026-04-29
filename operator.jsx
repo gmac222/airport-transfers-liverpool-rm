@@ -593,6 +593,193 @@ function AdminApp() {
         return dateTimeA - dateTimeB;
     });
 
+    // ── Stats View — strictly scoped to this operator's own bookings.
+    // Operators only see Operator Price (their fee), never Customer Price
+    // or Profit, since those are admin-side numbers.
+    const renderOperatorStats = () => {
+        const num = (raw) => {
+            if (typeof raw === 'number') return raw;
+            if (raw == null) return 0;
+            const n = parseFloat(String(raw).replace(/[^0-9.\-]/g, ''));
+            return Number.isFinite(n) ? n : 0;
+        };
+        const fmt = (n) => '£' + Number(n || 0).toLocaleString('en-GB', { maximumFractionDigits: 2 });
+        const now = new Date();
+
+        // operatorBookings is computed above and only contains jobs that
+        // belong to this operator (and are dispatched / post-payment).
+        const my = operatorBookings;
+        let earned = 0; let earnedJobs = 0;
+        let upcoming = 0; let upcomingJobs = 0;
+        let pendingDispatch = 0; let awaitingAllocation = 0; let completed = 0;
+        const byMonth = {};
+        const byDriver = {};
+        const byAirport = {};
+
+        for (const b of my) {
+            const f = b.fields;
+            const fee = num(f['Operator Price']);
+            const status = f['Status'] || '';
+            const tripDate = f['Outbound Date'] ? new Date(f['Outbound Date']) : null;
+            const isPaid = status === 'Accepted' || status === 'Completed' || status === 'Archived';
+            const isFuture = tripDate && tripDate > now;
+
+            if (isPaid) {
+                earnedJobs++;
+                earned += fee;
+                if (isFuture) {
+                    upcomingJobs++;
+                    upcoming += fee;
+                }
+            }
+            if (status === 'Awaiting Payment') awaitingAllocation++;
+            if (status === 'Pending' || status === 'Awaiting Confirmation') pendingDispatch++;
+            if (status === 'Completed' || status === 'Archived') completed++;
+
+            const monthKey = (f['Outbound Date'] || '').slice(0, 7) || 'unknown';
+            if (!byMonth[monthKey]) byMonth[monthKey] = { jobs: 0, earned: 0 };
+            byMonth[monthKey].jobs += 1;
+            byMonth[monthKey].earned += fee;
+
+            const drv = f['Driver Name'] || 'Unassigned';
+            if (!byDriver[drv]) byDriver[drv] = { jobs: 0, earned: 0 };
+            byDriver[drv].jobs += 1;
+            byDriver[drv].earned += fee;
+
+            const ap = f['Airport'] || 'Unknown';
+            if (!byAirport[ap]) byAirport[ap] = { jobs: 0, earned: 0 };
+            byAirport[ap].jobs += 1;
+            byAirport[ap].earned += fee;
+        }
+
+        const aov = earnedJobs ? earned / earnedJobs : 0;
+        const sortedMonths = Object.entries(byMonth).filter(([k]) => k !== 'unknown').sort();
+        const sortedDrivers = Object.entries(byDriver).filter(([k]) => k !== 'Unassigned').sort((a, b) => b[1].earned - a[1].earned).slice(0, 10);
+        const sortedAirports = Object.entries(byAirport).sort((a, b) => b[1].earned - a[1].earned);
+
+        const card = { background: 'white', border: '1px solid var(--line)', borderRadius: '12px', padding: '16px', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' };
+        const label = { fontSize: '12px', textTransform: 'uppercase', color: 'var(--muted)', fontWeight: 700, letterSpacing: '0.04em', marginBottom: '6px' };
+        const value = { fontFamily: 'Lexend, sans-serif', fontSize: '26px', fontWeight: 700, color: 'var(--navy-ink)', lineHeight: 1.1 };
+        const sub = { fontSize: '12px', color: 'var(--muted)', marginTop: '6px' };
+        const cell = { padding: '10px 12px', borderBottom: '1px solid var(--line)' };
+        const right = { ...cell, textAlign: 'right', fontVariantNumeric: 'tabular-nums' };
+
+        return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{ background: 'rgba(14, 39, 71, 0.04)', border: '1px solid var(--line)', borderRadius: '10px', padding: '12px 14px', fontSize: '13px', color: 'var(--muted)' }}>
+                    Stats below cover only jobs assigned to <strong style={{color: 'var(--navy-ink)'}}>{operatorName || 'you'}</strong>.
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px' }}>
+                    <div style={card}>
+                        <div style={label}>Total Earned</div>
+                        <div style={value}>{fmt(earned)}</div>
+                        <div style={sub}>{earnedJobs} paid jobs</div>
+                    </div>
+                    <div style={card}>
+                        <div style={label}>Upcoming</div>
+                        <div style={value}>{fmt(upcoming)}</div>
+                        <div style={sub}>{upcomingJobs} jobs ahead</div>
+                    </div>
+                    <div style={card}>
+                        <div style={label}>Avg per Job</div>
+                        <div style={value}>{fmt(aov)}</div>
+                        <div style={sub}>Across paid jobs</div>
+                    </div>
+                    <div style={card}>
+                        <div style={label}>Pipeline</div>
+                        <div style={{ ...value, fontSize: '20px', lineHeight: 1.4 }}>
+                            {pendingDispatch}<span style={{fontSize:'12px', color:'var(--muted)', fontWeight:400}}> pending</span><br/>
+                            {awaitingAllocation}<span style={{fontSize:'12px', color:'var(--muted)', fontWeight:400}}> awaiting allocation</span>
+                        </div>
+                        <div style={sub}>{completed} completed</div>
+                    </div>
+                </div>
+
+                <div style={card}>
+                    <h3 style={{ margin: '0 0 8px 0', fontFamily: 'Lexend', fontSize: '15px' }}>Earnings by Month</h3>
+                    <div style={{ overflowX: 'auto' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', minWidth: '320px' }}>
+                            <thead>
+                                <tr style={{ color: 'var(--muted)', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '0.04em' }}>
+                                    <th style={{ ...cell, textAlign: 'left' }}>Month</th>
+                                    <th style={right}>Jobs</th>
+                                    <th style={right}>Earned</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {sortedMonths.length === 0 && (
+                                    <tr><td colSpan="3" style={{...cell, color: 'var(--muted)', textAlign: 'center'}}>No data yet.</td></tr>
+                                )}
+                                {sortedMonths.map(([k, s]) => (
+                                    <tr key={k}>
+                                        <td style={cell}>{k}</td>
+                                        <td style={right}>{s.jobs}</td>
+                                        <td style={right}>{fmt(s.earned)}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div style={card}>
+                    <h3 style={{ margin: '0 0 8px 0', fontFamily: 'Lexend', fontSize: '15px' }}>Top Drivers</h3>
+                    <div style={{ overflowX: 'auto' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', minWidth: '320px' }}>
+                            <thead>
+                                <tr style={{ color: 'var(--muted)', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '0.04em' }}>
+                                    <th style={{ ...cell, textAlign: 'left' }}>Driver</th>
+                                    <th style={right}>Jobs</th>
+                                    <th style={right}>Earned</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {sortedDrivers.length === 0 && (
+                                    <tr><td colSpan="3" style={{...cell, color: 'var(--muted)', textAlign: 'center'}}>No driver data yet.</td></tr>
+                                )}
+                                {sortedDrivers.map(([name, s]) => (
+                                    <tr key={name}>
+                                        <td style={cell}>{name}</td>
+                                        <td style={right}>{s.jobs}</td>
+                                        <td style={right}>{fmt(s.earned)}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div style={card}>
+                    <h3 style={{ margin: '0 0 8px 0', fontFamily: 'Lexend', fontSize: '15px' }}>By Airport</h3>
+                    <div style={{ overflowX: 'auto' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', minWidth: '320px' }}>
+                            <thead>
+                                <tr style={{ color: 'var(--muted)', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '0.04em' }}>
+                                    <th style={{ ...cell, textAlign: 'left' }}>Airport</th>
+                                    <th style={right}>Jobs</th>
+                                    <th style={right}>Earned</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {sortedAirports.length === 0 && (
+                                    <tr><td colSpan="3" style={{...cell, color: 'var(--muted)', textAlign: 'center'}}>No data yet.</td></tr>
+                                )}
+                                {sortedAirports.map(([name, s]) => (
+                                    <tr key={name}>
+                                        <td style={cell}>{name}</td>
+                                        <td style={right}>{s.jobs}</td>
+                                        <td style={right}>{fmt(s.earned)}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     // ── Drivers View ──────────────────────────────────────────────────────
     const renderDriversView = () => {
         // Build driver → jobs map from ALL bookings (not just filtered)
@@ -815,9 +1002,6 @@ function AdminApp() {
                 </div>
 
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                    <a href="/stats.html" className="btn" style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', textDecoration: 'none', padding: '6px 12px', borderRadius: '6px', fontWeight: 'bold', fontSize: '13px', display: 'inline-flex', alignItems: 'center' }}>
-                        Stats
-                    </a>
                     <button
                         onClick={handleLogout}
                         style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.4)', color: 'white', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}
@@ -848,11 +1032,17 @@ function AdminApp() {
                         >
                             Archive
                         </button>
-                        <button 
-                            onClick={() => { setViewMode('drivers'); setSelectedDriver(null); }} 
+                        <button
+                            onClick={() => { setViewMode('drivers'); setSelectedDriver(null); }}
                             className={`segmented-btn ${viewMode === 'drivers' ? 'active' : ''}`}
                         >
                             Drivers
+                        </button>
+                        <button
+                            onClick={() => setViewMode('stats')}
+                            className={`segmented-btn ${viewMode === 'stats' ? 'active' : ''}`}
+                        >
+                            Stats
                         </button>
                     </div>
                 </div>
@@ -977,6 +1167,8 @@ function AdminApp() {
                     renderDriversView()
                 ) : viewMode === 'calendar' ? (
                     <div id="calendar" style={{ background: 'white', padding: '20px', borderRadius: '12px', border: '1px solid var(--line)' }}></div>
+                ) : viewMode === 'stats' ? (
+                    renderOperatorStats()
                 ) : (
                     <div className="jobs-list">
                         {filteredBookings.map(record => {
