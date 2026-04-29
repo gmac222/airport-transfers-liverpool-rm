@@ -1425,7 +1425,7 @@ function AdminApp() {
                                                         <select
                                                             value={driverNames[id] || ''}
                                                             onChange={e => handleDriverSelection(id, e)}
-                                                            style={{ flex: '1 1 200px', padding: '10px', borderRadius: '6px', border: '1px solid var(--line)', fontFamily: 'inherit' }}
+                                                            style={{ flex: '1 1 200px', minWidth: 0, padding: '10px', borderRadius: '6px', border: '1px solid var(--line)', fontFamily: 'inherit', boxSizing: 'border-box', fontSize: '16px' }}
                                                         >
                                                             {driversList.map((d, index) => (
                                                                 <option key={index} value={d.name === 'Select a driver...' ? '' : d.name}>
@@ -1439,7 +1439,7 @@ function AdminApp() {
                                                                 placeholder="Enter Custom Name..."
                                                                 value={driverNames[id] === 'Custom Driver' ? '' : driverNames[id]}
                                                                 onChange={e => handleDriverNameChange(id, e.target.value)}
-                                                                style={{ flex: '1 1 150px' }}
+                                                                style={{ flex: '1 1 150px', minWidth: 0, padding: '10px', borderRadius: '6px', border: '1px solid var(--line)', fontFamily: 'inherit', boxSizing: 'border-box', fontSize: '16px' }}
                                                             />
                                                         )}
                                                         <input
@@ -1447,7 +1447,7 @@ function AdminApp() {
                                                             placeholder="Driver Phone..."
                                                             value={driverPhones[id] || ''}
                                                             onChange={e => handleDriverPhoneChange(id, e.target.value)}
-                                                            style={{ flex: '1 1 150px' }}
+                                                            style={{ flex: '1 1 150px', minWidth: 0, padding: '10px', borderRadius: '6px', border: '1px solid var(--line)', fontFamily: 'inherit', boxSizing: 'border-box', fontSize: '16px' }}
                                                         />
                                                     </div>
 
@@ -1460,7 +1460,7 @@ function AdminApp() {
                                                                 <select
                                                                     value={returnDriverNames[id] || ''}
                                                                     onChange={e => handleReturnDriverSelection(id, e)}
-                                                                    style={{ flex: '1 1 200px', padding: '10px', borderRadius: '6px', border: '1px solid #c4b5fd', fontFamily: 'inherit', background: '#faf5ff' }}
+                                                                    style={{ flex: '1 1 200px', minWidth: 0, padding: '10px', borderRadius: '6px', border: '1px solid #c4b5fd', fontFamily: 'inherit', background: '#faf5ff', boxSizing: 'border-box', fontSize: '16px' }}
                                                                 >
                                                                     <option value="">Same as outbound driver</option>
                                                                     {driversList.filter(d => d.name !== 'Select a driver...').map((d, index) => (
@@ -1472,7 +1472,7 @@ function AdminApp() {
                                                                     placeholder="Return Driver Phone..."
                                                                     value={returnDriverPhones[id] || ''}
                                                                     onChange={e => handleReturnDriverPhoneChange(id, e.target.value)}
-                                                                    style={{ flex: '1 1 150px' }}
+                                                                    style={{ flex: '1 1 150px', minWidth: 0, padding: '10px', borderRadius: '6px', border: '1px solid var(--line)', fontFamily: 'inherit', boxSizing: 'border-box', fontSize: '16px' }}
                                                                 />
                                                             </div>
                                                         </>
