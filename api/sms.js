@@ -29,7 +29,7 @@ export default async function handler(req, res) {
         messages.push({
             to: formattedCustomerPhone,
             from: 'RMTransfers',
-            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nThe total price for your RM Transfers booking (${fields['Booking Ref']}) is £${fields['Total Price']}.\n\nPlease go to https://airporttaxitransfersliverpool.co.uk/portal.html?ref=${fields['Booking Ref']} to securely pay and confirm. Once payment is received we'll allocate a driver and send you their details.\n\n(Please do not reply to this text)`
+            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nThe total price for your RM Transfers booking (${fields['Booking Ref']}) is £${fields['Total Price']}.\n\nPlease go to https://airporttaxitransfersliverpool.co.uk/portal.html?ref=${fields['Booking Ref']} to confirm and pay, or to decline if the price doesn't suit. Once payment is received we'll allocate a driver and send you their details.\n\n(Please do not reply to this text)`
         });
     }
 

@@ -196,7 +196,7 @@ module.exports = async (req, res) => {
                         'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ fields: fieldsToSend })
+                    body: JSON.stringify({ fields: fieldsToSend, typecast: true })
                 });
                 const j = await r.json();
                 return { r, j };
