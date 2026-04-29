@@ -586,11 +586,14 @@ function AdminApp() {
         );
     }
 
-    // Filter bookings to this operator
+    // Filter bookings to this operator. A booking is only visible to the
+    // operator portal once admin has actively dispatched it — until then
+    // it sits invisible inside the admin queue.
     const operatorBookings = operatorName ? bookings.filter(b => {
         const assignedOp = b.fields['Operator'] || '';
-        return assignedOp === operatorName;
-    }) : bookings;
+        if (assignedOp !== operatorName) return false;
+        return b.fields['Dispatched To Operator'] === true;
+    }) : [];
 
     const filteredBookings = operatorBookings.filter(b => {
         const status = b.fields['Status'] || 'Pending';

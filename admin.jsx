@@ -26,6 +26,7 @@ function FocusedJobCard({
     handleSendQuote, sendingQuote,
     isSuper, handleAcknowledgePayment, acknowledgingId,
     openEditModal, handleDeleteJob, handleClearOperatorEditFlag,
+    dispatchToOperator,
     onClose, onLogout
 }) {
     if (loading) {
@@ -282,11 +283,11 @@ function FocusedJobCard({
                     </div>
                 </div>
 
-                <a
-                    href={`/operator.html?ref=${encodeURIComponent(f['Booking Ref'])}`}
-                    style={{ display: 'block', textAlign: 'center', padding: '14px', background: 'var(--amber)', color: 'var(--navy-ink)', textDecoration: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '15px' }}>
-                    📤 Dispatch to Operator →
-                </a>
+                <button
+                    onClick={() => dispatchToOperator(booking)}
+                    style={{ display: 'block', width: '100%', textAlign: 'center', padding: '14px', background: f['Dispatched To Operator'] ? '#dcfce7' : 'var(--amber)', color: f['Dispatched To Operator'] ? '#166534' : 'var(--navy-ink)', border: f['Dispatched To Operator'] ? '1px solid #16a34a' : 'none', borderRadius: '10px', fontWeight: 700, fontSize: '15px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                    {f['Dispatched To Operator'] ? '✓ Already dispatched — open in operator portal' : '📤 Dispatch to Operator →'}
+                </button>
             </div>
         </div>
     );
@@ -380,6 +381,32 @@ function AdminApp() {
             fetchBookings();
         })
         .catch(err => alert('Error deleting booking: ' + err.message));
+    };
+
+    // Dispatch the booking to its assigned operator. This is the moment
+    // the booking becomes visible in the operator portal — until now it
+    // sits in admin only. We require an Operator to be assigned first,
+    // flip Dispatched To Operator = true, then jump to that operator's
+    // portal pre-filtered to this job.
+    const dispatchToOperator = async (record) => {
+        const f = record.fields;
+        if (!f['Operator']) {
+            return alert('Assign an Operator before dispatching this booking.');
+        }
+        try {
+            const res = await fetch('/api/booking', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: record.id, fields: { 'Dispatched To Operator': true } })
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+        } catch (err) {
+            // Don't block navigation — admin can retry from the operator
+            // portal screen if the patch fails.
+            console.error('Could not flag dispatch:', err);
+        }
+        window.location.href = `/operator.html?ref=${encodeURIComponent(f['Booking Ref'])}`;
     };
 
     const handleClearOperatorEditFlag = (record) => {
@@ -685,11 +712,14 @@ function AdminApp() {
     };
 
     const handleReassignSingle = async (bookingId, opName) => {
+        // Reassigning the operator un-dispatches the booking — the new
+        // operator hasn't been told yet, the previous one shouldn't keep
+        // seeing it.
         try {
             await fetch('/api/booking', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: bookingId, fields: { 'Operator': opName } })
+                body: JSON.stringify({ id: bookingId, fields: { 'Operator': opName, 'Dispatched To Operator': false } })
             });
             fetchBookings();
         } catch (err) {
@@ -858,6 +888,7 @@ function AdminApp() {
                 openEditModal={openEditModal}
                 handleDeleteJob={handleDeleteJob}
                 handleClearOperatorEditFlag={handleClearOperatorEditFlag}
+                dispatchToOperator={dispatchToOperator}
                 onClose={() => {
                     setFocusRef('');
                     // Drop the ref from the URL without a reload
@@ -1088,7 +1119,9 @@ function AdminApp() {
                                                             <span style={{ fontSize: '12px', padding: '4px 10px', borderRadius: '999px', fontWeight: 700, background: status === 'Accepted' ? '#dcfce7' : status === 'Declined' ? '#fee2e2' : '#fef3c7', color: status === 'Accepted' ? '#166534' : status === 'Declined' ? '#b91c1c' : '#92400e' }}>{status}</span>
                                                             <button onClick={() => openEditModal(b)} style={{ background: 'transparent', color: 'var(--amber-deep)', border: '1px solid var(--amber)', borderRadius: '6px', padding: '5px 10px', fontSize: '12px', cursor: 'pointer', fontWeight: 700, fontFamily: 'inherit' }}>Edit</button>
                                                             <button onClick={() => handleDeleteJob(b)} style={{ background: 'transparent', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: '6px', padding: '5px 10px', fontSize: '12px', cursor: 'pointer', fontWeight: 700, fontFamily: 'inherit' }}>Delete</button>
-                                                            <a href={`/operator.html?ref=${encodeURIComponent(f['Booking Ref'])}`} style={{ fontSize: '12px', color: 'var(--navy-ink)', background: 'rgba(230, 178, 75, 0.18)', border: '1px solid var(--amber)', textDecoration: 'none', fontWeight: 700, padding: '6px 10px', borderRadius: '6px', whiteSpace: 'nowrap' }}>📤 Dispatch to Operator →</a>
+                                                            <button onClick={() => dispatchToOperator(b)} style={{ fontSize: '12px', color: 'var(--navy-ink)', background: f['Dispatched To Operator'] ? '#dcfce7' : 'rgba(230, 178, 75, 0.18)', border: f['Dispatched To Operator'] ? '1px solid #16a34a' : '1px solid var(--amber)', cursor: 'pointer', fontWeight: 700, padding: '6px 10px', borderRadius: '6px', whiteSpace: 'nowrap', fontFamily: 'inherit' }}>
+                                                                {f['Dispatched To Operator'] ? '✓ Dispatched — Open' : '📤 Dispatch to Operator'}
+                                                            </button>
                                                         </div>
                                                     </div>
 
