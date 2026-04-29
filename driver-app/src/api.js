@@ -20,7 +20,7 @@ export function login(username, password) {
 }
 
 export function listBookings() {
-  return request('/api/booking?action=list', { method: 'POST' });
+  return request('/api/booking?action=list&view=driver', { method: 'POST' });
 }
 
 export function driverAction(ref, action, extra = {}) {

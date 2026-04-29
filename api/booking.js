@@ -111,10 +111,15 @@ module.exports = async (req, res) => {
     }
 
 
-    // GET Request for Admin to fetch all pending/accepted bookings
+    // GET Request for Admin to fetch all pending/accepted bookings.
+    //
+    // ?view=operator or ?view=driver redacts the customer's name, phone,
+    // email and home address until the booking is BOTH post-payment
+    // (Status in {Accepted, Completed, Archived}) AND has been dispatched
+    // by admin (Dispatched To Operator = true). Admin/super-admin omits
+    // the param and sees everything.
     if (req.method === 'POST' && req.query.action === 'list') {
         try {
-            // Sort by Created Time desc
             const url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}?sort%5B0%5D%5Bfield%5D=Submitted+At&sort%5B0%5D%5Bdirection%5D=desc`;
             const response = await fetch(url, {
                 headers: {
@@ -123,7 +128,29 @@ module.exports = async (req, res) => {
             });
 
             const data = await response.json();
-            return res.status(200).json({ bookings: data.records || [] });
+            let bookings = data.records || [];
+
+            const view = (req.query.view || '').toString().toLowerCase();
+            if (view === 'operator' || view === 'driver') {
+                const POST_PAYMENT = new Set(['Accepted', 'Completed', 'Archived']);
+                bookings = bookings.map(rec => {
+                    const f = rec.fields || {};
+                    const isPostPayment = POST_PAYMENT.has(f['Status']);
+                    const isDispatched = f['Dispatched To Operator'] === true;
+                    if (isPostPayment && isDispatched) return rec;
+                    // Strip customer PII. Keep trip metadata (date, airport,
+                    // pax, etc.) so the operator can still see what's
+                    // pending — they just can't reach the customer.
+                    const redacted = { ...f };
+                    delete redacted['Customer Name'];
+                    delete redacted['Customer Phone'];
+                    delete redacted['Customer Email'];
+                    delete redacted['Home Address'];
+                    return { ...rec, fields: redacted };
+                });
+            }
+
+            return res.status(200).json({ bookings });
         } catch (error) {
             console.error(error);
             return res.status(500).json({ error: 'Failed to list bookings' });

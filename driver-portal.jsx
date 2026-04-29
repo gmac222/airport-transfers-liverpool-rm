@@ -54,7 +54,7 @@ function DriverPortal() {
 
     // Fetch bookings
     const fetchBookings = () => {
-        fetch('/api/booking?action=list', { method: 'POST' })
+        fetch('/api/booking?action=list&view=driver', { method: 'POST' })
             .then(r => r.json())
             .then(data => {
                 if (data.error) throw new Error(data.error);

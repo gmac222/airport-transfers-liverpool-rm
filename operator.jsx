@@ -149,7 +149,7 @@ function AdminApp() {
     };
 
     const fetchBookings = () => {
-        fetch('/api/booking?action=list', { method: 'POST' })
+        fetch('/api/booking?action=list&view=operator', { method: 'POST' })
             .then(res => res.json())
             .then(data => {
                 if (data.error) throw new Error(data.error);
