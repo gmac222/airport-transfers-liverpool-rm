@@ -271,7 +271,7 @@ function FocusedJobCard({
                 <a
                     href={`/operator.html?ref=${encodeURIComponent(f['Booking Ref'])}`}
                     style={{ display: 'block', textAlign: 'center', padding: '14px', background: 'var(--amber)', color: 'var(--navy-ink)', textDecoration: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '15px' }}>
-                    Open in Dispatch Portal →
+                    📤 Dispatch to Operator →
                 </a>
             </div>
         </div>
@@ -1007,7 +1007,7 @@ function AdminApp() {
                                                         </div>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                             <span style={{ fontSize: '12px', padding: '4px 10px', borderRadius: '999px', fontWeight: 700, background: status === 'Accepted' ? '#dcfce7' : status === 'Declined' ? '#fee2e2' : '#fef3c7', color: status === 'Accepted' ? '#166534' : status === 'Declined' ? '#b91c1c' : '#92400e' }}>{status}</span>
-                                                            <a href={`/operator.html?ref=${encodeURIComponent(f['Booking Ref'])}`} style={{ fontSize: '12px', color: 'var(--navy)', textDecoration: 'none', fontWeight: 600 }}>Dispatch →</a>
+                                                            <a href={`/operator.html?ref=${encodeURIComponent(f['Booking Ref'])}`} style={{ fontSize: '12px', color: 'var(--navy-ink)', background: 'rgba(230, 178, 75, 0.18)', border: '1px solid var(--amber)', textDecoration: 'none', fontWeight: 700, padding: '6px 10px', borderRadius: '6px', whiteSpace: 'nowrap' }}>📤 Dispatch to Operator →</a>
                                                         </div>
                                                     </div>
 
