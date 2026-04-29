@@ -389,6 +389,18 @@ module.exports = async (req, res) => {
                                     rec['Driver Name'] = defaultDriver;
                                     rec['Driver Phone'] = drvPhoneRaw || '';
                                     console.log(`Auto-assigned default driver ${defaultDriver} to ${rec['Booking Ref']}`);
+
+                                    // Step 3a's gate already passed (Driver
+                                    // wasn't in the original PATCH), so fire
+                                    // the driver SMS here directly.
+                                    const drvSmsPhone = formatPhone(drvPhoneRaw);
+                                    if (drvSmsPhone) {
+                                        const driverMsg = `RM TRANSFERS - New Job Assigned\n\nRef: ${rec['Booking Ref'] || '-'}\nCustomer: ${rec['Customer Name'] || '-'}\nPickup: ${rec['Home Address'] || '-'}\nAirport: ${rec['Airport'] || '-'}\nDate: ${fmtUKDate(rec['Outbound Date'])} at ${rec['Outbound Time'] || '-'}\nPassengers: ${rec['Passengers'] || '-'} | Bags: ${rec['Luggage'] || '-'}\n\nView your jobs: https://airporttaxitransfersliverpool.co.uk/driver-portal.html`;
+                                        console.log(`Driver SMS (auto-assign) firing for ${rec['Booking Ref']} -> ${defaultDriver} @ ${drvSmsPhone}`);
+                                        await sendSms(drvSmsPhone, driverMsg);
+                                    } else {
+                                        console.warn(`Auto-assigned ${defaultDriver} has no usable phone - SMS skipped.`);
+                                    }
                                 } else {
                                     console.warn(`Default driver ${defaultDriver} not found for operator ${opName} - skipping auto-assign.`);
                                 }

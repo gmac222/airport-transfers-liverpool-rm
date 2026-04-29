@@ -1621,6 +1621,11 @@ function AdminApp() {
                                                             {fields['Return Driver Phone'] && <span style={{ fontSize: '12px', color: 'var(--muted)' }}>📞 {fields['Return Driver Phone']}</span>}
                                                         </div>
                                                     )}
+                                                    <button
+                                                        onClick={() => handleDirectSMS(record, 'resend-driver')}
+                                                        style={{ width: '100%', padding: '10px', background: 'white', color: 'var(--amber-deep)', border: '1px solid var(--amber)', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                                                        ↻ Resend Job SMS to Driver
+                                                    </button>
                                                     <div style={{ padding: '8px 10px', background: '#f3f4f6', borderRadius: '6px', fontSize: '12px', color: 'var(--muted)', textAlign: 'center' }}>
                                                         You can change the driver any time. Admin confirms payment separately.
                                                     </div>
