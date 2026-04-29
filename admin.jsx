@@ -255,33 +255,16 @@ function FocusedJobCard({
                     </div>
                 </div>
 
-                {/* Assignment */}
+                {/* Assignment — admin only routes to an operator. The
+                    operator chooses the driver in their own portal. */}
                 <div className="card" style={{ padding: '16px' }}>
-                    <h3 style={{ margin: '0 0 12px 0', fontFamily: 'Lexend', fontSize: '16px' }}>🚗 Assignment</h3>
-                    <div style={{ display: 'grid', gap: '12px' }}>
-                        <div>
-                            <div style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '4px' }}>Operator</div>
-                            <select value={currentOp} onChange={e => handleReassignSingle(booking.id, e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid var(--line)', borderRadius: '8px', fontFamily: 'inherit', fontSize: '15px' }}>
-                                <option value="">Unassigned</option>
-                                {operators.map(op => <option key={op.id} value={op.name}>{op.name}</option>)}
-                            </select>
-                        </div>
-                        <div>
-                            <div style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '4px' }}>Outbound Driver</div>
-                            <select value={f['Driver Name'] || ''} onChange={e => handleReassignDriver(booking.id, e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid var(--line)', borderRadius: '8px', fontFamily: 'inherit', fontSize: '15px' }}>
-                                <option value="">No driver</option>
-                                {driversList.map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
-                            </select>
-                        </div>
-                        {isReturn && (
-                            <div>
-                                <div style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', color: '#7c3aed', marginBottom: '4px' }}>Return Driver</div>
-                                <select value={f['Return Driver Name'] || ''} onChange={e => handleReassignReturnDriver(booking.id, e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #c4b5fd', borderRadius: '8px', fontFamily: 'inherit', fontSize: '15px', background: '#faf5ff' }}>
-                                    <option value="">Same as outbound</option>
-                                    {driversList.map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
-                                </select>
-                            </div>
-                        )}
+                    <h3 style={{ margin: '0 0 12px 0', fontFamily: 'Lexend', fontSize: '16px' }}>🏷️ Operator</h3>
+                    <select value={currentOp} onChange={e => handleReassignSingle(booking.id, e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid var(--line)', borderRadius: '8px', fontFamily: 'inherit', fontSize: '15px' }}>
+                        <option value="">Unassigned</option>
+                        {operators.map(op => <option key={op.id} value={op.name}>{op.name}</option>)}
+                    </select>
+                    <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '8px' }}>
+                        The operator allocates a driver from their own dispatch portal.
                     </div>
                 </div>
 
@@ -349,7 +332,7 @@ function AdminApp() {
     const handleAcknowledgePayment = async (record) => {
         const f = record.fields;
         if (!f['Driver Name'] || !f['Driver Phone']) {
-            return alert('Allocate a driver before acknowledging payment — the customer needs the driver details.');
+            return alert('No driver allocated yet — the operator needs to allocate a driver in the operator portal before payment can be acknowledged. The customer SMS includes the driver details.');
         }
         if (!window.confirm(`Acknowledge payment of £${f['Customer Price'] || f['Total Price'] || '?'} from ${f['Customer Name'] || 'customer'}?\n\nThis sets the booking to Accepted and sends the customer the driver details.`)) return;
         setAcknowledgingId(record.id);
@@ -733,48 +716,37 @@ function AdminApp() {
     const unassignedCount = activeBookings.filter(b => !b.fields['Operator']).length;
     const isSuper = (typeof localStorage !== 'undefined') && localStorage.getItem('adminIsSuper') === 'true';
 
-    // Apply our current single-operator / single-driver defaults to any
-    // freshly-arrived booking that hasn't had them set yet. This runs once
-    // per render of activeBookings and silently PATCHes Airtable. The admin
-    // can change either dropdown afterwards.
+    // Default the Operator on freshly-arrived bookings to "RM Transfers"
+    // until we have other operators routinely receiving work. Admin can
+    // change the Operator dropdown afterwards. Driver assignment is the
+    // operator's job, not admin's, so we don't seed Driver Name here.
     const DEFAULT_OPERATOR = 'RM Transfers';
-    const DEFAULT_DRIVER = 'Roy Medlam';
     const defaultsAppliedRef = React.useRef(new Set());
     useEffect(() => {
         if (!isLoggedIn || loading || activeBookings.length === 0) return;
-        const defaultDriverPhone = (driversList.find(d => d.name === DEFAULT_DRIVER) || {}).phone || '';
         for (const b of activeBookings) {
             if (defaultsAppliedRef.current.has(b.id)) continue;
             const f = b.fields;
             const status = f['Status'] || 'Pending';
-            // Only seed defaults on freshly-arrived bookings — anything past
-            // Pending has been touched by an admin/operator already, so don't
-            // second-guess them.
             if (status !== 'Pending') {
                 defaultsAppliedRef.current.add(b.id);
                 continue;
             }
-            const patch = {};
-            if (!f['Operator']) patch['Operator'] = DEFAULT_OPERATOR;
-            if (!f['Driver Name']) {
-                patch['Driver Name'] = DEFAULT_DRIVER;
-                if (defaultDriverPhone && !f['Driver Phone']) patch['Driver Phone'] = defaultDriverPhone;
-            }
-            if (Object.keys(patch).length === 0) {
+            if (f['Operator']) {
                 defaultsAppliedRef.current.add(b.id);
                 continue;
             }
-            defaultsAppliedRef.current.add(b.id); // mark first so we don't loop
+            defaultsAppliedRef.current.add(b.id);
             fetch('/api/booking', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: b.id, fields: patch })
+                body: JSON.stringify({ id: b.id, fields: { 'Operator': DEFAULT_OPERATOR } })
             })
             .then(r => r.json())
             .then(d => { if (!d.error) fetchBookings(); })
             .catch(err => console.error('Default seed failed for', b.id, err));
         }
-    }, [isLoggedIn, loading, activeBookings, driversList]);
+    }, [isLoggedIn, loading, activeBookings]);
 
     // ─── SMS deep-link: single-job card view ───────────────────────
     if (focusRef) {
@@ -1070,31 +1042,20 @@ function AdminApp() {
                                                             style={{ width: '100%', padding: '10px 12px', border: `2px solid ${plBorder}`, background: plBg, borderRadius: '8px', fontFamily: 'inherit', fontSize: '13px', color: 'var(--navy-ink)', outline: 'none', boxSizing: 'border-box' }} />
                                                     </div>
 
-                                                    {/* Assignment dropdowns */}
-                                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '14px' }}>
-                                                        <div>
-                                                            <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '4px' }}>Driver</div>
-                                                            <select value={f['Driver Name'] || ''} onChange={e => handleReassignDriver(b.id, e.target.value)} style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--line)', borderRadius: '6px', fontSize: '13px', fontFamily: 'inherit', fontWeight: f['Driver Name'] ? 600 : 400 }}>
-                                                                <option value="">No driver</option>
-                                                                {driversList.map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
-                                                            </select>
-                                                        </div>
-                                                        {f['Trip Type'] === 'return' && (
-                                                            <div>
-                                                                <div style={{ fontSize: '11px', fontWeight: 700, color: '#7c3aed', textTransform: 'uppercase', marginBottom: '4px' }}>Return Driver</div>
-                                                                <select value={f['Return Driver Name'] || ''} onChange={e => handleReassignReturnDriver(b.id, e.target.value)} style={{ width: '100%', padding: '8px 10px', border: '1px solid #c4b5fd', borderRadius: '6px', fontSize: '13px', fontFamily: 'inherit', background: '#faf5ff' }}>
-                                                                    <option value="">Same as outbound</option>
-                                                                    {driversList.map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
-                                                                </select>
+                                                    {/* Operator routing — admin only assigns the operator. */}
+                                                    <div style={{ marginBottom: '14px' }}>
+                                                        <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '4px' }}>Operator</div>
+                                                        <select value={currentOp} onChange={e => handleReassignSingle(b.id, e.target.value)} style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--line)', borderRadius: '8px', fontSize: '14px', fontFamily: 'inherit', fontWeight: currentOp ? 600 : 400, color: currentOp ? 'var(--navy-ink)' : '#e53e3e' }}>
+                                                            <option value="">Unassigned</option>
+                                                            {operators.map(op => <option key={op.id} value={op.name}>{op.name}</option>)}
+                                                        </select>
+                                                        {f['Driver Name'] && (
+                                                            <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '6px' }}>
+                                                                Driver allocated by operator: <strong style={{ color: 'var(--navy-ink)' }}>{f['Driver Name']}</strong>
+                                                                {f['Driver Phone'] ? ` (${f['Driver Phone']})` : ''}
+                                                                {f['Trip Type'] === 'return' && f['Return Driver Name'] && f['Return Driver Name'] !== f['Driver Name'] && <> · Return: <strong style={{ color: '#7c3aed' }}>{f['Return Driver Name']}</strong></>}
                                                             </div>
                                                         )}
-                                                        <div>
-                                                            <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '4px' }}>Operator</div>
-                                                            <select value={currentOp} onChange={e => handleReassignSingle(b.id, e.target.value)} style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--line)', borderRadius: '6px', fontSize: '13px', fontFamily: 'inherit', fontWeight: currentOp ? 600 : 400, color: currentOp ? 'var(--navy-ink)' : '#e53e3e' }}>
-                                                                <option value="">Unassigned</option>
-                                                                {operators.map(op => <option key={op.id} value={op.name}>{op.name}</option>)}
-                                                            </select>
-                                                        </div>
                                                     </div>
 
                                                     {/* Send Quote */}
