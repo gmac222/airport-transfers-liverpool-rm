@@ -168,9 +168,13 @@ module.exports = async (req, res) => {
         try {
             const url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}/${id}`;
 
-            // ─── Step 1: Fetch the EXISTING record so we can detect driver changes ───
+            // ─── Step 1: Fetch the EXISTING record so we can detect driver
+            // changes and recompute Profit when either price changes.
             let oldRecord = {};
-            if (fields['Driver Name'] !== undefined || fields['Return Driver Name'] !== undefined) {
+            const priceTouched = fields['Customer Price'] !== undefined ||
+                                 fields['Operator Price'] !== undefined ||
+                                 fields['Total Price'] !== undefined;
+            if (fields['Driver Name'] !== undefined || fields['Return Driver Name'] !== undefined || priceTouched) {
                 try {
                     const existingRes = await fetch(url, {
                         headers: { 'Authorization': `Bearer ${AIRTABLE_API_KEY}` }
@@ -182,6 +186,23 @@ module.exports = async (req, res) => {
                 } catch (fetchErr) {
                     console.error('Failed to fetch existing record (non-blocking):', fetchErr);
                 }
+            }
+
+            // Recompute Profit whenever either price is touched. Falls back to
+            // the existing record's value if only one side is in this PATCH.
+            if (priceTouched) {
+                const num = (v) => {
+                    if (v === null || v === undefined || v === '') return 0;
+                    const n = Number(v);
+                    return Number.isFinite(n) ? n : 0;
+                };
+                const customer = fields['Customer Price'] !== undefined
+                    ? num(fields['Customer Price'])
+                    : num(oldRecord['Customer Price'] ?? oldRecord['Total Price']);
+                const operator = fields['Operator Price'] !== undefined
+                    ? num(fields['Operator Price'])
+                    : num(oldRecord['Operator Price']);
+                fields['Profit'] = customer - operator;
             }
 
             // ─── Step 2: Apply the update ─────────────────────────────────────

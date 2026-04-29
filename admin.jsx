@@ -43,6 +43,10 @@ function AdminApp() {
         .then(data => {
             if (data.error) throw new Error(data.error);
             localStorage.setItem('adminLoggedIn', 'true');
+            if (data.token) localStorage.setItem('adminToken', data.token);
+            if (data.isSuperAdmin) localStorage.setItem('adminIsSuper', 'true');
+            else localStorage.removeItem('adminIsSuper');
+            if (data.adminName) localStorage.setItem('adminName', data.adminName);
             setIsLoggedIn(true);
         })
         .catch(err => setLoginError(err.message))
@@ -51,6 +55,9 @@ function AdminApp() {
 
     const handleLogout = () => {
         localStorage.removeItem('adminLoggedIn');
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminIsSuper');
+        localStorage.removeItem('adminName');
         setIsLoggedIn(false);
     };
 
@@ -269,7 +276,11 @@ function AdminApp() {
                         <div style={{ fontSize: '14px', marginTop: '2px', opacity: 0.7 }}>Manage operators &amp; job assignments</div>
                     </div>
                 </div>
-                <div style={{ display: 'flex', gap: '10px' }}>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                    {localStorage.getItem('adminIsSuper') === 'true' && (
+                        <a href="/superadmin.html" style={{ background: 'var(--amber)', color: 'var(--navy-ink)', textDecoration: 'none', padding: '6px 12px', borderRadius: '6px', fontWeight: 700, fontSize: '14px' }}>💰 Finance</a>
+                    )}
+                    <a href="/stats.html" style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', textDecoration: 'none', padding: '6px 12px', borderRadius: '6px', fontWeight: 'bold', fontSize: '14px' }}>Stats</a>
                     <a href="/operator.html" style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', textDecoration: 'none', padding: '6px 12px', borderRadius: '6px', fontWeight: 'bold', fontSize: '14px' }}>Operator Portal →</a>
                     <button onClick={handleLogout} style={{ background: 'transparent', border: '1px solid white', color: 'white', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>Log Out</button>
                 </div>

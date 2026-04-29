@@ -132,7 +132,7 @@ function SuperAdmin() {
             const f = b.fields;
             const customerPrice = num(f['Customer Price'] || f['Total Price']);
             const operatorPrice = num(f['Operator Price']);
-            const jobProfit = customerPrice - operatorPrice;
+            const jobProfit = f['Profit'] != null ? num(f['Profit']) : (customerPrice - operatorPrice);
             revenue += customerPrice;
             cost += operatorPrice;
             profit += jobProfit;
@@ -481,7 +481,7 @@ function SuperAdmin() {
                                     const f = b.fields;
                                     const cp = num(f['Customer Price'] || f['Total Price']);
                                     const op = num(f['Operator Price']);
-                                    const p = cp - op;
+                                    const p = f['Profit'] != null ? num(f['Profit']) : (cp - op);
                                     return (
                                         <tr key={b.id}>
                                             <td style={{ ...cell, color: 'var(--amber)', fontWeight: 600 }}>{f['Booking Ref']}</td>
