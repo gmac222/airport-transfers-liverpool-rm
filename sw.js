@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rm-transfers-v1';
+const CACHE_NAME = 'rm-transfers-v2';
 const ASSETS = [
   '/',
   '/index.html',
