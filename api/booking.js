@@ -314,15 +314,23 @@ module.exports = async (req, res) => {
                 return s;
             };
 
-            // Helper: send SMS (non-blocking)
+            // Helper: send SMS. Returns the awaited promise so callers
+            // can `await` it. We also inspect the ClickSend response body
+            // so authentication / bad-number errors actually show up in
+            // the Vercel logs instead of being silently swallowed.
             const sendSms = async (to, body) => {
                 try {
-                    await fetch('https://rest.clicksend.com/v3/sms/send', {
+                    const r = await fetch('https://rest.clicksend.com/v3/sms/send', {
                         method: 'POST',
                         headers: { 'Authorization': CLICKSEND_AUTH, 'Content-Type': 'application/json' },
                         body: JSON.stringify({ messages: [{ to, from: 'RMTransfers', body }] })
                     });
-                    console.log(`SMS sent to ${to}`);
+                    const txt = await r.text();
+                    if (!r.ok) {
+                        console.error(`ClickSend ${r.status} for ${to}: ${txt}`);
+                    } else {
+                        console.log(`SMS sent to ${to}`);
+                    }
                 } catch (err) {
                     console.error(`SMS to ${to} failed (non-blocking):`, err);
                 }
@@ -392,10 +400,13 @@ module.exports = async (req, res) => {
             // We compare against oldRecord['Status'] so we don't re-spam if
             // an admin patches an already-declined booking later.
             if (fields['Status'] === 'Declined' && oldRecord['Status'] !== 'Declined') {
+                console.log(`Decline trigger fired for ${rec['Booking Ref']} (was ${oldRecord['Status'] || 'undefined'})`);
                 const ADMIN_NUMBERS = ['+447398233859', '+447746899644']; // Graham, Roy
                 const price = rec['Customer Price'] || rec['Total Price'];
                 const adminMsg = `RM TRANSFERS – Booking DECLINED by customer\n\nRef: ${rec['Booking Ref'] || '—'}\nCustomer: ${rec['Customer Name'] || '—'}\nPhone: ${rec['Customer Phone'] || '—'}\nQuote: £${price ?? '—'}\nPickup: ${rec['Home Address'] || '—'}\nDate: ${fmtUKDate(rec['Outbound Date'])} at ${rec['Outbound Time'] || '—'}\n\nOpen: https://airporttaxitransfersliverpool.co.uk/admin.html?ref=${rec['Booking Ref'] || ''}`;
-                ADMIN_NUMBERS.forEach(n => sendSms(n, adminMsg));
+                // Await both so the serverless function can't terminate before
+                // ClickSend has actually been called.
+                await Promise.all(ADMIN_NUMBERS.map(n => sendSms(n, adminMsg)));
                 console.log(`Admins notified of declined booking: ${rec['Booking Ref']}`);
             }
 
