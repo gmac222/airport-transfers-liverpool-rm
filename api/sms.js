@@ -27,12 +27,24 @@ export default async function handler(req, res) {
 
     const messages = [];
 
+    // Step 1 of customer flow: just the price + accept/decline link.
+    // Sent when operator quotes the booking. No payment link, no driver yet.
+    if (action === 'send-price-quote') {
+        if (!formattedCustomerPhone) return res.status(400).json({ error: 'Missing customer phone' });
+        messages.push({
+            to: formattedCustomerPhone,
+            from: 'RMTransfers',
+            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nGood news — we can cover your RM Transfers booking (${fields['Booking Ref']}) for £${fields['Total Price']}.\n\nPlease go to https://airporttaxitransfersliverpool.co.uk/portal.html?ref=${fields['Booking Ref']} to accept this price or decline if it doesn't suit.${SUPPORT_LINE}\n\n(Please do not reply to this text)`
+        });
+    }
+
+    // Step 2 of customer flow: payment link, sent after the customer accepts the quote.
     if (action === 'send-payment-link') {
         if (!formattedCustomerPhone) return res.status(400).json({ error: 'Missing customer phone' });
         messages.push({
             to: formattedCustomerPhone,
             from: 'RMTransfers',
-            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nThe total price for your RM Transfers booking (${fields['Booking Ref']}) is £${fields['Total Price']}.\n\nPlease go to https://airporttaxitransfersliverpool.co.uk/portal.html?ref=${fields['Booking Ref']} to confirm and pay, or to decline if the price doesn't suit. Once payment is received we'll allocate a driver and send you their details.${SUPPORT_LINE}\n\n(Please do not reply to this text)`
+            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nThanks for accepting your quote for RM Transfers booking (${fields['Booking Ref']}).\n\nPlease complete payment of £${fields['Total Price']} here: https://airporttaxitransfersliverpool.co.uk/portal.html?ref=${fields['Booking Ref']}\n\nOnce payment clears we'll allocate a driver and send you their details.${SUPPORT_LINE}\n\n(Please do not reply to this text)`
         });
     }
 

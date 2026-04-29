@@ -48,7 +48,7 @@ module.exports = async (req, res) => {
     }
 
     if (req.method === 'POST') {
-        const { name, phone, username, password } = req.body;
+        const { name, phone, username, password, vehicleType, vehicleRegistration, badgeNumber } = req.body;
         if (!name) {
             return res.status(400).json({ error: 'Driver name is required' });
         }
@@ -71,7 +71,10 @@ module.exports = async (req, res) => {
                                 'Name': name,
                                 'Phone': phone || '',
                                 'Username': username,
-                                'Password': password
+                                'Password': password,
+                                'Vehicle Type': vehicleType || '',
+                                'Vehicle Registration': vehicleRegistration || '',
+                                'Badge Number': badgeNumber || ''
                             }
                         }
                     ]

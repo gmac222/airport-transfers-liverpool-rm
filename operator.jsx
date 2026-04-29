@@ -26,6 +26,9 @@ function AdminApp() {
     const [newDriverPhone, setNewDriverPhone] = useState('');
     const [newDriverUsername, setNewDriverUsername] = useState('');
     const [newDriverPassword, setNewDriverPassword] = useState('');
+    const [newDriverVehicleType, setNewDriverVehicleType] = useState('');
+    const [newDriverVehicleReg, setNewDriverVehicleReg] = useState('');
+    const [newDriverBadge, setNewDriverBadge] = useState('');
     const [isAddingDriver, setIsAddingDriver] = useState(false);
 
     const [driverNames, setDriverNames] = useState({});
@@ -195,7 +198,10 @@ function AdminApp() {
                     name: newDriverName.trim(),
                     phone: newDriverPhone.trim(),
                     username: newDriverUsername.trim(),
-                    password: newDriverPassword.trim()
+                    password: newDriverPassword.trim(),
+                    vehicleType: newDriverVehicleType.trim(),
+                    vehicleRegistration: newDriverVehicleReg.trim(),
+                    badgeNumber: newDriverBadge.trim()
                 })
             });
             const data = await res.json();
@@ -213,6 +219,9 @@ function AdminApp() {
             setNewDriverPhone('');
             setNewDriverUsername('');
             setNewDriverPassword('');
+            setNewDriverVehicleType('');
+            setNewDriverVehicleReg('');
+            setNewDriverBadge('');
             alert('Driver added successfully!');
         } catch (err) {
             alert('Error adding driver: ' + err.message);
@@ -265,22 +274,72 @@ function AdminApp() {
         setPrices(prev => ({ ...prev, [id]: price }));
     };
 
+    // STEP 1: send the price quote to the customer.
+    // No driver, no payment link yet — just price + accept/decline link.
+    const handleSendQuote = (id) => {
+        const priceRaw = prices[id];
+        if (!priceRaw || String(priceRaw).trim() === '' || Number(priceRaw) <= 0) {
+            return alert('Please enter a valid price (£) before sending the quote.');
+        }
+        const price = Number(priceRaw);
+        setAssigningId(id);
+
+        fetch('/api/booking', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id: id,
+                fields: {
+                    'Status': 'Awaiting Confirmation',
+                    'Total Price': price
+                }
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) throw new Error(data.error);
+
+            const record = bookings.find(b => b.id === id);
+            if (record) {
+                fetch('/api/sms', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'send-price-quote',
+                        fields: {
+                            'Booking Ref': record.fields['Booking Ref'],
+                            'Customer Name': record.fields['Customer Name'],
+                            'Customer Phone': record.fields['Customer Phone'],
+                            'Total Price': price
+                        }
+                    })
+                }).then(async res => {
+                    const smsData = await res.json();
+                    if (smsData.error) alert('Error sending quote SMS: ' + smsData.error);
+                }).catch(err => console.error('Error triggering sms:', err));
+            }
+
+            fetchBookings();
+        })
+        .catch(err => alert('Error sending quote: ' + err.message))
+        .finally(() => setAssigningId(null));
+    };
+
+    // STEP 2: customer has accepted the quote (status === 'Awaiting Payment').
+    // Operator now allocates a driver and sends the payment link.
     const handleAssignDriver = (id) => {
         const driverName = driverNames[id];
         const driverPhone = driverPhones[id];
         const paymentLink = paymentLinks[id];
-        const price = prices[id];
         if (!driverName || driverName.trim() === '') return alert('Please enter a driver name');
         if (!driverPhone || driverPhone.trim() === '') return alert('Please enter a driver phone number');
         if (!paymentLink || paymentLink.trim() === '') return alert('Please enter a payment link');
 
         setAssigningId(id);
 
-        // Build fields — include return driver if it's a return trip and one was selected
         const booking = bookings.find(b => b.id === id);
         const isReturn = booking && booking.fields['Trip Type'] === 'return';
         const assignFields = {
-            'Status': 'Awaiting Payment',
             'Driver Name': driverName.trim(),
             'Driver Phone': driverPhone.trim(),
             'Payment Link': paymentLink.trim()
@@ -297,15 +356,12 @@ function AdminApp() {
         fetch('/api/booking', {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                id: id,
-                fields: assignFields
-            })
+            body: JSON.stringify({ id, fields: assignFields })
         })
         .then(res => res.json())
         .then(data => {
             if (data.error) throw new Error(data.error);
-            
+
             const record = bookings.find(b => b.id === id);
             if (record) {
                 fetch('/api/sms', {
@@ -318,7 +374,7 @@ function AdminApp() {
                             'Customer Name': record.fields['Customer Name'],
                             'Customer Phone': record.fields['Customer Phone'],
                             'Payment Link': paymentLink.trim(),
-                            'Total Price': record.fields['Total Price'] || record.fields['Operator Price'] || 0
+                            'Total Price': record.fields['Total Price'] || 0
                         }
                     })
                 }).then(async res => {
@@ -327,7 +383,6 @@ function AdminApp() {
                 }).catch(err => console.error('Error triggering sms:', err));
             }
 
-            // Refresh list
             fetchBookings();
         })
         .catch(err => alert('Error assigning driver: ' + err.message))
@@ -480,6 +535,9 @@ function AdminApp() {
         if (action === 'driver-arrived') confirmText = "Send 'Driver Arrived' SMS to Customer?";
         if (action === 'resend-driver') confirmText = "Resend Job SMS & Portal Link to Driver?";
         if (action === 'send-review-invite') confirmText = "Send Review Invite SMS to Customer?";
+        if (action === 'send-confirmation') confirmText = "Resend driver details (name + phone) to customer?";
+        if (action === 'send-price-quote') confirmText = "Resend price quote SMS to customer?";
+        if (action === 'send-payment-link') confirmText = "Resend payment link SMS to customer?";
 
         if (!window.confirm(confirmText)) return;
         
@@ -960,6 +1018,27 @@ function AdminApp() {
                                 style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--line)' }}
                                 required
                             />
+                            <input
+                                type="text"
+                                placeholder="Vehicle Type (e.g. Mercedes V-Class)"
+                                value={newDriverVehicleType}
+                                onChange={e => setNewDriverVehicleType(e.target.value)}
+                                style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--line)' }}
+                            />
+                            <input
+                                type="text"
+                                placeholder="Vehicle Registration"
+                                value={newDriverVehicleReg}
+                                onChange={e => setNewDriverVehicleReg(e.target.value.toUpperCase())}
+                                style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--line)', textTransform: 'uppercase' }}
+                            />
+                            <input
+                                type="text"
+                                placeholder="Driver Badge Number"
+                                value={newDriverBadge}
+                                onChange={e => setNewDriverBadge(e.target.value)}
+                                style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--line)', gridColumn: '1 / -1' }}
+                            />
                             <button type="submit" disabled={isAddingDriver} className="btn btn-primary" style={{ gridColumn: '1 / -1', padding: '10px 16px', fontSize: '14px' }}>
                                 {isAddingDriver ? 'Adding...' : 'Add Driver'}
                             </button>
@@ -981,7 +1060,9 @@ function AdminApp() {
                             const { id, fields } = record;
                             const status = fields['Status'] || 'Pending';
                             const isPending = status === 'Pending';
+                            const isAwaitingConfirmation = status === 'Awaiting Confirmation';
                             const isAwaitingPayment = status === 'Awaiting Payment';
+                            const isDeclined = status === 'Declined';
                             const isCompleted = status === 'Completed';
                             
                             return (
@@ -1100,108 +1181,166 @@ function AdminApp() {
 
                                     {isPending ? (
                                         <div className="job-actions" style={{ flexDirection: 'column', gap: '10px' }}>
-                                            {/* Outbound Driver */}
                                             <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--navy-ink)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                                {fields['Trip Type'] === 'return' ? '🚗 Outbound Driver' : '🚗 Assign Driver'}
+                                                💷 Step 1 — Quote Customer
                                             </div>
-                                            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                                                <select 
-                                                    value={driverNames[id] || ''}
-                                                    onChange={e => handleDriverSelection(id, e)}
-                                                    style={{ flex: '1 1 200px', padding: '10px', borderRadius: '6px', border: '1px solid var(--line)', fontFamily: 'inherit' }}
-                                                >
-                                                    {driversList.map((d, index) => (
-                                                        <option key={index} value={d.name === 'Select a driver...' ? '' : d.name}>
-                                                            {d.name}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                                {driverNames[id] === 'Custom Driver' && (
-                                                    <input 
-                                                        type="text" 
-                                                        placeholder="Enter Custom Name..." 
-                                                        value={driverNames[id] === 'Custom Driver' ? '' : driverNames[id]}
-                                                        onChange={e => handleDriverNameChange(id, e.target.value)}
-                                                        style={{ flex: '1 1 150px' }}
-                                                    />
-                                                )}
-                                                <input 
-                                                    type="tel" 
-                                                    placeholder="Driver Phone..." 
-                                                    value={driverPhones[id] || ''}
-                                                    onChange={e => handleDriverPhoneChange(id, e.target.value)}
-                                                    style={{ flex: '1 1 150px' }}
+                                            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+                                                <span style={{ fontSize: '14px', fontWeight: 600 }}>Total price (£):</span>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    step="0.01"
+                                                    placeholder="e.g. 130"
+                                                    value={prices[id] !== undefined ? prices[id] : (fields['Total Price'] || '')}
+                                                    onChange={e => handlePriceChange(id, e.target.value)}
+                                                    style={{ flex: '1 1 120px', padding: '10px', borderRadius: '6px', border: '1px solid var(--line)' }}
                                                 />
                                             </div>
-
-                                            {/* Return Driver — only for return trips */}
-                                            {fields['Trip Type'] === 'return' && (
-                                                <>
-                                                    <div style={{ fontSize: '12px', fontWeight: 700, color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: '6px', borderTop: '1px dashed #e2e8f0', paddingTop: '10px' }}>
-                                                        🔄 Return Driver
-                                                    </div>
-                                                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                                                        <select 
-                                                            value={returnDriverNames[id] || ''}
-                                                            onChange={e => handleReturnDriverSelection(id, e)}
-                                                            style={{ flex: '1 1 200px', padding: '10px', borderRadius: '6px', border: '1px solid #c4b5fd', fontFamily: 'inherit', background: '#faf5ff' }}
-                                                        >
-                                                            <option value="">Same as outbound driver</option>
-                                                            {driversList.filter(d => d.name !== 'Select a driver...').map((d, index) => (
-                                                                <option key={index} value={d.name}>{d.name}</option>
-                                                            ))}
-                                                        </select>
-                                                        {returnDriverNames[id] === 'Custom Driver' && (
-                                                            <input 
-                                                                type="text" 
-                                                                placeholder="Enter Custom Name..." 
-                                                                onChange={e => handleReturnDriverNameChange(id, e.target.value)}
-                                                                style={{ flex: '1 1 150px' }}
-                                                            />
-                                                        )}
-                                                        <input 
-                                                            type="tel" 
-                                                            placeholder="Return Driver Phone..." 
-                                                            value={returnDriverPhones[id] || ''}
-                                                            onChange={e => handleReturnDriverPhoneChange(id, e.target.value)}
-                                                            style={{ flex: '1 1 150px' }}
-                                                        />
-                                                    </div>
-                                                </>
-                                            )}
-
-                                            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                                                <input 
-                                                    type="url" 
-                                                    placeholder="Paste Revolut Payment Link..." 
-                                                    value={paymentLinks[id] || ''}
-                                                    onChange={e => handlePaymentLinkChange(id, e.target.value)}
-                                                    style={{ flex: '2 1 200px' }}
-                                                />
-                                            </div>
-                                            <button 
-                                                onClick={() => handleAssignDriver(id)}
+                                            <button
+                                                onClick={() => handleSendQuote(id)}
                                                 disabled={assigningId === id}
                                                 style={{ padding: '12px', width: '100%' }}
                                             >
-                                                {assigningId === id ? '...' : 'Assign Driver & Send Payment Link'}
+                                                {assigningId === id ? '...' : 'Send Quote (Accept / Decline) to Customer'}
+                                            </button>
+                                            <div style={{ fontSize: '12px', color: 'var(--muted)' }}>
+                                                Customer gets an SMS with the price and links to accept or decline. You'll only need to allocate a driver after they accept.
+                                            </div>
+                                        </div>
+                                    ) : isAwaitingConfirmation ? (
+                                        <div className="job-actions" style={{background: '#fefce8', padding: '10px 14px', borderRadius: '8px', border: '1px solid #facc15', display: 'flex', flexDirection: 'column', gap: '8px'}}>
+                                            <span style={{fontSize: '14px', fontWeight: 600, color: '#a16207'}}>⏳ Awaiting customer confirmation</span>
+                                            <span style={{fontSize: '14px'}}>Quoted price: £{fields['Total Price'] || '—'}</span>
+                                            <span style={{fontSize: '13px', color: 'var(--muted)'}}>
+                                                Customer has been sent the price and is choosing to accept or decline. The status will move to "Awaiting Payment" once they accept.
+                                            </span>
+                                            <button
+                                                onClick={() => handleDirectSMS(record, 'send-price-quote')}
+                                                style={{ padding: '8px', width: '100%', background: 'white', border: '1px solid #facc15', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', color: '#a16207', fontSize: '13px' }}
+                                            >
+                                                Resend Quote SMS
                                             </button>
                                         </div>
                                     ) : isAwaitingPayment ? (
-                                        <div className="job-actions" style={{background: '#fffbf0', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--amber)', display: 'flex', flexDirection: 'column', gap: '8px'}}>
-                                            <span style={{fontSize: '14px', fontWeight: 600, color: 'var(--amber-deep)'}}>Awaiting Payment</span>
-                                            <span style={{fontSize: '14px'}}>Outbound Driver: {fields['Driver Name']} {fields['Driver Phone'] ? `(${fields['Driver Phone']})` : ''}</span>
-                                            {fields['Trip Type'] === 'return' && (
-                                                <span style={{fontSize: '14px', color: '#7c3aed'}}>Return Driver: {fields['Return Driver Name'] || fields['Driver Name']} {fields['Return Driver Phone'] ? `(${fields['Return Driver Phone']})` : fields['Driver Phone'] ? `(${fields['Driver Phone']})` : ''}</span>
+                                        <div className="job-actions" style={{ flexDirection: 'column', gap: '10px' }}>
+                                            <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--navy-ink)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                                {fields['Driver Name']
+                                                    ? '💳 Awaiting Payment'
+                                                    : `🚗 Step 2 — Allocate Driver & Payment Link${fields['Trip Type'] === 'return' ? ' (Outbound)' : ''}`}
+                                            </div>
+
+                                            {!fields['Driver Name'] && (
+                                                <>
+                                                    <div style={{ fontSize: '13px', color: 'var(--muted)' }}>
+                                                        Customer accepted the £{fields['Total Price'] || '—'} quote. Allocate a driver and paste the payment link to send.
+                                                    </div>
+                                                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                                        <select
+                                                            value={driverNames[id] || ''}
+                                                            onChange={e => handleDriverSelection(id, e)}
+                                                            style={{ flex: '1 1 200px', padding: '10px', borderRadius: '6px', border: '1px solid var(--line)', fontFamily: 'inherit' }}
+                                                        >
+                                                            {driversList.map((d, index) => (
+                                                                <option key={index} value={d.name === 'Select a driver...' ? '' : d.name}>
+                                                                    {d.name}
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                        {driverNames[id] === 'Custom Driver' && (
+                                                            <input
+                                                                type="text"
+                                                                placeholder="Enter Custom Name..."
+                                                                value={driverNames[id] === 'Custom Driver' ? '' : driverNames[id]}
+                                                                onChange={e => handleDriverNameChange(id, e.target.value)}
+                                                                style={{ flex: '1 1 150px' }}
+                                                            />
+                                                        )}
+                                                        <input
+                                                            type="tel"
+                                                            placeholder="Driver Phone..."
+                                                            value={driverPhones[id] || ''}
+                                                            onChange={e => handleDriverPhoneChange(id, e.target.value)}
+                                                            style={{ flex: '1 1 150px' }}
+                                                        />
+                                                    </div>
+
+                                                    {fields['Trip Type'] === 'return' && (
+                                                        <>
+                                                            <div style={{ fontSize: '12px', fontWeight: 700, color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: '6px', borderTop: '1px dashed #e2e8f0', paddingTop: '10px' }}>
+                                                                🔄 Return Driver
+                                                            </div>
+                                                            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                                                <select
+                                                                    value={returnDriverNames[id] || ''}
+                                                                    onChange={e => handleReturnDriverSelection(id, e)}
+                                                                    style={{ flex: '1 1 200px', padding: '10px', borderRadius: '6px', border: '1px solid #c4b5fd', fontFamily: 'inherit', background: '#faf5ff' }}
+                                                                >
+                                                                    <option value="">Same as outbound driver</option>
+                                                                    {driversList.filter(d => d.name !== 'Select a driver...').map((d, index) => (
+                                                                        <option key={index} value={d.name}>{d.name}</option>
+                                                                    ))}
+                                                                </select>
+                                                                <input
+                                                                    type="tel"
+                                                                    placeholder="Return Driver Phone..."
+                                                                    value={returnDriverPhones[id] || ''}
+                                                                    onChange={e => handleReturnDriverPhoneChange(id, e.target.value)}
+                                                                    style={{ flex: '1 1 150px' }}
+                                                                />
+                                                            </div>
+                                                        </>
+                                                    )}
+
+                                                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                                        <input
+                                                            type="url"
+                                                            placeholder="Paste Revolut Payment Link..."
+                                                            value={paymentLinks[id] || ''}
+                                                            onChange={e => handlePaymentLinkChange(id, e.target.value)}
+                                                            style={{ flex: '2 1 200px' }}
+                                                        />
+                                                    </div>
+                                                    <button
+                                                        onClick={() => handleAssignDriver(id)}
+                                                        disabled={assigningId === id}
+                                                        style={{ padding: '12px', width: '100%' }}
+                                                    >
+                                                        {assigningId === id ? '...' : 'Allocate Driver & Send Payment Link'}
+                                                    </button>
+                                                </>
                                             )}
-                                            {fields['Payment Link'] && <span style={{fontSize: '14px', color: 'var(--muted)'}}>Payment Link: <a href={fields['Payment Link']?.startsWith('http') ? fields['Payment Link'] : `https://${fields['Payment Link']}`} target="_blank" rel="noreferrer" style={{color: 'var(--navy)'}}>{fields['Payment Link']}</a></span>}
-                                            <button 
-                                                onClick={() => handleAcknowledgePayment(id)}
-                                                disabled={acknowledgingId === id}
-                                                style={{ padding: '10px', width: '100%', background: '#10b981', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', marginTop: '4px' }}
-                                            >
-                                                {acknowledgingId === id ? '...' : 'Acknowledge Payment & Confirm Booking'}
-                                            </button>
+
+                                            {fields['Driver Name'] && (
+                                                <div style={{background: '#fffbf0', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--amber)', display: 'flex', flexDirection: 'column', gap: '8px'}}>
+                                                    <span style={{fontSize: '14px'}}>Outbound Driver: {fields['Driver Name']} {fields['Driver Phone'] ? `(${fields['Driver Phone']})` : ''}</span>
+                                                    {fields['Trip Type'] === 'return' && (
+                                                        <span style={{fontSize: '14px', color: '#7c3aed'}}>Return Driver: {fields['Return Driver Name'] || fields['Driver Name']} {fields['Return Driver Phone'] ? `(${fields['Return Driver Phone']})` : fields['Driver Phone'] ? `(${fields['Driver Phone']})` : ''}</span>
+                                                    )}
+                                                    {fields['Payment Link'] && <span style={{fontSize: '14px', color: 'var(--muted)'}}>Payment Link: <a href={fields['Payment Link']?.startsWith('http') ? fields['Payment Link'] : `https://${fields['Payment Link']}`} target="_blank" rel="noreferrer" style={{color: 'var(--navy)'}}>{fields['Payment Link']}</a></span>}
+                                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                                        <button
+                                                            onClick={() => handleDirectSMS(record, 'send-payment-link')}
+                                                            style={{ flex: 1, padding: '8px', background: 'white', border: '1px solid var(--amber)', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', color: 'var(--amber-deep)', fontSize: '13px' }}
+                                                        >
+                                                            Resend Payment Link SMS
+                                                        </button>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => handleAcknowledgePayment(id)}
+                                                        disabled={acknowledgingId === id}
+                                                        style={{ padding: '10px', width: '100%', background: '#10b981', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', marginTop: '4px' }}
+                                                    >
+                                                        {acknowledgingId === id ? '...' : 'Acknowledge Payment & Send Driver Details to Customer'}
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : isDeclined ? (
+                                        <div className="job-actions" style={{background: '#fef2f2', padding: '10px 14px', borderRadius: '8px', border: '1px solid #fca5a5', display: 'flex', flexDirection: 'column', gap: '8px'}}>
+                                            <span style={{fontSize: '14px', fontWeight: 600, color: '#b91c1c'}}>❌ Customer Declined</span>
+                                            <span style={{fontSize: '13px', color: 'var(--muted)'}}>
+                                                The customer declined the £{fields['Total Price'] || '—'} quote. No driver was allocated and no payment was taken.
+                                            </span>
                                         </div>
                                     ) : isCompleted ? (
                                         <div className="job-actions" style={{background: '#f0fdf4', padding: '10px 14px', borderRadius: '8px', border: '1px solid #10b981', display: 'flex', flexDirection: 'column', gap: '8px'}}>
@@ -1219,8 +1358,11 @@ function AdminApp() {
                                             <span style={{fontSize: '14px', fontWeight: 600}}>Driver: {fields['Driver Name']} {fields['Driver Phone'] ? `(${fields['Driver Phone']})` : ''}</span>
                                             {fields['Payment Link'] && <span style={{fontSize: '14px', color: 'var(--muted)'}}>Payment Link: <a href={fields['Payment Link']?.startsWith('http') ? fields['Payment Link'] : `https://${fields['Payment Link']}`} target="_blank" rel="noreferrer" style={{color: 'var(--navy)'}}>{fields['Payment Link']}</a></span>}
                                             <div style={{ display: 'flex', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
+                                                <button onClick={() => handleDirectSMS(record, 'send-confirmation')} style={{ flex: 1, padding: '8px 4px', background: 'white', border: '1px solid #10b981', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', color: '#047857', fontWeight: 'bold' }}>
+                                                    Resend Driver Details to Customer
+                                                </button>
                                                 <button onClick={() => handleDirectSMS(record, 'resend-driver')} style={{ flex: 1, padding: '8px 4px', background: 'white', border: '1px solid var(--amber)', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', color: 'var(--amber-deep)', fontWeight: 'bold' }}>
-                                                    Resend Driver Info
+                                                    Resend Job to Driver
                                                 </button>
                                                 <button onClick={() => handleDirectSMS(record, 'send-24h-reminders')} style={{ flex: 1, padding: '8px 4px', background: 'white', border: '1px solid #f59e0b', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', color: '#d97706', fontWeight: 'bold' }}>
                                                     Send 24h Reminder

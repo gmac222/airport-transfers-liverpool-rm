@@ -6,6 +6,31 @@ function PortalApp() {
     const [error, setError] = useState(null);
     const [inputRef, setInputRef] = useState('');
     const [declining, setDeclining] = useState(false);
+    const [accepting, setAccepting] = useState(false);
+
+    const handleAccept = async () => {
+        if (!booking) return;
+        setAccepting(true);
+        try {
+            const res = await fetch('/api/booking', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: booking.id, fields: { Status: 'Awaiting Payment' } })
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+
+            // Refetch the booking to pick up any operator-side changes
+            const ref = booking.fields['Booking Ref'];
+            const refresh = await fetch(`/api/booking?ref=${ref}`).then(r => r.json());
+            if (refresh.booking) setBooking(refresh.booking);
+            else setBooking({ ...booking, fields: { ...booking.fields, Status: 'Awaiting Payment' } });
+        } catch (err) {
+            alert('Could not accept the quote: ' + err.message + '\n\nPlease call us on 07746 899644.');
+        } finally {
+            setAccepting(false);
+        }
+    };
 
     const handleDecline = async () => {
         if (!booking) return;
@@ -163,17 +188,27 @@ function PortalApp() {
                 </div>
                 
                 <div className="portal-content">
-                    {status === 'Pending' ? (
-                        <div className="status-badge status-pending">
-                            <div className="status-pulse"></div>
-                            Awaiting Driver Assignment
-                        </div>
-                    ) : (
-                        <div className="status-badge status-accepted">
-                            <div className="status-pulse"></div>
-                            Driver Assigned
-                        </div>
-                    )}
+                    {(() => {
+                        const labelMap = {
+                            'Pending': 'Pricing Your Trip',
+                            'Awaiting Confirmation': 'Awaiting Your Confirmation',
+                            'Awaiting Payment': 'Awaiting Payment',
+                            'Accepted': 'Driver Assigned',
+                            'Declined': 'Booking Declined'
+                        };
+                        const label = labelMap[status] || status;
+                        const cls = (status === 'Pending' || status === 'Awaiting Confirmation' || status === 'Awaiting Payment')
+                            ? 'status-badge status-pending'
+                            : status === 'Declined'
+                                ? 'status-badge'
+                                : 'status-badge status-accepted';
+                        return (
+                            <div className={cls} style={status === 'Declined' ? {background: 'rgba(229,62,62,0.15)', color: '#fca5a5', border: '1px solid rgba(229,62,62,0.3)'} : undefined}>
+                                {status !== 'Declined' && <div className="status-pulse"></div>}
+                                {label}
+                            </div>
+                        );
+                    })()}
 
                     <div className="grid-details">
                         <div className="detail-item">
@@ -216,7 +251,71 @@ function PortalApp() {
                         </div>
                     )}
 
-                    {(status === 'Accepted' || status === 'Awaiting Payment') && fields['Payment Link'] && (
+                    {status === 'Awaiting Confirmation' && (
+                        <div style={{
+                            marginTop: '32px',
+                            padding: '32px 24px',
+                            background: 'linear-gradient(145deg, rgba(230, 178, 75, 0.15), rgba(230, 178, 75, 0.05))',
+                            borderRadius: '24px',
+                            border: '1px solid rgba(230, 178, 75, 0.3)',
+                            boxShadow: '0 20px 40px -10px rgba(230, 178, 75, 0.15), inset 0 1px 0 rgba(255,255,255,0.1)',
+                            textAlign: 'center'
+                        }}>
+                            <h3 style={{ margin: '0 0 8px 0', fontSize: '20px', color: '#fff', fontWeight: 700 }}>
+                                {fields['Total Price'] ? `Your price: £${fields['Total Price']}` : 'Confirm your booking'}
+                            </h3>
+                            <p style={{ margin: '0 0 24px 0', fontSize: '15px', color: 'rgba(255,255,255,0.8)', lineHeight: 1.5 }}>
+                                Happy with this? Tap accept and we'll allocate a driver and send you a payment link. Otherwise, decline and we'll release your slot — no charge either way.
+                            </p>
+                            <button
+                                onClick={handleAccept}
+                                disabled={accepting || declining}
+                                style={{
+                                    width: '100%',
+                                    padding: '16px',
+                                    background: 'var(--amber)',
+                                    color: 'var(--navy-ink)',
+                                    border: 'none',
+                                    borderRadius: '12px',
+                                    fontSize: '16px',
+                                    fontWeight: 700,
+                                    cursor: accepting ? 'wait' : 'pointer',
+                                    fontFamily: 'inherit',
+                                    boxShadow: '0 10px 20px -5px rgba(230, 178, 75, 0.4)'
+                                }}>
+                                {accepting ? 'Accepting…' : `Accept${fields['Total Price'] ? ` £${fields['Total Price']}` : ''} & Continue`}
+                            </button>
+                            <button
+                                onClick={handleDecline}
+                                disabled={declining || accepting}
+                                style={{
+                                    marginTop: '12px',
+                                    width: '100%',
+                                    padding: '12px 16px',
+                                    background: 'transparent',
+                                    color: 'rgba(255,255,255,0.7)',
+                                    border: '1px solid rgba(255,255,255,0.2)',
+                                    borderRadius: '10px',
+                                    fontSize: '14px',
+                                    fontWeight: 500,
+                                    cursor: declining ? 'wait' : 'pointer',
+                                    fontFamily: 'inherit'
+                                }}>
+                                {declining ? 'Declining…' : "No thanks — decline this booking"}
+                            </button>
+                            <p style={{fontSize: '12px', color: 'rgba(255,255,255,0.45)', textAlign: 'center', marginTop: '12px', marginBottom: 0}}>
+                                You won't be charged. A driver is only allocated after payment.
+                            </p>
+                        </div>
+                    )}
+
+                    {status === 'Awaiting Payment' && !fields['Payment Link'] && (
+                        <div style={{marginTop: '30px', padding: '20px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '16px', fontSize: '14px', color: 'var(--muted)', lineHeight: 1.6, textAlign: 'center'}}>
+                            Thanks for accepting! We're allocating a driver and preparing your secure payment link — you'll get an SMS within a few minutes.
+                        </div>
+                    )}
+
+                    {status === 'Awaiting Payment' && fields['Payment Link'] && (
                         <div className="payment-card" style={{
                             marginTop: '32px',
                             padding: '32px 24px',
@@ -262,28 +361,8 @@ function PortalApp() {
                                 }}>
                                 Complete Payment Now
                             </a>
-                            <p style={{fontSize: '13px', color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginTop: '16px', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'}}>
+                            <p style={{fontSize: '13px', color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginTop: '16px', marginBottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'}}>
                                 <span style={{opacity: 0.7}}>🔒</span> Secure, encrypted checkout
-                            </p>
-                            <button
-                                onClick={handleDecline}
-                                disabled={declining}
-                                style={{
-                                    background: 'transparent',
-                                    color: 'rgba(255,255,255,0.7)',
-                                    border: '1px solid rgba(255,255,255,0.2)',
-                                    borderRadius: '10px',
-                                    padding: '12px 16px',
-                                    fontSize: '14px',
-                                    fontWeight: 500,
-                                    cursor: declining ? 'wait' : 'pointer',
-                                    width: '100%',
-                                    fontFamily: 'inherit'
-                                }}>
-                                {declining ? 'Declining…' : "No thanks — decline this booking"}
-                            </button>
-                            <p style={{fontSize: '12px', color: 'rgba(255,255,255,0.45)', textAlign: 'center', marginTop: '10px', marginBottom: 0}}>
-                                You won't be charged. Declining cancels this quote.
                             </p>
                         </div>
                     )}
@@ -297,7 +376,7 @@ function PortalApp() {
 
                     {status === 'Pending' && (
                         <div style={{marginTop: '30px', padding: '20px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '16px', fontSize: '14px', color: 'var(--muted)', lineHeight: 1.6}}>
-                            We have received your booking and are currently matching you with one of our professional drivers. You will receive an SMS as soon as a driver is confirmed!
+                            We've received your booking. Our dispatch team is finalising your price and will text you a quote shortly to accept or decline.
                         </div>
                     )}
                 </div>
