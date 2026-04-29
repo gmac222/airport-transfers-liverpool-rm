@@ -1087,23 +1087,23 @@ function AdminApp() {
 
                 {viewMode !== 'calendar' && (
                     <div style={{ marginBottom: '20px', display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-                        <div style={{ flex: '1 1 400px' }}>
-                            <input 
-                                type="text" 
-                                placeholder="Search by ref, name, or phone..." 
+                        <div style={{ flex: '1 1 280px', minWidth: 0 }}>
+                            <input
+                                type="text"
+                                placeholder="Search by ref, name, or phone..."
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
-                                style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--line)', fontFamily: 'inherit', fontSize: '15px' }}
+                                style={{ width: '100%', minWidth: 0, padding: '12px 14px', borderRadius: '8px', border: '1px solid var(--line)', fontFamily: 'inherit', fontSize: '16px', boxSizing: 'border-box' }}
                             />
                         </div>
                         
-                        <form onSubmit={handleAddDriver} style={{ flex: '1 1 400px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', background: 'var(--cream)', padding: '12px 14px', borderRadius: '8px', border: '1px solid var(--line)' }}>
+                        <form onSubmit={handleAddDriver} className="add-driver-form" style={{ flex: '1 1 320px', minWidth: 0, display: 'grid', gap: '8px', background: 'var(--cream)', padding: '12px 14px', borderRadius: '8px', border: '1px solid var(--line)', boxSizing: 'border-box' }}>
                             <input
                                 type="text"
                                 placeholder="Driver Name"
                                 value={newDriverName}
                                 onChange={e => setNewDriverName(e.target.value)}
-                                style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--line)' }}
+                                style={{ width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--line)', fontFamily: 'inherit', fontSize: '16px', boxSizing: 'border-box' }}
                                 required
                             />
                             <input
@@ -1111,7 +1111,7 @@ function AdminApp() {
                                 placeholder="Phone Number"
                                 value={newDriverPhone}
                                 onChange={e => setNewDriverPhone(e.target.value)}
-                                style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--line)' }}
+                                style={{ width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--line)', fontFamily: 'inherit', fontSize: '16px', boxSizing: 'border-box' }}
                             />
                             <input
                                 type="text"
@@ -1120,7 +1120,7 @@ function AdminApp() {
                                 onChange={e => setNewDriverUsername(e.target.value)}
                                 autoCapitalize="none"
                                 autoCorrect="off"
-                                style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--line)' }}
+                                style={{ width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--line)', fontFamily: 'inherit', fontSize: '16px', boxSizing: 'border-box' }}
                                 required
                             />
                             <input
@@ -1128,7 +1128,7 @@ function AdminApp() {
                                 placeholder="Portal Password"
                                 value={newDriverPassword}
                                 onChange={e => setNewDriverPassword(e.target.value)}
-                                style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--line)' }}
+                                style={{ width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--line)', fontFamily: 'inherit', fontSize: '16px', boxSizing: 'border-box' }}
                                 required
                             />
                             <input
@@ -1136,23 +1136,23 @@ function AdminApp() {
                                 placeholder="Vehicle Type (e.g. Mercedes V-Class)"
                                 value={newDriverVehicleType}
                                 onChange={e => setNewDriverVehicleType(e.target.value)}
-                                style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--line)' }}
+                                style={{ width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--line)', fontFamily: 'inherit', fontSize: '16px', boxSizing: 'border-box' }}
                             />
                             <input
                                 type="text"
                                 placeholder="Vehicle Registration"
                                 value={newDriverVehicleReg}
                                 onChange={e => setNewDriverVehicleReg(e.target.value.toUpperCase())}
-                                style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--line)', textTransform: 'uppercase' }}
+                                style={{ width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--line)', textTransform: 'uppercase', fontFamily: 'inherit', fontSize: '16px', boxSizing: 'border-box' }}
                             />
                             <input
                                 type="text"
                                 placeholder="Driver Badge Number"
                                 value={newDriverBadge}
                                 onChange={e => setNewDriverBadge(e.target.value)}
-                                style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--line)', gridColumn: '1 / -1' }}
+                                style={{ width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--line)', fontFamily: 'inherit', fontSize: '16px', boxSizing: 'border-box', gridColumn: '1 / -1' }}
                             />
-                            <button type="submit" disabled={isAddingDriver} className="btn btn-primary" style={{ gridColumn: '1 / -1', padding: '10px 16px', fontSize: '14px' }}>
+                            <button type="submit" disabled={isAddingDriver} className="btn btn-primary" style={{ gridColumn: '1 / -1', padding: '12px 16px', fontSize: '15px', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer' }}>
                                 {isAddingDriver ? 'Adding...' : 'Add Driver'}
                             </button>
                         </form>
@@ -1416,25 +1416,25 @@ function AdminApp() {
                                         <div className="job-actions" style={{background: 'var(--cream)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--line)', display: 'flex', flexDirection: 'column', gap: '8px'}}>
                                             <span style={{fontSize: '14px', fontWeight: 600}}>Driver: {fields['Driver Name']} {fields['Driver Phone'] ? `(${fields['Driver Phone']})` : ''}</span>
                                             <div style={{ display: 'flex', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
-                                                <button onClick={() => handleDirectSMS(record, 'send-confirmation')} style={{ flex: 1, padding: '8px 4px', background: 'white', border: '1px solid #10b981', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', color: '#047857', fontWeight: 'bold' }}>
+                                                <button onClick={() => handleDirectSMS(record, 'send-confirmation')} style={{ flex: '1 1 130px', minWidth: 0, padding: '10px 8px', background: 'white', border: '1px solid #10b981', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', color: '#047857', fontWeight: 'bold' }}>
                                                     Resend Driver Details to Customer
                                                 </button>
-                                                <button onClick={() => handleDirectSMS(record, 'resend-driver')} style={{ flex: 1, padding: '8px 4px', background: 'white', border: '1px solid var(--amber)', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', color: 'var(--amber-deep)', fontWeight: 'bold' }}>
+                                                <button onClick={() => handleDirectSMS(record, 'resend-driver')} style={{ flex: '1 1 130px', minWidth: 0, padding: '10px 8px', background: 'white', border: '1px solid var(--amber)', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', color: 'var(--amber-deep)', fontWeight: 'bold' }}>
                                                     Resend Job to Driver
                                                 </button>
-                                                <button onClick={() => handleDirectSMS(record, 'send-24h-reminders')} style={{ flex: 1, padding: '8px 4px', background: 'white', border: '1px solid #f59e0b', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', color: '#d97706', fontWeight: 'bold' }}>
+                                                <button onClick={() => handleDirectSMS(record, 'send-24h-reminders')} style={{ flex: '1 1 130px', minWidth: 0, padding: '10px 8px', background: 'white', border: '1px solid #f59e0b', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', color: '#d97706', fontWeight: 'bold' }}>
                                                     Send 24h Reminder
                                                 </button>
-                                                <button onClick={() => handleDirectSMS(record, 'driver-on-way')} style={{ flex: 1, padding: '8px 4px', background: 'white', border: '1px solid #10b981', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', color: '#10b981', fontWeight: 'bold' }}>
+                                                <button onClick={() => handleDirectSMS(record, 'driver-on-way')} style={{ flex: '1 1 130px', minWidth: 0, padding: '10px 8px', background: 'white', border: '1px solid #10b981', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', color: '#10b981', fontWeight: 'bold' }}>
                                                     Backup: Send 'On Way'
                                                 </button>
-                                                <button onClick={() => handleDirectSMS(record, 'driver-arrived')} style={{ flex: 1, padding: '8px 4px', background: 'white', border: '1px solid #10b981', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', color: '#10b981', fontWeight: 'bold' }}>
+                                                <button onClick={() => handleDirectSMS(record, 'driver-arrived')} style={{ flex: '1 1 130px', minWidth: 0, padding: '10px 8px', background: 'white', border: '1px solid #10b981', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', color: '#10b981', fontWeight: 'bold' }}>
                                                     Backup: Send 'Arrived'
                                                 </button>
-                                                <button onClick={() => handleDirectSMS(record, 'send-review-invite')} style={{ flex: 1, padding: '8px 4px', background: 'white', border: '1px solid #3b82f6', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', color: '#3b82f6', fontWeight: 'bold' }}>
+                                                <button onClick={() => handleDirectSMS(record, 'send-review-invite')} style={{ flex: '1 1 130px', minWidth: 0, padding: '10px 8px', background: 'white', border: '1px solid #3b82f6', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', color: '#3b82f6', fontWeight: 'bold' }}>
                                                     Send Review Invite
                                                 </button>
-                                                <button onClick={() => handleCloseJob(record)} style={{ flex: 1, padding: '8px 4px', background: '#3b82f6', border: '1px solid #3b82f6', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', color: 'white', fontWeight: 'bold' }}>
+                                                <button onClick={() => handleCloseJob(record)} style={{ flex: '1 1 130px', minWidth: 0, padding: '10px 8px', background: '#3b82f6', border: '1px solid #3b82f6', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', color: 'white', fontWeight: 'bold' }}>
                                                     Close Job (Archive)
                                                 </button>
                                             </div>
@@ -1633,10 +1633,10 @@ function AdminApp() {
                                 <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0', marginTop: '10px' }}>
                                     <h4 style={{ margin: '0 0 10px 0', color: 'var(--navy-ink)' }}>Communication</h4>
                                     <div style={{ display: 'flex', gap: '10px' }}>
-                                        <button type="button" onClick={() => handleResendSMS('resend-customer')} style={{ flex: 1, padding: '8px', background: 'white', border: '1px solid var(--line)', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
+                                        <button type="button" onClick={() => handleResendSMS('resend-customer')} style={{ flex: '1 1 140px', minWidth: 0, padding: '10px', background: 'white', border: '1px solid var(--line)', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
                                             Resend Customer SMS
                                         </button>
-                                        <button type="button" onClick={() => handleResendSMS('resend-driver')} style={{ flex: 1, padding: '8px', background: 'white', border: '1px solid var(--line)', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
+                                        <button type="button" onClick={() => handleResendSMS('resend-driver')} style={{ flex: '1 1 140px', minWidth: 0, padding: '10px', background: 'white', border: '1px solid var(--line)', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
                                             Resend Driver SMS
                                         </button>
                                     </div>

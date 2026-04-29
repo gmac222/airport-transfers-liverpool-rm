@@ -389,6 +389,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         }
         .price-send-btn:disabled { opacity: 0.6; cursor: wait; }
 
+        /* Add Driver form: single column on phones, 2 cols on tablet+. */
+        .add-driver-form { grid-template-columns: 1fr; }
+        @media (min-width: 768px) {
+            .add-driver-form { grid-template-columns: 1fr 1fr; }
+        }
+
         /* Filter chip row scrolls horizontally on phones rather than
            wrapping into a tall stack. */
         .filter-control {
@@ -452,7 +458,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <div id="root"></div>
 
-    <script type="text/babel" src="operator.jsx?v=2026-04-29-9"></script>
+    <script type="text/babel" src="operator.jsx?v=2026-04-29-10"></script>
 
     <!-- Service Worker Registration -->
     <script>
