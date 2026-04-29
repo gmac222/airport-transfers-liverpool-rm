@@ -595,7 +595,9 @@ function AdminApp() {
             const patchRes = await fetch('/api/booking', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: record.id, fields: { Status: 'Accepted' } })
+                // Acknowledging payment also auto-dispatches the booking
+                // to its operator — once paid, the operator owns the job.
+                body: JSON.stringify({ id: record.id, fields: { Status: 'Accepted', 'Dispatched To Operator': true } })
             });
             const patchData = await patchRes.json();
             if (patchData.error) throw new Error(patchData.error);

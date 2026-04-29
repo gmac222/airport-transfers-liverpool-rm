@@ -586,13 +586,17 @@ function AdminApp() {
         );
     }
 
-    // Filter bookings to this operator. A booking is only visible to the
-    // operator portal once admin has actively dispatched it — until then
-    // it sits invisible inside the admin queue.
+    // Filter bookings to this operator. A booking is visible to the
+    // operator either when admin has explicitly dispatched it, OR once
+    // payment has been acknowledged (Accepted/Completed/Archived) — at
+    // which point the operator unambiguously owns it and needs to act.
+    // Pre-payment bookings stay hidden until admin clicks Dispatch.
     const operatorBookings = operatorName ? bookings.filter(b => {
         const assignedOp = b.fields['Operator'] || '';
         if (assignedOp !== operatorName) return false;
-        return b.fields['Dispatched To Operator'] === true;
+        const status = b.fields['Status'] || '';
+        const isPostPayment = status === 'Accepted' || status === 'Completed' || status === 'Archived';
+        return b.fields['Dispatched To Operator'] === true || isPostPayment;
     }) : [];
 
     const filteredBookings = operatorBookings.filter(b => {
