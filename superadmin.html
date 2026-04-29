@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en-GB">
+
+<head>
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-PD63KLP9');</script>
+<!-- End Google Tag Manager -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Super Admin Finance | RM Transfers</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg" />
+    <meta name="theme-color" content="#0B1E37" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Source+Sans+3:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    
+    <style>
+        :root {
+            --navy: #0E2747;
+            --navy-2: #14345c;
+            --navy-ink: #0B1E37;
+            --amber: #E6B24B;
+            --amber-deep: #C7932F;
+            --cream: #FAF7F2;
+            --cream-2: #F3EEE4;
+            --line: rgba(255, 255, 255, 0.1);
+            --ink: #FAF7F2;
+            --muted: #A0ABB8;
+            --ok: #4CAF50;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--navy-ink);
+            font-family: 'Source Sans 3', sans-serif;
+            color: var(--ink);
+            line-height: 1.5;
+        }
+
+        .header {
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 20px;
+            font-family: 'Lexend', sans-serif;
+            color: var(--amber);
+        }
+
+        .wrap {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .grid-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--amber);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-title {
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-family: 'Lexend', sans-serif;
+            font-size: 42px;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.1;
+        }
+
+        .stat-sub {
+            margin-top: 12px;
+            font-size: 14px;
+            color: var(--ok);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .stat-sub.neutral {
+            color: var(--muted);
+        }
+
+        .chart-placeholder {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 30px;
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--muted);
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 40px;
+        }
+
+        .recent-jobs {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 24px;
+        }
+
+        .recent-jobs h2 {
+            font-family: 'Lexend', sans-serif;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        .job-row {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr 1fr;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--line);
+            font-size: 15px;
+        }
+
+        .job-row:last-child {
+            border-bottom: none;
+        }
+
+        .job-row.header-row {
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 1px;
+            border-bottom: 2px solid var(--line);
+        }
+
+        @media (max-width: 768px) {
+            .job-row {
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+            .job-row.header-row { display: none; }
+        }
+
+        .btn {
+            background: var(--amber);
+            color: var(--navy-ink);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 100px;
+            color: var(--muted);
+            font-size: 18px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--line);
+            color: white;
+            border-radius: 8px;
+            font-family: inherit;
+            margin-bottom: 16px;
+        }
+    </style>
+
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="RM Transfers" />
+    <link rel="apple-touch-icon" href="/assets/logo.png" />
+
+</head>
+
+<body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PD63KLP9"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+    <script src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
+
+    <div id="root"></div>
+
+    <script type="text/babel" src="superadmin.jsx"></script>
+
+    <!-- Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(err => {
+            console.log('Service Worker registration failed:', err);
+          });
+        });
+      }
+    </script>
+
+</body>
+
+</html>

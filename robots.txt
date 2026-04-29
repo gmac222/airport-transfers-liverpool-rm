@@ -2,6 +2,7 @@ User-agent: *
 Disallow: /admin.html
 Disallow: /operator.html
 Disallow: /stats.html
+Disallow: /superadmin.html
 Disallow: /portal.html
 Disallow: /driver-action.html
 Disallow: /api/

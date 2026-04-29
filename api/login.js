@@ -95,7 +95,15 @@ module.exports = async (req, res) => {
             return res.status(401).json({ error: 'Invalid username or password' });
         }
 
-        return res.status(200).json({ success: true, token: "admin-auth-ok", role: 'admin' });
+        const adminRec = data.records[0];
+        const isSuperAdmin = adminRec.fields['Is Super Admin'] === true;
+        return res.status(200).json({
+            success: true,
+            token: "admin-auth-ok",
+            role: 'admin',
+            isSuperAdmin,
+            adminName: adminRec.fields['Name'] || cleanUsername
+        });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ error: 'Internal server error during login' });
