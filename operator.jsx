@@ -74,6 +74,53 @@ function AdminApp() {
         .finally(() => setIsLoggingIn(false));
     };
 
+    // Admin SSO: if ?as=<operatorUsername> is present AND the user is a
+    // logged-in super admin, swap us into that operator's view without a
+    // password. Operator's localStorage state is overwritten so the booking
+    // filter narrows correctly.
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const asUser = params.get('as');
+        if (!asUser) return;
+        const adminUser = localStorage.getItem('adminName');
+        const isSuper = localStorage.getItem('adminIsSuper') === 'true';
+        if (!adminUser || !isSuper) return;
+
+        const currentOperator = localStorage.getItem('operatorName') || '';
+        // If we're already logged in as some other operator (or a stale one),
+        // log out first so we don't show their data while the SSO call runs.
+        if (currentOperator && currentOperator.toLowerCase() !== asUser.toLowerCase()) {
+            localStorage.removeItem('operatorLoggedIn');
+            localStorage.removeItem('operatorName');
+            setIsLoggedIn(false);
+            setOperatorName('');
+        }
+
+        fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Admin-SSO': adminUser },
+            body: JSON.stringify({ username: asUser, password: '__sso__', portal: 'operator' })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.error || !data.success) {
+                setLoginError(data.error || 'Admin SSO failed');
+                return;
+            }
+            localStorage.setItem('operatorLoggedIn', 'true');
+            localStorage.setItem('operatorName', data.operatorName || asUser);
+            setOperatorName(data.operatorName || asUser);
+            setIsLoggedIn(true);
+            // Drop ?as= from the URL so a refresh doesn't re-SSO.
+            try {
+                const u = new URL(window.location.href);
+                u.searchParams.delete('as');
+                window.history.replaceState({}, '', u.toString());
+            } catch (e) {}
+        })
+        .catch(err => setLoginError('Admin SSO error: ' + err.message));
+    }, []);
+
     const handleLogout = () => {
         localStorage.removeItem('operatorLoggedIn');
         localStorage.removeItem('operatorName');
@@ -595,7 +642,7 @@ function AdminApp() {
 
     // Filter bookings to this operator
     const operatorBookings = operatorName ? bookings.filter(b => {
-        const assignedOp = b.fields['Operator'] || 'RM Transfers';
+        const assignedOp = b.fields['Operator'] || '';
         return assignedOp === operatorName;
     }) : bookings;
 
