@@ -276,7 +276,7 @@ module.exports = async (req, res) => {
                 if (oldDriverName && oldDriverName !== newDriverName) {
                     const customerPhone = formatPhone(rec['Phone'] || rec['Customer Phone'] || '');
                     if (customerPhone) {
-                        const custMsg = `RM TRANSFERS – Driver Update\n\nHi ${rec['Customer Name'] || 'there'},\n\nApologies, the driver for your upcoming transfer has been changed.\n\nYour new driver is: ${newDriverName}\nDriver contact: ${fields['Driver Phone'] || '—'}\n\nBooking Ref: ${rec['Booking Ref'] || '—'}\nDate: ${rec['Outbound Date'] || '—'} at ${rec['Outbound Time'] || '—'}\nPickup: ${rec['Home Address'] || '—'}\n\nWe apologise for any inconvenience.\n\nRM Transfers`;
+                        const custMsg = `RM TRANSFERS – Driver Update\n\nHi ${rec['Customer Name'] || 'there'},\n\nApologies, the driver for your upcoming transfer has been changed.\n\nYour new driver is: ${newDriverName}\nDriver contact: ${fields['Driver Phone'] || '—'}\n\nBooking Ref: ${rec['Booking Ref'] || '—'}\nDate: ${rec['Outbound Date'] || '—'} at ${rec['Outbound Time'] || '—'}\nPickup: ${rec['Home Address'] || '—'}\n\nWe apologise for any inconvenience.\n\nNeed to speak to us? Call 07746 899644.\n\nRM Transfers`;
                         sendSms(customerPhone, custMsg);
                         console.log(`Customer notified of driver change: ${oldDriverName} → ${newDriverName}`);
                     }
@@ -299,7 +299,7 @@ module.exports = async (req, res) => {
                 if (oldRetDriver && oldRetDriver !== newRetDriver) {
                     const customerPhone = formatPhone(rec['Phone'] || rec['Customer Phone'] || '');
                     if (customerPhone) {
-                        const custRetMsg = `RM TRANSFERS – Return Driver Update\n\nHi ${rec['Customer Name'] || 'there'},\n\nApologies, the driver for your return transfer has been changed.\n\nYour new return driver is: ${newRetDriver}\nDriver contact: ${fields['Return Driver Phone'] || '—'}\n\nBooking Ref: ${rec['Booking Ref'] || '—'}\nReturn Date: ${rec['Return Date'] || '—'} at ${rec['Return Time'] || '—'}\n\nWe apologise for any inconvenience.\n\nRM Transfers`;
+                        const custRetMsg = `RM TRANSFERS – Return Driver Update\n\nHi ${rec['Customer Name'] || 'there'},\n\nApologies, the driver for your return transfer has been changed.\n\nYour new return driver is: ${newRetDriver}\nDriver contact: ${fields['Return Driver Phone'] || '—'}\n\nBooking Ref: ${rec['Booking Ref'] || '—'}\nReturn Date: ${rec['Return Date'] || '—'} at ${rec['Return Time'] || '—'}\n\nWe apologise for any inconvenience.\n\nNeed to speak to us? Call 07746 899644.\n\nRM Transfers`;
                         sendSms(customerPhone, custRetMsg);
                         console.log(`Customer notified of return driver change: ${oldRetDriver} → ${newRetDriver}`);
                     }

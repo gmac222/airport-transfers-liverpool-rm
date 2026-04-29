@@ -302,6 +302,10 @@ function PortalApp() {
                     )}
                 </div>
             </div>
+
+            <div style={{textAlign: 'center', marginTop: '20px', padding: '14px', fontSize: '14px', color: 'rgba(255,255,255,0.7)'}}>
+                Need to speak to us? <a href="tel:07746899644" style={{color: 'var(--amber)', fontWeight: 600, textDecoration: 'none'}}>📞 07746 899644</a>
+            </div>
         </div>
     );
 }

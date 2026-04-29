@@ -9,6 +9,9 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Invalid request' });
     }
 
+    const SUPPORT_PHONE = '07746 899644';
+    const SUPPORT_LINE = `\n\nNeed to speak to us? Call ${SUPPORT_PHONE}.`;
+
     const formatPhone = (phone) => {
         if (!phone) return null;
         let p = String(phone).replace(/\s+/g, '').replace(/[^0-9+]/g, '');
@@ -29,7 +32,7 @@ export default async function handler(req, res) {
         messages.push({
             to: formattedCustomerPhone,
             from: 'RMTransfers',
-            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nThe total price for your RM Transfers booking (${fields['Booking Ref']}) is £${fields['Total Price']}.\n\nPlease go to https://airporttaxitransfersliverpool.co.uk/portal.html?ref=${fields['Booking Ref']} to confirm and pay, or to decline if the price doesn't suit. Once payment is received we'll allocate a driver and send you their details.\n\n(Please do not reply to this text)`
+            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nThe total price for your RM Transfers booking (${fields['Booking Ref']}) is £${fields['Total Price']}.\n\nPlease go to https://airporttaxitransfersliverpool.co.uk/portal.html?ref=${fields['Booking Ref']} to confirm and pay, or to decline if the price doesn't suit. Once payment is received we'll allocate a driver and send you their details.${SUPPORT_LINE}\n\n(Please do not reply to this text)`
         });
     }
 
@@ -54,7 +57,7 @@ export default async function handler(req, res) {
         messages.push({
             to: formattedCustomerPhone,
             from: 'RMTransfers',
-            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nPayment received! Your RM Transfers booking (${fields['Booking Ref']}) is fully confirmed.\n\n${tripDetails}\n\nDriver: ${fields['Driver Name']} (${fields['Driver Phone']})\n\nWe have also sent an email with your full itinerary.\n\n(Please do not reply to this text. Text your driver directly.)`
+            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nPayment received! Your RM Transfers booking (${fields['Booking Ref']}) is fully confirmed.\n\n${tripDetails}\n\nDriver: ${fields['Driver Name']} (${fields['Driver Phone']})\n\nWe have also sent an email with your full itinerary.${SUPPORT_LINE}\n\n(Please do not reply to this text. Text your driver directly.)`
         });
 
         // Also notify the driver that payment is confirmed and the job is locked in
@@ -107,6 +110,8 @@ export default async function handler(req, res) {
                 <img src="https://airporttaxitransfersliverpool.co.uk/assets/airport-transfers-fleet.jpg" alt="Our Premium Fleet" style="width: 100%; height: auto; object-fit: cover; border-radius: 8px; margin-bottom: 24px;" />
                 
                 <p style="font-size: 16px;">If you need anything at all before your trip, please don't hesitate to reach out to us or your driver. We can't wait to see you!</p>
+
+                <p style="font-size: 16px;"><strong>Customer Services:</strong> <a href="tel:07746899644" style="color: #0E2747; text-decoration: none; font-weight: 600;">07746 899644</a></p>
                 
                 <div style="margin-top: 40px; border-top: 1px solid #E8E2D4; padding-top: 20px;">
                   <p style="color: #5b6472; font-size: 14px; margin-bottom: 4px;">Warm regards,</p>
@@ -140,7 +145,7 @@ export default async function handler(req, res) {
         messages.push({
             to: formattedCustomerPhone,
             from: 'RMTransfers',
-            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nThis is a resent confirmation for RM Transfers booking (${fields['Booking Ref']}).\n\nYour driver is ${fields['Driver Name'] || 'not yet assigned'}.\n\nView details: https://airporttaxitransfersliverpool.co.uk/portal.html?ref=${fields['Booking Ref']}\n\n(Please do not reply to this text)`
+            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nThis is a resent confirmation for RM Transfers booking (${fields['Booking Ref']}).\n\nYour driver is ${fields['Driver Name'] || 'not yet assigned'}.\n\nView details: https://airporttaxitransfersliverpool.co.uk/portal.html?ref=${fields['Booking Ref']}${SUPPORT_LINE}\n\n(Please do not reply to this text)`
         });
     }
 
@@ -158,7 +163,7 @@ export default async function handler(req, res) {
         messages.push({
             to: formattedCustomerPhone,
             from: 'RMTransfers',
-            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nYour RM Transfers driver, ${fields['Driver Name']}, is on the way for your booking (${fields['Booking Ref']})!\n\nYou can contact them directly on ${fields['Driver Phone']}.`
+            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nYour RM Transfers driver, ${fields['Driver Name']}, is on the way for your booking (${fields['Booking Ref']})!\n\nYou can contact them directly on ${fields['Driver Phone']}.${SUPPORT_LINE}`
         });
     }
 
@@ -167,7 +172,7 @@ export default async function handler(req, res) {
         messages.push({
             to: formattedCustomerPhone,
             from: 'RMTransfers',
-            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nYour RM Transfers driver, ${fields['Driver Name']}, is waiting outside.\n\nPlease come out when you are ready.`
+            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nYour RM Transfers driver, ${fields['Driver Name']}, is waiting outside.\n\nPlease come out when you are ready.${SUPPORT_LINE}`
         });
     }
 
@@ -176,7 +181,7 @@ export default async function handler(req, res) {
         messages.push({
             to: formattedCustomerPhone,
             from: 'RMTransfers',
-            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nThank you for traveling with RM Transfers!\n\nWe hope you had a great journey. If you have a moment, we'd really appreciate it if you could leave us a review on Trustpilot:\n\nhttps://uk.trustpilot.com/review/rmtransfers.co.uk?utm_medium=trustbox&utm_source=TrustBoxReviewCollector\n\nThanks again!`
+            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nThank you for traveling with RM Transfers!\n\nWe hope you had a great journey. If you have a moment, we'd really appreciate it if you could leave us a review on Trustpilot:\n\nhttps://uk.trustpilot.com/review/rmtransfers.co.uk?utm_medium=trustbox&utm_source=TrustBoxReviewCollector\n\nThanks again!${SUPPORT_LINE}`
         });
     }
 
@@ -185,7 +190,7 @@ export default async function handler(req, res) {
         messages.push({
             to: formattedCustomerPhone,
             from: 'RMTransfers',
-            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nFriendly reminder from RM Transfers!\n\nYour booking (${fields['Booking Ref']}) is scheduled for ${fields['Outbound Date']} at ${fields['Outbound Time']}.\n\nYour driver will be ${fields['Driver Name'] || 'assigned shortly'}.`
+            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nFriendly reminder from RM Transfers!\n\nYour booking (${fields['Booking Ref']}) is scheduled for ${fields['Outbound Date']} at ${fields['Outbound Time']}.\n\nYour driver will be ${fields['Driver Name'] || 'assigned shortly'}.${SUPPORT_LINE}`
         });
     }
 
@@ -204,7 +209,7 @@ export default async function handler(req, res) {
             messages.push({
                 to: formattedCustomerPhone,
                 from: 'RMTransfers',
-                body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nFriendly reminder from RM Transfers!\n\nYour booking (${fields['Booking Ref']}) is scheduled for ${fields['Outbound Date']} at ${fields['Outbound Time']}.\n\nYour driver will be ${fields['Driver Name'] || 'assigned shortly'}.`
+                body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nFriendly reminder from RM Transfers!\n\nYour booking (${fields['Booking Ref']}) is scheduled for ${fields['Outbound Date']} at ${fields['Outbound Time']}.\n\nYour driver will be ${fields['Driver Name'] || 'assigned shortly'}.${SUPPORT_LINE}`
             });
         }
         if (formattedDriverPhone) {
