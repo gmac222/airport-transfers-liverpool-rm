@@ -405,32 +405,8 @@ function AdminApp() {
         .finally(() => setAssigningId(null));
     };
 
-    const openCreateModal = () => {
-        setEditingJob('new');
-        setEditForm({
-            'Booking Ref': 'ATL-' + Array.from({length: 8}, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)]).join(''),
-            'Trip Type': 'oneway',
-            'Oneway Direction': 'to',
-            'Airport': 'LJLA',
-            'Customer Name': '',
-            'Customer Phone': '',
-            'Customer Email': '',
-            'Home Address': '',
-            'Outbound Date': '',
-            'Outbound Time': '',
-            'Outbound Flight': '',
-            'Return Date': '',
-            'Return Time': '',
-            'Return Flight': '',
-            'Passengers': 1,
-            'Luggage': 0,
-            'Notes': '',
-            'Total Price': 0,
-            'Operator Price': 0,
-            'Status': 'Pending',
-            'Submitted At': new Date().toISOString()
-        });
-    };
+    // openCreateModal lived here previously. New manual bookings are now
+    // created from the admin portal — operators only edit existing jobs.
 
     const openEditModal = (record) => {
         setEditingJob(record.id);
@@ -440,39 +416,22 @@ function AdminApp() {
     const handleSaveBooking = (e) => {
         e.preventDefault();
         setIsSavingEdit(true);
-        
-        if (editingJob === 'new') {
-            // Create
-            fetch('/api/booking?action=create', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ fields: editForm })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.error) throw new Error(data.error);
-                setEditingJob(null);
-                fetchBookings();
-            })
-            .catch(err => alert('Error creating booking: ' + err.message))
-            .finally(() => setIsSavingEdit(false));
-        } else {
-            // Update — flag the booking so admin sees the operator touched it.
-            const fieldsWithFlag = { ...editForm, 'Edited By Operator': true };
-            fetch('/api/booking', {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: editingJob, fields: fieldsWithFlag })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.error) throw new Error(data.error);
-                setEditingJob(null);
-                fetchBookings();
-            })
-            .catch(err => alert('Error updating booking: ' + err.message))
-            .finally(() => setIsSavingEdit(false));
-        }
+        // Operator only edits existing jobs — manual booking creation lives
+        // on the admin portal. Flag the booking so admin sees the change.
+        const fieldsWithFlag = { ...editForm, 'Edited By Operator': true };
+        fetch('/api/booking', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: editingJob, fields: fieldsWithFlag })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) throw new Error(data.error);
+            setEditingJob(null);
+            fetchBookings();
+        })
+        .catch(err => alert('Error updating booking: ' + err.message))
+        .finally(() => setIsSavingEdit(false));
     };
 
     const handleResendSMS = (action) => {
@@ -1299,7 +1258,7 @@ function AdminApp() {
             {editingJob && (
                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '20px' }}>
                     <div style={{ background: 'white', padding: '30px', borderRadius: '12px', width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
-                        <h2 style={{ marginTop: 0 }}>{editingJob === 'new' ? 'New Manual Booking' : 'Edit Booking'}</h2>
+                        <h2 style={{ marginTop: 0 }}>Edit Booking</h2>
                         <form onSubmit={handleSaveBooking} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                             <div style={{ display: 'flex', gap: '15px' }}>
                                 <div style={{ flex: 1 }}>
