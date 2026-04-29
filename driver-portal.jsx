@@ -72,11 +72,18 @@ function DriverPortal() {
         }
     }, [isLoggedIn]);
 
-    // Filter to only this driver's jobs
+    // Filter to only this driver's jobs. Defence-in-depth on top of the
+    // server-side gate: a driver must never see a booking until admin has
+    // dispatched it AND payment has landed.
     const myJobs = useMemo(() => {
+        const POST_PAYMENT = new Set(['Accepted', 'Completed', 'Archived']);
         return bookings.filter(b => {
-            const dn = (b.fields['Driver Name'] || '').toLowerCase().trim();
-            return dn === driverName.toLowerCase().trim();
+            const f = b.fields || {};
+            const dn = (f['Driver Name'] || '').toLowerCase().trim();
+            if (dn !== driverName.toLowerCase().trim()) return false;
+            if (!POST_PAYMENT.has(f['Status'])) return false;
+            if (f['Dispatched To Operator'] !== true) return false;
+            return true;
         });
     }, [bookings, driverName]);
 

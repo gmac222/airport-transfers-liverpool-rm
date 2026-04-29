@@ -133,21 +133,32 @@ module.exports = async (req, res) => {
             const view = (req.query.view || '').toString().toLowerCase();
             if (view === 'operator' || view === 'driver') {
                 const POST_PAYMENT = new Set(['Accepted', 'Completed', 'Archived']);
-                bookings = bookings.map(rec => {
-                    const f = rec.fields || {};
-                    const isPostPayment = POST_PAYMENT.has(f['Status']);
-                    const isDispatched = f['Dispatched To Operator'] === true;
-                    if (isPostPayment && isDispatched) return rec;
-                    // Strip customer PII. Keep trip metadata (date, airport,
-                    // pax, etc.) so the operator can still see what's
-                    // pending — they just can't reach the customer.
-                    const redacted = { ...f };
-                    delete redacted['Customer Name'];
-                    delete redacted['Customer Phone'];
-                    delete redacted['Customer Email'];
-                    delete redacted['Home Address'];
-                    return { ...rec, fields: redacted };
-                });
+                if (view === 'driver') {
+                    // Drivers must not see a booking at all until it has
+                    // been paid AND admin has dispatched it to the operator.
+                    // (Operators allocate the driver only after dispatch,
+                    // so this also covers the "before my operator picked
+                    // me" case.)
+                    bookings = bookings.filter(rec => {
+                        const f = rec.fields || {};
+                        return POST_PAYMENT.has(f['Status']) && f['Dispatched To Operator'] === true;
+                    });
+                } else {
+                    // Operator: keep the booking visible (so they can plan)
+                    // but redact customer PII until paid + dispatched.
+                    bookings = bookings.map(rec => {
+                        const f = rec.fields || {};
+                        const isPostPayment = POST_PAYMENT.has(f['Status']);
+                        const isDispatched = f['Dispatched To Operator'] === true;
+                        if (isPostPayment && isDispatched) return rec;
+                        const redacted = { ...f };
+                        delete redacted['Customer Name'];
+                        delete redacted['Customer Phone'];
+                        delete redacted['Customer Email'];
+                        delete redacted['Home Address'];
+                        return { ...rec, fields: redacted };
+                    });
+                }
             }
 
             return res.status(200).json({ bookings });
