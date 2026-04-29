@@ -9,6 +9,7 @@ function FocusedJobCard({
     setPriceDraftCustomer, setPriceDraftOperator,
     priceSavingId, priceSavedFlash, commitPrice,
     handleReassignDriver, handleReassignReturnDriver, handleReassignSingle,
+    handleSendQuote, sendingQuote,
     onClose, onLogout
 }) {
     if (loading) {
@@ -126,6 +127,37 @@ function FocusedJobCard({
                             <span className={`profit-pill ${profitCls}`}>{hasBothPrices ? `£${profit.toFixed(2)}` : '–'}</span>
                         </div>
                     </div>
+
+                    {(() => {
+                        const sentAlready = status !== 'Pending';
+                        const canSend = !sentAlready && cpRaw != null && Number(cpRaw) > 0 && priceSavingId !== booking.id;
+                        return (
+                            <button
+                                onClick={() => handleSendQuote(booking)}
+                                disabled={!canSend || sendingQuote}
+                                style={{
+                                    marginTop: '14px',
+                                    width: '100%',
+                                    padding: '14px',
+                                    border: 'none',
+                                    borderRadius: '10px',
+                                    fontWeight: 700,
+                                    fontSize: '15px',
+                                    cursor: canSend && !sendingQuote ? 'pointer' : 'not-allowed',
+                                    background: canSend ? 'var(--amber)' : '#e5e7eb',
+                                    color: canSend ? 'var(--navy-ink)' : '#6b7280',
+                                    fontFamily: 'inherit'
+                                }}>
+                                {sendingQuote
+                                    ? 'Sending quote…'
+                                    : sentAlready
+                                        ? `Quote already sent (${status})`
+                                        : cpRaw == null || Number(cpRaw) <= 0
+                                            ? 'Enter Customer Price first'
+                                            : `Send Quote — £${Number(cpRaw).toFixed(2)} to Customer`}
+                            </button>
+                        );
+                    })()}
                 </div>
 
                 {/* Trip details */}
@@ -229,6 +261,65 @@ function AdminApp() {
     const [priceDraftOperator, setPriceDraftOperator] = useState({});
     const [priceSavingId, setPriceSavingId] = useState(null);
     const [priceSavedFlash, setPriceSavedFlash] = useState({});
+
+    // Send-quote state for the focused job card
+    const [sendingQuote, setSendingQuote] = useState(false);
+
+    const handleSendQuote = async (record) => {
+        const f = record.fields;
+        const cp = f['Customer Price'];
+        if (cp == null || Number(cp) <= 0) {
+            return alert('Enter a Customer Price before sending the quote.');
+        }
+        if (!f['Customer Phone']) {
+            return alert('No customer phone number on this booking.');
+        }
+        if (!window.confirm(`Send quote of £${Number(cp).toFixed(2)} to ${f['Customer Name'] || 'the customer'} (${f['Customer Phone']})?`)) return;
+
+        setSendingQuote(true);
+        try {
+            // 1. Move status forward
+            const patchRes = await fetch('/api/booking', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: record.id,
+                    fields: {
+                        'Status': 'Awaiting Confirmation',
+                        // Mirror Customer Price into Total Price so any legacy
+                        // code paths reading Total Price keep working.
+                        'Total Price': Number(cp)
+                    }
+                })
+            });
+            const patchData = await patchRes.json();
+            if (patchData.error) throw new Error(patchData.error);
+
+            // 2. Fire the SMS
+            const smsRes = await fetch('/api/sms', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'send-price-quote',
+                    fields: {
+                        'Booking Ref': f['Booking Ref'],
+                        'Customer Name': f['Customer Name'],
+                        'Customer Phone': f['Customer Phone'],
+                        'Total Price': Number(cp)
+                    }
+                })
+            });
+            const smsData = await smsRes.json();
+            if (smsData.error) throw new Error('Quote saved but SMS failed: ' + smsData.error);
+
+            fetchBookings();
+            alert(`Quote of £${Number(cp).toFixed(2)} sent to ${f['Customer Name'] || 'customer'}.`);
+        } catch (err) {
+            alert('Could not send quote: ' + err.message);
+        } finally {
+            setSendingQuote(false);
+        }
+    };
 
     const commitPrice = async (bookingId, field, rawValue) => {
         // field is 'Customer Price' or 'Operator Price'
@@ -509,6 +600,8 @@ function AdminApp() {
                 handleReassignDriver={handleReassignDriver}
                 handleReassignReturnDriver={handleReassignReturnDriver}
                 handleReassignSingle={handleReassignSingle}
+                handleSendQuote={handleSendQuote}
+                sendingQuote={sendingQuote}
                 onClose={() => {
                     setFocusRef('');
                     // Drop the ref from the URL without a reload
@@ -673,6 +766,7 @@ function AdminApp() {
                                             <th style={{ padding: '8px' }}>Reassign Return</th>
                                             <th style={{ padding: '8px' }}>Assigned To</th>
                                             <th style={{ padding: '8px' }}>Reassign Operator</th>
+                                            <th style={{ padding: '8px', minWidth: '120px' }}>Quote</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -804,18 +898,45 @@ function AdminApp() {
                                                             {operators.map(op => <option key={op.id} value={op.name}>{op.name}</option>)}
                                                         </select>
                                                     </td>
+                                                    <td style={{ padding: '8px' }}>
+                                                        {(() => {
+                                                            const cp = b.fields['Customer Price'];
+                                                            const status = b.fields['Status'] || 'Pending';
+                                                            const sentAlready = status !== 'Pending';
+                                                            const canSend = !sentAlready && cp != null && Number(cp) > 0 && priceSavingId !== b.id;
+                                                            return (
+                                                                <button
+                                                                    onClick={() => handleSendQuote(b)}
+                                                                    disabled={!canSend || sendingQuote}
+                                                                    title={sentAlready ? `Status: ${status}` : (cp == null ? 'Set Customer Price first' : `Send £${Number(cp).toFixed(2)} quote`)}
+                                                                    style={{
+                                                                        padding: '8px 10px',
+                                                                        background: canSend ? 'var(--amber)' : '#e5e7eb',
+                                                                        color: canSend ? 'var(--navy-ink)' : '#6b7280',
+                                                                        border: 'none',
+                                                                        borderRadius: '6px',
+                                                                        fontWeight: 700,
+                                                                        fontSize: '12px',
+                                                                        cursor: canSend && !sendingQuote ? 'pointer' : 'not-allowed',
+                                                                        whiteSpace: 'nowrap'
+                                                                    }}>
+                                                                    {sendingQuote ? '…' : sentAlready ? status : cp == null ? 'No price' : `Send £${Number(cp).toFixed(0)}`}
+                                                                </button>
+                                                            );
+                                                        })()}
+                                                    </td>
                                                 </tr>
                                             );
                                         })}
                                         {activeBookings.length === 0 && (
-                                            <tr><td colSpan="13" style={{ padding: '30px', textAlign: 'center', color: 'var(--muted)' }}>No active bookings.</td></tr>
+                                            <tr><td colSpan="14" style={{ padding: '30px', textAlign: 'center', color: 'var(--muted)' }}>No active bookings.</td></tr>
                                         )}
                                         {activeBookings.length > 0 && jobsSearch.trim() && activeBookings.filter(b => {
                                             const q = jobsSearch.trim().toLowerCase();
                                             const f = b.fields;
                                             return [f['Booking Ref'], f['Customer Name'], f['Customer Phone'], f['Driver Name'], f['Return Driver Name'], f['Operator'], f['Customer Email'], f['Home Address'], f['Status']].some(v => v && String(v).toLowerCase().includes(q));
                                         }).length === 0 && (
-                                            <tr><td colSpan="13" style={{ padding: '30px', textAlign: 'center', color: 'var(--muted)' }}>No bookings match "{jobsSearch}".</td></tr>
+                                            <tr><td colSpan="14" style={{ padding: '30px', textAlign: 'center', color: 'var(--muted)' }}>No bookings match "{jobsSearch}".</td></tr>
                                         )}
                                     </tbody>
                                 </table>

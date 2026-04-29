@@ -311,6 +311,7 @@ function AdminApp() {
                 id: id,
                 fields: {
                     'Status': 'Awaiting Confirmation',
+                    'Customer Price': price,
                     'Total Price': price
                 }
             })
@@ -1210,9 +1211,9 @@ function AdminApp() {
                                                         min="0"
                                                         step="1"
                                                         placeholder="0"
-                                                        value={prices[id] !== undefined ? prices[id] : (fields['Total Price'] || '')}
+                                                        value={prices[id] !== undefined ? prices[id] : (fields['Customer Price'] || fields['Total Price'] || '')}
                                                         onChange={e => handlePriceChange(id, e.target.value)}
-                                                        aria-label="Total price in pounds"
+                                                        aria-label="Customer price in pounds"
                                                     />
                                                 </div>
                                                 <button
