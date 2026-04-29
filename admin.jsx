@@ -30,6 +30,38 @@ function AdminApp() {
     const [opPriceVal, setOpPriceVal] = useState('');
     const [isSavingPrice, setIsSavingPrice] = useState(false);
 
+    // Inline price drafts (per booking id) — what the user has typed in the
+    // always-visible price boxes but hasn't yet committed. Empty string means
+    // "show whatever Airtable has". A trailing flag tracks per-row save state.
+    const [priceDraftCustomer, setPriceDraftCustomer] = useState({});
+    const [priceDraftOperator, setPriceDraftOperator] = useState({});
+    const [priceSavingId, setPriceSavingId] = useState(null);
+    const [priceSavedFlash, setPriceSavedFlash] = useState({});
+
+    const commitPrice = async (bookingId, field, rawValue) => {
+        // field is 'Customer Price' or 'Operator Price'
+        const trimmed = (rawValue ?? '').toString().trim();
+        const parsed = trimmed === '' ? null : parseFloat(trimmed);
+        if (parsed !== null && !Number.isFinite(parsed)) return; // ignore garbage
+        setPriceSavingId(bookingId);
+        try {
+            const res = await fetch('/api/booking', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: bookingId, fields: { [field]: parsed } })
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            setPriceSavedFlash(prev => ({ ...prev, [bookingId]: Date.now() }));
+            setTimeout(() => setPriceSavedFlash(prev => { const n = { ...prev }; delete n[bookingId]; return n; }), 1500);
+            fetchBookings();
+        } catch (err) {
+            alert('Could not save ' + field + ': ' + err.message);
+        } finally {
+            setPriceSavingId(null);
+        }
+    };
+
     const handleLogin = (e) => {
         e.preventDefault();
         setIsLoggingIn(true);
@@ -405,8 +437,9 @@ function AdminApp() {
                                             <th style={{ padding: '8px' }}>Customer</th>
                                             <th style={{ padding: '8px' }}>Date</th>
                                             <th style={{ padding: '8px' }}>Status</th>
-                                            <th style={{ padding: '8px' }}>Customer Price</th>
-                                            <th style={{ padding: '8px' }}>Operator Price</th>
+                                            <th style={{ padding: '8px', minWidth: '110px', color: 'var(--amber-deep)', fontWeight: 700 }}>Customer £</th>
+                                            <th style={{ padding: '8px', minWidth: '110px', color: 'var(--amber-deep)', fontWeight: 700 }}>Operator £</th>
+                                            <th style={{ padding: '8px', minWidth: '80px' }}>Profit</th>
                                             <th style={{ padding: '8px' }}>Outbound Driver</th>
                                             <th style={{ padding: '8px' }}>Reassign Driver</th>
                                             <th style={{ padding: '8px' }}>Return Driver</th>
@@ -442,29 +475,78 @@ function AdminApp() {
                                                     <td style={{ padding: '8px' }}>
                                                         <span style={{ fontSize: '11px', padding: '2px 6px', borderRadius: '4px', background: b.fields['Status'] === 'Accepted' ? '#dcfce7' : '#fef3c7', color: b.fields['Status'] === 'Accepted' ? '#166534' : '#92400e', fontWeight: 600 }}>{b.fields['Status']}</span>
                                                     </td>
-                                                    {/* Inline Price Editing */}
-                                                    <td style={{ padding: '8px' }}>
-                                                        {editingPriceId === b.id ? (
-                                                            <input type="number" step="0.01" value={costPriceVal} onChange={e => setCostPriceVal(e.target.value)} style={{ width: '70px', padding: '4px 6px', border: '1px solid var(--amber)', borderRadius: '4px', fontSize: '12px' }} autoFocus />
-                                                        ) : (
-                                                            <span onClick={() => startEditPrice(b)} style={{ cursor: 'pointer', fontWeight: 600, color: b.fields['Customer Price'] ? 'var(--navy-ink)' : '#9ca3af' }} title="Click to edit">
-                                                                {b.fields['Customer Price'] != null ? `£${Number(b.fields['Customer Price']).toFixed(2)}` : '–'}
-                                                            </span>
-                                                        )}
-                                                    </td>
-                                                    <td style={{ padding: '8px' }}>
-                                                        {editingPriceId === b.id ? (
-                                                            <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                                                                <input type="number" step="0.01" value={opPriceVal} onChange={e => setOpPriceVal(e.target.value)} style={{ width: '70px', padding: '4px 6px', border: '1px solid var(--amber)', borderRadius: '4px', fontSize: '12px' }} />
-                                                                <button onClick={() => handleSavePrice(b.id)} disabled={isSavingPrice} style={{ padding: '3px 8px', fontSize: '11px', background: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}>{isSavingPrice ? '...' : '✓'}</button>
-                                                                <button onClick={() => setEditingPriceId(null)} style={{ padding: '3px 8px', fontSize: '11px', background: '#f3f4f6', color: '#6b7280', border: '1px solid #d1d5db', borderRadius: '4px', cursor: 'pointer' }}>✗</button>
-                                                            </div>
-                                                        ) : (
-                                                            <span onClick={() => startEditPrice(b)} style={{ cursor: 'pointer', fontWeight: 600, color: b.fields['Operator Price'] ? 'var(--navy-ink)' : '#9ca3af' }} title="Click to edit">
-                                                                {b.fields['Operator Price'] != null ? `£${Number(b.fields['Operator Price']).toFixed(2)}` : '–'}
-                                                            </span>
-                                                        )}
-                                                    </td>
+                                                    {/* Always-visible price inputs */}
+                                                    {(() => {
+                                                        const cpRaw = b.fields['Customer Price'];
+                                                        const opRaw = b.fields['Operator Price'];
+                                                        const cpDraft = priceDraftCustomer[b.id];
+                                                        const opDraft = priceDraftOperator[b.id];
+                                                        const cpValue = cpDraft !== undefined
+                                                            ? cpDraft
+                                                            : (cpRaw != null ? String(cpRaw) : '');
+                                                        const opValue = opDraft !== undefined
+                                                            ? opDraft
+                                                            : (opRaw != null ? String(opRaw) : '');
+                                                        const flashed = !!priceSavedFlash[b.id];
+                                                        const cpClass = `price-cell${flashed ? ' saved' : (cpRaw == null && cpDraft === undefined ? ' empty' : '')}`;
+                                                        const opClass = `price-cell${flashed ? ' saved' : (opRaw == null && opDraft === undefined ? ' empty' : '')}`;
+                                                        const profit = (Number(cpRaw) || 0) - (Number(opRaw) || 0);
+                                                        const hasBoth = cpRaw != null && opRaw != null;
+                                                        const profitCls = !hasBoth ? 'zero' : profit > 0 ? 'positive' : profit < 0 ? 'negative' : 'zero';
+                                                        return (
+                                                            <React.Fragment>
+                                                                <td style={{ padding: '8px' }}>
+                                                                    <label className={cpClass}>
+                                                                        <span className="currency">£</span>
+                                                                        <input
+                                                                            type="number"
+                                                                            inputMode="decimal"
+                                                                            step="0.01"
+                                                                            min="0"
+                                                                            placeholder="0.00"
+                                                                            value={cpValue}
+                                                                            disabled={priceSavingId === b.id}
+                                                                            onChange={e => setPriceDraftCustomer(prev => ({ ...prev, [b.id]: e.target.value }))}
+                                                                            onBlur={e => {
+                                                                                const v = e.target.value;
+                                                                                const oldVal = cpRaw != null ? String(cpRaw) : '';
+                                                                                if (v !== oldVal) commitPrice(b.id, 'Customer Price', v);
+                                                                                setPriceDraftCustomer(prev => { const n = { ...prev }; delete n[b.id]; return n; });
+                                                                            }}
+                                                                            onKeyDown={e => { if (e.key === 'Enter') e.target.blur(); }}
+                                                                        />
+                                                                    </label>
+                                                                </td>
+                                                                <td style={{ padding: '8px' }}>
+                                                                    <label className={opClass}>
+                                                                        <span className="currency">£</span>
+                                                                        <input
+                                                                            type="number"
+                                                                            inputMode="decimal"
+                                                                            step="0.01"
+                                                                            min="0"
+                                                                            placeholder="0.00"
+                                                                            value={opValue}
+                                                                            disabled={priceSavingId === b.id}
+                                                                            onChange={e => setPriceDraftOperator(prev => ({ ...prev, [b.id]: e.target.value }))}
+                                                                            onBlur={e => {
+                                                                                const v = e.target.value;
+                                                                                const oldVal = opRaw != null ? String(opRaw) : '';
+                                                                                if (v !== oldVal) commitPrice(b.id, 'Operator Price', v);
+                                                                                setPriceDraftOperator(prev => { const n = { ...prev }; delete n[b.id]; return n; });
+                                                                            }}
+                                                                            onKeyDown={e => { if (e.key === 'Enter') e.target.blur(); }}
+                                                                        />
+                                                                    </label>
+                                                                </td>
+                                                                <td style={{ padding: '8px' }}>
+                                                                    <span className={`profit-pill ${profitCls}`}>
+                                                                        {hasBoth ? `£${profit.toFixed(2)}` : '–'}
+                                                                    </span>
+                                                                </td>
+                                                            </React.Fragment>
+                                                        );
+                                                    })()}
                                                     <td style={{ padding: '8px' }}>{b.fields['Driver Name'] || <span style={{color:'#9ca3af'}}>–</span>}</td>
                                                     <td style={{ padding: '8px' }}>
                                                         <select value={b.fields['Driver Name'] || ''} onChange={e => handleReassignDriver(b.id, e.target.value)} style={{ padding: '4px 8px', border: '1px solid var(--line)', borderRadius: '4px', fontSize: '12px', fontFamily: 'inherit' }}>
@@ -499,14 +581,14 @@ function AdminApp() {
                                             );
                                         })}
                                         {activeBookings.length === 0 && (
-                                            <tr><td colSpan="12" style={{ padding: '30px', textAlign: 'center', color: 'var(--muted)' }}>No active bookings.</td></tr>
+                                            <tr><td colSpan="13" style={{ padding: '30px', textAlign: 'center', color: 'var(--muted)' }}>No active bookings.</td></tr>
                                         )}
                                         {activeBookings.length > 0 && jobsSearch.trim() && activeBookings.filter(b => {
                                             const q = jobsSearch.trim().toLowerCase();
                                             const f = b.fields;
                                             return [f['Booking Ref'], f['Customer Name'], f['Customer Phone'], f['Driver Name'], f['Return Driver Name'], f['Operator'], f['Customer Email'], f['Home Address'], f['Status']].some(v => v && String(v).toLowerCase().includes(q));
                                         }).length === 0 && (
-                                            <tr><td colSpan="12" style={{ padding: '30px', textAlign: 'center', color: 'var(--muted)' }}>No bookings match "{jobsSearch}".</td></tr>
+                                            <tr><td colSpan="13" style={{ padding: '30px', textAlign: 'center', color: 'var(--muted)' }}>No bookings match "{jobsSearch}".</td></tr>
                                         )}
                                     </tbody>
                                 </table>

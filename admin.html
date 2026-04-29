@@ -87,6 +87,62 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
         .loading { text-align: center; padding: 40px; color: var(--muted); }
 
+        /* Always-visible price inputs in the jobs table — must be unmissable */
+        .price-cell {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: #fffbeb;
+            border: 2px solid var(--amber);
+            border-radius: 8px;
+            padding: 4px 8px;
+            min-width: 90px;
+            transition: box-shadow 0.15s ease, border-color 0.15s ease;
+        }
+        .price-cell.empty {
+            background: #fef2f2;
+            border-color: #fca5a5;
+        }
+        .price-cell.saved {
+            background: #dcfce7;
+            border-color: #16a34a;
+        }
+        .price-cell:focus-within {
+            border-color: var(--amber-deep);
+            box-shadow: 0 0 0 3px rgba(230, 178, 75, 0.25);
+        }
+        .price-cell .currency {
+            font-weight: 700;
+            color: var(--amber-deep);
+            font-size: 14px;
+            line-height: 1;
+        }
+        .price-cell input {
+            border: none;
+            outline: none;
+            background: transparent;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--navy-ink);
+            font-family: inherit;
+            width: 100%;
+            padding: 4px 0;
+            min-width: 50px;
+        }
+        .price-cell input::placeholder { color: #9ca3af; font-weight: 400; }
+        .profit-pill {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 13px;
+            min-width: 60px;
+            text-align: center;
+        }
+        .profit-pill.positive { background: #dcfce7; color: #15803d; }
+        .profit-pill.zero { background: #f3f4f6; color: #6b7280; }
+        .profit-pill.negative { background: #fee2e2; color: #b91c1c; }
+
         @media (max-width: 600px) {
             .header {
                 flex-direction: column !important;
