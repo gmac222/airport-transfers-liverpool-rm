@@ -174,7 +174,7 @@ module.exports = async (req, res) => {
             const priceTouched = fields['Customer Price'] !== undefined ||
                                  fields['Operator Price'] !== undefined ||
                                  fields['Total Price'] !== undefined;
-            if (fields['Driver Name'] !== undefined || fields['Return Driver Name'] !== undefined || priceTouched) {
+            if (fields['Driver Name'] !== undefined || fields['Return Driver Name'] !== undefined || fields['Status'] !== undefined || priceTouched) {
                 try {
                     const existingRes = await fetch(url, {
                         headers: { 'Authorization': `Bearer ${AIRTABLE_API_KEY}` }
@@ -321,6 +321,18 @@ module.exports = async (req, res) => {
                         console.log(`Customer notified of first-time driver allocation post-payment: ${newDriverName}`);
                     }
                 }
+            }
+
+            // ─── Step 3c: Customer declined the booking → notify admins ────
+            // Fires when the Status field has just transitioned to 'Declined'.
+            // We compare against oldRecord['Status'] so we don't re-spam if
+            // an admin patches an already-declined booking later.
+            if (fields['Status'] === 'Declined' && oldRecord['Status'] !== 'Declined') {
+                const ADMIN_NUMBERS = ['+447398233859', '+447746899644']; // Graham, Roy
+                const price = rec['Customer Price'] || rec['Total Price'];
+                const adminMsg = `RM TRANSFERS – Booking DECLINED by customer\n\nRef: ${rec['Booking Ref'] || '—'}\nCustomer: ${rec['Customer Name'] || '—'}\nPhone: ${rec['Customer Phone'] || '—'}\nQuote: £${price ?? '—'}\nPickup: ${rec['Home Address'] || '—'}\nDate: ${fmtUKDate(rec['Outbound Date'])} at ${rec['Outbound Time'] || '—'}\n\nOpen: https://airporttaxitransfersliverpool.co.uk/admin.html?ref=${rec['Booking Ref'] || ''}`;
+                ADMIN_NUMBERS.forEach(n => sendSms(n, adminMsg));
+                console.log(`Admins notified of declined booking: ${rec['Booking Ref']}`);
             }
 
             // ─── Step 4: Return driver notifications ──────────────────────────
