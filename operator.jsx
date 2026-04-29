@@ -334,6 +334,44 @@ function AdminApp() {
     const [driverEditForm, setDriverEditForm] = useState({});
     const [isSavingDriver, setIsSavingDriver] = useState(false);
 
+    // Operator's own profile (for Default Driver preference)
+    const [myOperator, setMyOperator] = useState(null);
+    const [savingDefaultDriver, setSavingDefaultDriver] = useState(false);
+
+    const fetchMyOperator = () => {
+        if (!operatorName) return;
+        fetch('/api/operators?name=' + encodeURIComponent(operatorName))
+            .then(r => r.json())
+            .then(data => {
+                const me = (data.operators || [])[0];
+                if (me) setMyOperator(me);
+            })
+            .catch(err => console.error('Failed to fetch operator profile:', err));
+    };
+
+    useEffect(() => {
+        if (isLoggedIn && operatorName) fetchMyOperator();
+    }, [isLoggedIn, operatorName]);
+
+    const saveDefaultDriver = async (driverName) => {
+        if (!myOperator) return;
+        setSavingDefaultDriver(true);
+        try {
+            const res = await fetch('/api/operators', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: myOperator.id, fields: { 'Default Driver': driverName || '' } })
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            setMyOperator({ ...myOperator, defaultDriver: driverName || '' });
+        } catch (err) {
+            alert('Could not save default driver: ' + err.message);
+        } finally {
+            setSavingDefaultDriver(false);
+        }
+    };
+
     const openEditDriverModal = (driver) => {
         setEditingDriverId(driver.id);
         setDriverEditForm({
@@ -469,6 +507,48 @@ function AdminApp() {
 
     // Operator allocates a driver to a booking that's been routed to them.
     // Quoting and payment are owned by the admin portal.
+    // Quick-assign a driver to a booking from the job card. No modal,
+    // no edit step — just a one-PATCH change to Driver Name + Phone.
+    const handleQuickAssignDriver = async (bookingId, driverName) => {
+        const matched = driversList.find(d => d.name === driverName);
+        const fields = {
+            'Driver Name': driverName || '',
+            'Driver Phone': matched ? (matched.phone || '') : ''
+        };
+        try {
+            const res = await fetch('/api/booking', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: bookingId, fields })
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            fetchBookings();
+        } catch (err) {
+            alert('Could not assign driver: ' + err.message);
+        }
+    };
+
+    const handleQuickAssignReturnDriver = async (bookingId, driverName) => {
+        const matched = driversList.find(d => d.name === driverName);
+        const fields = {
+            'Return Driver Name': driverName || '',
+            'Return Driver Phone': matched ? (matched.phone || '') : ''
+        };
+        try {
+            const res = await fetch('/api/booking', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: bookingId, fields })
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            fetchBookings();
+        } catch (err) {
+            alert('Could not assign return driver: ' + err.message);
+        }
+    };
+
     const handleAssignDriver = (id) => {
         const driverName = driverNames[id];
         const driverPhone = driverPhones[id];
@@ -1025,6 +1105,29 @@ function AdminApp() {
                     </button>
                 </div>
 
+                {/* Default driver picker — auto-assigned to new dispatched bookings. */}
+                {myOperator && (
+                    <div style={{ background: '#fffbeb', border: '1px solid var(--amber)', borderRadius: '10px', padding: '14px 16px', marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                            <div>
+                                <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--amber-deep)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Default Driver</div>
+                                <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '2px' }}>New dispatched jobs are auto-assigned to this driver. You can swap drivers per-job afterwards.</div>
+                            </div>
+                            {savingDefaultDriver && <span style={{ fontSize: '12px', color: 'var(--muted)' }}>Saving…</span>}
+                        </div>
+                        <select
+                            value={myOperator.defaultDriver || ''}
+                            disabled={savingDefaultDriver}
+                            onChange={e => saveDefaultDriver(e.target.value)}
+                            style={{ width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--amber)', background: 'white', fontFamily: 'inherit', fontSize: '16px', boxSizing: 'border-box', fontWeight: 600 }}>
+                            <option value="">No default — assign manually each time</option>
+                            {driversList
+                                .filter(d => d.name !== 'Select a driver...' && d.name !== 'Custom Driver')
+                                .map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
+                        </select>
+                    </div>
+                )}
+
                 {/* Mobile-friendly card list (hidden on tablet+) */}
                 <div className="drivers-cards" style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
                     {rows.length === 0 && (
@@ -1489,13 +1592,37 @@ function AdminApp() {
                                             )}
 
                                             {fields['Driver Name'] && (
-                                                <div style={{background: '#fffbf0', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--amber)', display: 'flex', flexDirection: 'column', gap: '8px'}}>
-                                                    <span style={{fontSize: '14px'}}>Outbound Driver: {fields['Driver Name']} {fields['Driver Phone'] ? `(${fields['Driver Phone']})` : ''}</span>
+                                                <div style={{background: '#fffbf0', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--amber)', display: 'flex', flexDirection: 'column', gap: '10px'}}>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                        <span style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--muted)', fontWeight: 700, letterSpacing: '0.04em' }}>Driver</span>
+                                                        <select
+                                                            value={fields['Driver Name'] || ''}
+                                                            onChange={e => handleQuickAssignDriver(id, e.target.value)}
+                                                            style={{ width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--line)', fontFamily: 'inherit', fontSize: '16px', boxSizing: 'border-box', fontWeight: 600 }}>
+                                                            <option value="">No driver</option>
+                                                            {driversList
+                                                                .filter(d => d.name !== 'Select a driver...' && d.name !== 'Custom Driver')
+                                                                .map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
+                                                        </select>
+                                                        {fields['Driver Phone'] && <span style={{ fontSize: '12px', color: 'var(--muted)' }}>📞 {fields['Driver Phone']}</span>}
+                                                    </div>
                                                     {fields['Trip Type'] === 'return' && (
-                                                        <span style={{fontSize: '14px', color: '#7c3aed'}}>Return Driver: {fields['Return Driver Name'] || fields['Driver Name']} {fields['Return Driver Phone'] ? `(${fields['Return Driver Phone']})` : fields['Driver Phone'] ? `(${fields['Driver Phone']})` : ''}</span>
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', borderTop: '1px dashed #e2e8f0', paddingTop: '10px' }}>
+                                                            <span style={{ fontSize: '11px', textTransform: 'uppercase', color: '#7c3aed', fontWeight: 700, letterSpacing: '0.04em' }}>🔄 Return Driver</span>
+                                                            <select
+                                                                value={fields['Return Driver Name'] || ''}
+                                                                onChange={e => handleQuickAssignReturnDriver(id, e.target.value)}
+                                                                style={{ width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: '6px', border: '1px solid #c4b5fd', background: '#faf5ff', fontFamily: 'inherit', fontSize: '16px', boxSizing: 'border-box', fontWeight: 600 }}>
+                                                                <option value="">Same as outbound</option>
+                                                                {driversList
+                                                                    .filter(d => d.name !== 'Select a driver...' && d.name !== 'Custom Driver')
+                                                                    .map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
+                                                            </select>
+                                                            {fields['Return Driver Phone'] && <span style={{ fontSize: '12px', color: 'var(--muted)' }}>📞 {fields['Return Driver Phone']}</span>}
+                                                        </div>
                                                     )}
-                                                    <div style={{ padding: '10px', background: '#f3f4f6', borderRadius: '6px', fontSize: '12px', color: 'var(--muted)', textAlign: 'center', marginTop: '4px' }}>
-                                                        Driver allocated. The job will be confirmed by admin.
+                                                    <div style={{ padding: '8px 10px', background: '#f3f4f6', borderRadius: '6px', fontSize: '12px', color: 'var(--muted)', textAlign: 'center' }}>
+                                                        You can change the driver any time. Admin confirms payment separately.
                                                     </div>
                                                 </div>
                                             )}
@@ -1519,8 +1646,34 @@ function AdminApp() {
                                             </button>
                                         </div>
                                     ) : (
-                                        <div className="job-actions" style={{background: 'var(--cream)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--line)', display: 'flex', flexDirection: 'column', gap: '8px'}}>
-                                            <span style={{fontSize: '14px', fontWeight: 600}}>Driver: {fields['Driver Name']} {fields['Driver Phone'] ? `(${fields['Driver Phone']})` : ''}</span>
+                                        <div className="job-actions" style={{background: 'var(--cream)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--line)', display: 'flex', flexDirection: 'column', gap: '10px'}}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                <span style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--muted)', fontWeight: 700, letterSpacing: '0.04em' }}>Driver</span>
+                                                <select
+                                                    value={fields['Driver Name'] || ''}
+                                                    onChange={e => handleQuickAssignDriver(id, e.target.value)}
+                                                    style={{ width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--line)', fontFamily: 'inherit', fontSize: '16px', boxSizing: 'border-box', fontWeight: 600 }}>
+                                                    <option value="">No driver</option>
+                                                    {driversList
+                                                        .filter(d => d.name !== 'Select a driver...' && d.name !== 'Custom Driver')
+                                                        .map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
+                                                </select>
+                                                {fields['Driver Phone'] && <span style={{ fontSize: '12px', color: 'var(--muted)' }}>📞 {fields['Driver Phone']}</span>}
+                                            </div>
+                                            {fields['Trip Type'] === 'return' && (
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', borderTop: '1px dashed #e2e8f0', paddingTop: '10px' }}>
+                                                    <span style={{ fontSize: '11px', textTransform: 'uppercase', color: '#7c3aed', fontWeight: 700, letterSpacing: '0.04em' }}>🔄 Return Driver</span>
+                                                    <select
+                                                        value={fields['Return Driver Name'] || ''}
+                                                        onChange={e => handleQuickAssignReturnDriver(id, e.target.value)}
+                                                        style={{ width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: '6px', border: '1px solid #c4b5fd', background: '#faf5ff', fontFamily: 'inherit', fontSize: '16px', boxSizing: 'border-box', fontWeight: 600 }}>
+                                                        <option value="">Same as outbound</option>
+                                                        {driversList
+                                                            .filter(d => d.name !== 'Select a driver...' && d.name !== 'Custom Driver')
+                                                            .map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
+                                                    </select>
+                                                </div>
+                                            )}
                                             <div style={{ display: 'flex', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
                                                 <button onClick={() => handleDirectSMS(record, 'send-confirmation')} style={{ flex: '1 1 130px', minWidth: 0, padding: '10px 8px', background: 'white', border: '1px solid #10b981', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', color: '#047857', fontWeight: 'bold' }}>
                                                     Resend Driver Details to Customer

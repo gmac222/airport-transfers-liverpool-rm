@@ -369,9 +369,11 @@ module.exports = async (req, res) => {
                 }
             }
 
-            // ─── Step 3b-bis: Dispatched To Operator just flipped on → SMS the operator
-            // Fires on the false→true transition only. We look up the
-            // assigned operator's phone in the Operators table.
+            // ─── Step 3b-bis: Dispatched To Operator just flipped on
+            // - SMS the operator
+            // - Auto-assign their Default Driver (if set) when the booking
+            //   doesn't already have a driver. The operator can swap them
+            //   afterwards from their portal.
             if (fields['Dispatched To Operator'] === true && oldRecord['Dispatched To Operator'] !== true) {
                 const opName = rec['Operator'] || oldRecord['Operator'];
                 if (opName) {
@@ -381,6 +383,33 @@ module.exports = async (req, res) => {
                         const opData = await opRes.json();
                         const opRecord = opData.records && opData.records[0];
                         const opPhone = opRecord && formatPhone(opRecord.fields['Phone']);
+                        const defaultDriver = opRecord && opRecord.fields['Default Driver'];
+
+                        // Auto-assign default driver if booking has none yet.
+                        if (defaultDriver && !rec['Driver Name']) {
+                            try {
+                                const drvUrl = `https://api.airtable.com/v0/${BASE_ID}/tblgM0WSDVJUbbjS2?filterByFormula=` + encodeURIComponent(`AND({Name}='${defaultDriver.replace(/'/g, "\\'")}', {Operator}='${opName.replace(/'/g, "\\'")}')`);
+                                const drvRes = await fetch(drvUrl, { headers: { 'Authorization': `Bearer ${AIRTABLE_API_KEY}` } });
+                                const drvData = await drvRes.json();
+                                const drvRecord = drvData.records && drvData.records[0];
+                                const drvPhoneRaw = drvRecord && drvRecord.fields['Phone'];
+                                if (drvRecord) {
+                                    await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}/${id}`, {
+                                        method: 'PATCH',
+                                        headers: { 'Authorization': `Bearer ${AIRTABLE_API_KEY}`, 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ fields: { 'Driver Name': defaultDriver, 'Driver Phone': drvPhoneRaw || '' } })
+                                    });
+                                    rec['Driver Name'] = defaultDriver;
+                                    rec['Driver Phone'] = drvPhoneRaw || '';
+                                    console.log(`Auto-assigned default driver ${defaultDriver} to ${rec['Booking Ref']}`);
+                                } else {
+                                    console.warn(`Default driver ${defaultDriver} not found for operator ${opName} — skipping auto-assign.`);
+                                }
+                            } catch (drvErr) {
+                                console.error('Default-driver lookup failed:', drvErr);
+                            }
+                        }
+
                         if (opPhone) {
                             const isReturn = (rec['Trip Type'] || '') === 'return';
                             const dispatchMsg = `RM TRANSFERS – New Job Dispatched\n\nA new ${isReturn ? 'return' : 'one-way'} booking has been added to your operator portal.\n\nRef: ${rec['Booking Ref'] || '—'}\nDate: ${fmtUKDate(rec['Outbound Date'])} at ${rec['Outbound Time'] || '—'}\nAirport: ${rec['Airport'] || '—'}\nPassengers/Bags: ${rec['Passengers'] || '?'} / ${rec['Luggage'] || '?'}\n\nAllocate a driver here: https://airporttaxitransfersliverpool.co.uk/operator.html?ref=${rec['Booking Ref'] || ''}`;

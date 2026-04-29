@@ -2,7 +2,7 @@ module.exports = async (req, res) => {
     // CORS headers
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,DELETE,OPTIONS');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PATCH,DELETE,OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
 
     if (req.method === 'OPTIONS') {
@@ -18,10 +18,15 @@ module.exports = async (req, res) => {
         return res.status(500).json({ error: 'Airtable API key is not configured.' });
     }
 
-    // GET – list all operators
+    // GET – list operators (optionally ?name=Foo for a single record)
     if (req.method === 'GET') {
         try {
-            const url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}`;
+            const name = (req.query.name || '').toString().trim();
+            let url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}`;
+            if (name) {
+                const safe = name.replace(/'/g, "\\'");
+                url += '?filterByFormula=' + encodeURIComponent(`{Name}='${safe}'`);
+            }
             const response = await fetch(url, {
                 headers: { 'Authorization': `Bearer ${AIRTABLE_API_KEY}` }
             });
@@ -37,13 +42,41 @@ module.exports = async (req, res) => {
                 name: record.fields['Name'] || 'Unnamed',
                 username: record.fields['Username'] || '',
                 phone: record.fields['Phone'] || '',
-                email: record.fields['Email'] || ''
+                email: record.fields['Email'] || '',
+                defaultDriver: record.fields['Default Driver'] || ''
             }));
 
             return res.status(200).json({ operators });
         } catch (error) {
             console.error(error);
             return res.status(500).json({ error: 'Internal server error while fetching operators' });
+        }
+    }
+
+    // PATCH – update an operator (operator self-service via the portal)
+    if (req.method === 'PATCH') {
+        const { id, fields } = req.body || {};
+        if (!id || !fields) {
+            return res.status(400).json({ error: 'Missing operator id or fields' });
+        }
+        try {
+            const allowed = ['Name', 'Phone', 'Email', 'Default Driver'];
+            const safeFields = {};
+            for (const k of allowed) if (fields[k] !== undefined) safeFields[k] = fields[k];
+            const r = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}/${id}`, {
+                method: 'PATCH',
+                headers: { 'Authorization': `Bearer ${AIRTABLE_API_KEY}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fields: safeFields })
+            });
+            const data = await r.json();
+            if (!r.ok) {
+                const msg = (data.error && (data.error.message || data.error.type)) || `Airtable ${r.status}`;
+                return res.status(r.status).json({ error: msg });
+            }
+            return res.status(200).json({ success: true, operator: data });
+        } catch (err) {
+            console.error('operators PATCH error:', err);
+            return res.status(500).json({ error: err.message });
         }
     }
 
