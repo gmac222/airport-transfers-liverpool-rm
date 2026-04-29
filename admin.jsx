@@ -20,6 +20,8 @@ function FocusedJobCard({
     priceDraftCustomer, priceDraftOperator,
     setPriceDraftCustomer, setPriceDraftOperator,
     priceSavingId, priceSavedFlash, commitPrice,
+    paymentLinkDraft, setPaymentLinkDraft,
+    paymentLinkSavingId, paymentLinkSavedFlash, commitPaymentLink,
     handleReassignDriver, handleReassignReturnDriver, handleReassignSingle,
     handleSendQuote, sendingQuote,
     onClose, onLogout
@@ -138,6 +140,47 @@ function FocusedJobCard({
                             <span style={{ fontSize: '12px', textTransform: 'uppercase', color: 'var(--muted)', fontWeight: 700 }}>Profit</span>
                             <span className={`profit-pill ${profitCls}`}>{hasBothPrices ? `£${profit.toFixed(2)}` : '–'}</span>
                         </div>
+                        {(() => {
+                            const plRaw = f['Payment Link'];
+                            const plDraft = paymentLinkDraft[booking.id];
+                            const plValue = plDraft !== undefined ? plDraft : (plRaw || '');
+                            const plFlashed = !!paymentLinkSavedFlash[booking.id];
+                            const plFilled = plRaw && String(plRaw).trim();
+                            const plBorder = plFlashed ? '#16a34a' : (plFilled ? 'var(--amber)' : '#fca5a5');
+                            const plBg = plFlashed ? '#dcfce7' : (plFilled ? '#fffbeb' : '#fef2f2');
+                            return (
+                                <div style={{ marginTop: '4px' }}>
+                                    <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--amber-deep)', textTransform: 'uppercase', marginBottom: '4px' }}>Payment Link (Revolut, etc.)</div>
+                                    <input
+                                        type="url"
+                                        inputMode="url"
+                                        placeholder="Paste payment link here…"
+                                        value={plValue}
+                                        disabled={paymentLinkSavingId === booking.id}
+                                        onChange={e => setPaymentLinkDraft(prev => ({ ...prev, [booking.id]: e.target.value }))}
+                                        onBlur={e => {
+                                            const v = e.target.value;
+                                            const old = plRaw || '';
+                                            if (v !== old) commitPaymentLink(booking.id, v);
+                                            setPaymentLinkDraft(prev => { const n = { ...prev }; delete n[booking.id]; return n; });
+                                        }}
+                                        onKeyDown={e => { if (e.key === 'Enter') e.target.blur(); }}
+                                        style={{
+                                            width: '100%',
+                                            padding: '12px',
+                                            border: `2px solid ${plBorder}`,
+                                            background: plBg,
+                                            borderRadius: '8px',
+                                            fontFamily: 'inherit',
+                                            fontSize: '14px',
+                                            color: 'var(--navy-ink)',
+                                            outline: 'none',
+                                            boxSizing: 'border-box'
+                                        }}
+                                    />
+                                </div>
+                            );
+                        })()}
                     </div>
 
                     {(() => {
@@ -166,7 +209,7 @@ function FocusedJobCard({
                                         ? `Quote already sent (${status})`
                                         : cpRaw == null || Number(cpRaw) <= 0
                                             ? 'Enter Customer Price first'
-                                            : `Send Quote — £${Number(cpRaw).toFixed(2)} to Customer`}
+                                            : `Send Quote to Customer — £${Number(cpRaw).toFixed(2)}`}
                             </button>
                         );
                     })()}
@@ -277,6 +320,32 @@ function AdminApp() {
     // Send-quote state for the focused job card
     const [sendingQuote, setSendingQuote] = useState(false);
 
+    // Payment link drafts (per booking id) — same blur-to-save pattern as prices
+    const [paymentLinkDraft, setPaymentLinkDraft] = useState({});
+    const [paymentLinkSavingId, setPaymentLinkSavingId] = useState(null);
+    const [paymentLinkSavedFlash, setPaymentLinkSavedFlash] = useState({});
+
+    const commitPaymentLink = async (bookingId, rawValue) => {
+        const value = (rawValue ?? '').toString().trim();
+        setPaymentLinkSavingId(bookingId);
+        try {
+            const res = await fetch('/api/booking', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: bookingId, fields: { 'Payment Link': value } })
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            setPaymentLinkSavedFlash(prev => ({ ...prev, [bookingId]: Date.now() }));
+            setTimeout(() => setPaymentLinkSavedFlash(prev => { const n = { ...prev }; delete n[bookingId]; return n; }), 1500);
+            fetchBookings();
+        } catch (err) {
+            alert('Could not save Payment Link: ' + err.message);
+        } finally {
+            setPaymentLinkSavingId(null);
+        }
+    };
+
     const handleSendQuote = async (record) => {
         const f = record.fields;
         const cp = f['Customer Price'];
@@ -317,6 +386,7 @@ function AdminApp() {
                         'Booking Ref': f['Booking Ref'],
                         'Customer Name': f['Customer Name'],
                         'Customer Phone': f['Customer Phone'],
+                        'Customer Price': Number(cp),
                         'Total Price': Number(cp)
                     }
                 })
@@ -609,6 +679,11 @@ function AdminApp() {
                 priceSavingId={priceSavingId}
                 priceSavedFlash={priceSavedFlash}
                 commitPrice={commitPrice}
+                paymentLinkDraft={paymentLinkDraft}
+                setPaymentLinkDraft={setPaymentLinkDraft}
+                paymentLinkSavingId={paymentLinkSavingId}
+                paymentLinkSavedFlash={paymentLinkSavedFlash}
+                commitPaymentLink={commitPaymentLink}
                 handleReassignDriver={handleReassignDriver}
                 handleReassignReturnDriver={handleReassignReturnDriver}
                 handleReassignSingle={handleReassignSingle}
@@ -772,6 +847,7 @@ function AdminApp() {
                                             <th style={{ padding: '8px', minWidth: '110px', color: 'var(--amber-deep)', fontWeight: 700 }}>Customer £</th>
                                             <th style={{ padding: '8px', minWidth: '110px', color: 'var(--amber-deep)', fontWeight: 700 }}>Operator £</th>
                                             <th style={{ padding: '8px', minWidth: '80px' }}>Profit</th>
+                                            <th style={{ padding: '8px', minWidth: '180px', color: 'var(--amber-deep)', fontWeight: 700 }}>Payment Link</th>
                                             <th style={{ padding: '8px' }}>Outbound Driver</th>
                                             <th style={{ padding: '8px' }}>Reassign Driver</th>
                                             <th style={{ padding: '8px' }}>Return Driver</th>
@@ -877,6 +953,47 @@ function AdminApp() {
                                                                         {hasBoth ? `£${profit.toFixed(2)}` : '–'}
                                                                     </span>
                                                                 </td>
+                                                                {(() => {
+                                                                    const plRaw = b.fields['Payment Link'];
+                                                                    const plDraft = paymentLinkDraft[b.id];
+                                                                    const plValue = plDraft !== undefined ? plDraft : (plRaw || '');
+                                                                    const plFlashed = !!paymentLinkSavedFlash[b.id];
+                                                                    const plFilled = plRaw && String(plRaw).trim();
+                                                                    const plBorder = plFlashed ? '#16a34a' : (plFilled ? 'var(--amber)' : '#fca5a5');
+                                                                    const plBg = plFlashed ? '#dcfce7' : (plFilled ? '#fffbeb' : '#fef2f2');
+                                                                    return (
+                                                                        <td style={{ padding: '8px' }}>
+                                                                            <input
+                                                                                type="url"
+                                                                                inputMode="url"
+                                                                                placeholder="Paste link…"
+                                                                                value={plValue}
+                                                                                disabled={paymentLinkSavingId === b.id}
+                                                                                onChange={e => setPaymentLinkDraft(prev => ({ ...prev, [b.id]: e.target.value }))}
+                                                                                onBlur={e => {
+                                                                                    const v = e.target.value;
+                                                                                    const old = plRaw || '';
+                                                                                    if (v !== old) commitPaymentLink(b.id, v);
+                                                                                    setPaymentLinkDraft(prev => { const n = { ...prev }; delete n[b.id]; return n; });
+                                                                                }}
+                                                                                onKeyDown={e => { if (e.key === 'Enter') e.target.blur(); }}
+                                                                                style={{
+                                                                                    width: '100%',
+                                                                                    minWidth: '170px',
+                                                                                    padding: '6px 8px',
+                                                                                    border: `2px solid ${plBorder}`,
+                                                                                    background: plBg,
+                                                                                    borderRadius: '6px',
+                                                                                    fontSize: '12px',
+                                                                                    fontFamily: 'inherit',
+                                                                                    color: 'var(--navy-ink)',
+                                                                                    outline: 'none',
+                                                                                    boxSizing: 'border-box'
+                                                                                }}
+                                                                            />
+                                                                        </td>
+                                                                    );
+                                                                })()}
                                                             </React.Fragment>
                                                         );
                                                     })()}
@@ -932,7 +1049,7 @@ function AdminApp() {
                                                                         cursor: canSend && !sendingQuote ? 'pointer' : 'not-allowed',
                                                                         whiteSpace: 'nowrap'
                                                                     }}>
-                                                                    {sendingQuote ? '…' : sentAlready ? status : cp == null ? 'No price' : `Send £${Number(cp).toFixed(0)}`}
+                                                                    {sendingQuote ? '…' : sentAlready ? status : cp == null ? 'No price' : `Send Quote to Customer (£${Number(cp).toFixed(0)})`}
                                                                 </button>
                                                             );
                                                         })()}
@@ -941,14 +1058,14 @@ function AdminApp() {
                                             );
                                         })}
                                         {activeBookings.length === 0 && (
-                                            <tr><td colSpan="14" style={{ padding: '30px', textAlign: 'center', color: 'var(--muted)' }}>No active bookings.</td></tr>
+                                            <tr><td colSpan="15" style={{ padding: '30px', textAlign: 'center', color: 'var(--muted)' }}>No active bookings.</td></tr>
                                         )}
                                         {activeBookings.length > 0 && jobsSearch.trim() && activeBookings.filter(b => {
                                             const q = jobsSearch.trim().toLowerCase();
                                             const f = b.fields;
                                             return [f['Booking Ref'], f['Customer Name'], f['Customer Phone'], f['Driver Name'], f['Return Driver Name'], f['Operator'], f['Customer Email'], f['Home Address'], f['Status']].some(v => v && String(v).toLowerCase().includes(q));
                                         }).length === 0 && (
-                                            <tr><td colSpan="14" style={{ padding: '30px', textAlign: 'center', color: 'var(--muted)' }}>No bookings match "{jobsSearch}".</td></tr>
+                                            <tr><td colSpan="15" style={{ padding: '30px', textAlign: 'center', color: 'var(--muted)' }}>No bookings match "{jobsSearch}".</td></tr>
                                         )}
                                     </tbody>
                                 </table>

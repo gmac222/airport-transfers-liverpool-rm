@@ -46,7 +46,7 @@ export default async function handler(req, res) {
         messages.push({
             to: formattedCustomerPhone,
             from: 'RMTransfers',
-            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nGood news — we can cover your RM Transfers booking (${fields['Booking Ref']}) for £${fields['Total Price']}.\n\nPlease go to https://airporttaxitransfersliverpool.co.uk/portal.html?ref=${fields['Booking Ref']} to accept this price or decline if it doesn't suit.${SUPPORT_LINE}\n\n(Please do not reply to this text)`
+            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nGood news — we can cover your RM Transfers booking (${fields['Booking Ref']}) for £${fields['Customer Price'] ?? fields['Total Price']}.\n\nPlease go to https://airporttaxitransfersliverpool.co.uk/portal.html?ref=${fields['Booking Ref']} to accept this price or decline if it doesn't suit.${SUPPORT_LINE}\n\n(Please do not reply to this text)`
         });
     }
 
@@ -56,7 +56,7 @@ export default async function handler(req, res) {
         messages.push({
             to: formattedCustomerPhone,
             from: 'RMTransfers',
-            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nThanks for accepting your quote for RM Transfers booking (${fields['Booking Ref']}).\n\nPlease complete payment of £${fields['Total Price']} here: https://airporttaxitransfersliverpool.co.uk/portal.html?ref=${fields['Booking Ref']}\n\nOnce payment clears we'll allocate a driver and send you their details.${SUPPORT_LINE}\n\n(Please do not reply to this text)`
+            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nThanks for accepting your quote for RM Transfers booking (${fields['Booking Ref']}).\n\nPlease complete payment of £${fields['Customer Price'] ?? fields['Total Price']} here: https://airporttaxitransfersliverpool.co.uk/portal.html?ref=${fields['Booking Ref']}\n\nOnce payment clears we'll allocate a driver and send you their details.${SUPPORT_LINE}\n\n(Please do not reply to this text)`
         });
     }
 

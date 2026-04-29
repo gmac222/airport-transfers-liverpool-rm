@@ -362,19 +362,25 @@ function AdminApp() {
     const handleAssignDriver = (id) => {
         const driverName = driverNames[id];
         const driverPhone = driverPhones[id];
-        const paymentLink = paymentLinks[id];
+        // Payment link now comes from the booking (set on the admin portal).
+        // Local field is only used as an override if the operator wants to
+        // tweak it before sending.
+        const localPaymentLink = paymentLinks[id];
+        const booking = bookings.find(b => b.id === id);
+        const persistedPaymentLink = booking && booking.fields['Payment Link'];
+        const paymentLink = (localPaymentLink && localPaymentLink.trim()) || persistedPaymentLink || '';
+
         if (!driverName || driverName.trim() === '') return alert('Please enter a driver name');
         if (!driverPhone || driverPhone.trim() === '') return alert('Please enter a driver phone number');
-        if (!paymentLink || paymentLink.trim() === '') return alert('Please enter a payment link');
+        if (!paymentLink || !String(paymentLink).trim()) return alert('No payment link on this booking. Add it on the admin portal first.');
 
         setAssigningId(id);
 
-        const booking = bookings.find(b => b.id === id);
         const isReturn = booking && booking.fields['Trip Type'] === 'return';
         const assignFields = {
             'Driver Name': driverName.trim(),
             'Driver Phone': driverPhone.trim(),
-            'Payment Link': paymentLink.trim()
+            'Payment Link': String(paymentLink).trim()
         };
         if (isReturn) {
             const retName = returnDriverNames[id];
@@ -405,8 +411,9 @@ function AdminApp() {
                             'Booking Ref': record.fields['Booking Ref'],
                             'Customer Name': record.fields['Customer Name'],
                             'Customer Phone': record.fields['Customer Phone'],
-                            'Payment Link': paymentLink.trim(),
-                            'Total Price': record.fields['Total Price'] || 0
+                            'Payment Link': String(paymentLink).trim(),
+                            'Customer Price': record.fields['Customer Price'] || record.fields['Total Price'] || 0,
+                            'Total Price': record.fields['Total Price'] || record.fields['Customer Price'] || 0
                         }
                     })
                 }).then(async res => {
@@ -1324,10 +1331,16 @@ function AdminApp() {
                                                         </>
                                                     )}
 
-                                                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                        <div style={{ fontSize: '12px', color: 'var(--muted)' }}>
+                                                            {fields['Payment Link']
+                                                                ? <>Payment link from admin: <a href={fields['Payment Link']?.startsWith('http') ? fields['Payment Link'] : `https://${fields['Payment Link']}`} target="_blank" rel="noreferrer" style={{ color: 'var(--navy)' }}>{fields['Payment Link']}</a>. Override below if needed.</>
+                                                                : <>No payment link on this booking yet — paste one below or add it on the admin portal.</>
+                                                            }
+                                                        </div>
                                                         <input
                                                             type="url"
-                                                            placeholder="Paste Revolut Payment Link..."
+                                                            placeholder={fields['Payment Link'] ? 'Override Payment Link (optional)' : 'Paste Payment Link…'}
                                                             value={paymentLinks[id] || ''}
                                                             onChange={e => handlePaymentLinkChange(id, e.target.value)}
                                                             style={{ flex: '2 1 200px' }}
