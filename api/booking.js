@@ -46,40 +46,6 @@ module.exports = async (req, res) => {
         }
     }
 
-    // PATCH Request: Update Booking Status
-    if (req.method === 'PATCH') {
-        const { id, fields } = req.body;
-        
-        if (!id || !fields) {
-            return res.status(400).json({ error: 'Missing record id or fields' });
-        }
-
-        try {
-            const url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}/${id}`;
-            const response = await fetch(url, {
-                method: 'PATCH',
-                headers: {
-                    'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ fields, typecast: true })
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                console.error('Airtable error:', data);
-                return res.status(response.status).json({ error: data.error?.message || 'Failed to update Airtable' });
-            }
-
-            // SMS is now handled by the n8n webhook triggered from the frontend
-
-            return res.status(200).json({ booking: data });
-        } catch (error) {
-            console.error(error);
-            return res.status(500).json({ error: 'Failed to update booking' });
-        }
-    }
     // DELETE Request: Delete Booking
     if (req.method === 'DELETE') {
         const { id } = req.body;
