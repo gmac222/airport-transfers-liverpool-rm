@@ -78,6 +78,7 @@ function AdminApp() {
     const [newDriverVehicleReg, setNewDriverVehicleReg] = useState('');
     const [newDriverBadge, setNewDriverBadge] = useState('');
     const [isAddingDriver, setIsAddingDriver] = useState(false);
+    const [showAddDriver, setShowAddDriver] = useState(false);
 
     const [driverNames, setDriverNames] = useState({});
     const [driverPhones, setDriverPhones] = useState({});
@@ -380,7 +381,7 @@ function AdminApp() {
             setNewDriverVehicleType('');
             setNewDriverVehicleReg('');
             setNewDriverBadge('');
-            alert('Driver added successfully!');
+            setShowAddDriver(false);
         } catch (err) {
             alert('Error adding driver: ' + err.message);
         } finally {
@@ -958,13 +959,70 @@ function AdminApp() {
             );
         }
 
-        // Overview: all drivers grid
+        // Pre-compute the per-driver row data so both layouts share it.
+        const rows = driverEntries.map(([name, data]) => {
+            const activeJobs = data.jobs.filter(b => !['Archived', 'Cancelled'].includes(b.fields['Status']));
+            const upcoming = activeJobs
+                .filter(b => b.fields['Outbound Date'])
+                .sort((a, b) => new Date(a.fields['Outbound Date'] + 'T' + (a.fields['Outbound Time'] || '00:00')) - new Date(b.fields['Outbound Date'] + 'T' + (b.fields['Outbound Time'] || '00:00')))[0];
+            return { name, data, activeJobs, upcoming };
+        });
+
+        // Overview: drivers as cards (mobile) or table (>=768px). The
+        // mobile-card / desktop-table swap is driven by the .drivers-table
+        // / .drivers-cards CSS rules in operator.html.
         return (
             <div>
-                <h2 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '16px', color: 'var(--navy-ink)' }}>Driver Overview</h2>
-                
-                {/* Summary table */}
-                <div style={{ background: 'white', borderRadius: '12px', border: '1px solid var(--line)', overflow: 'hidden', marginBottom: '32px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
+                    <h2 style={{ fontSize: '18px', fontWeight: 700, margin: 0, color: 'var(--navy-ink)' }}>Driver Overview</h2>
+                    <button
+                        type="button"
+                        onClick={() => setShowAddDriver(true)}
+                        style={{ padding: '10px 16px', background: 'var(--amber)', color: 'var(--navy-ink)', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '14px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                        + Add Driver
+                    </button>
+                </div>
+
+                {/* Mobile-friendly card list (hidden on tablet+) */}
+                <div className="drivers-cards" style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+                    {rows.length === 0 && (
+                        <div style={{ padding: '24px', textAlign: 'center', color: 'var(--muted)', background: 'white', border: '1px solid var(--line)', borderRadius: '12px' }}>
+                            You haven't added any drivers yet. Tap <strong>+ Add Driver</strong> above.
+                        </div>
+                    )}
+                    {rows.map(({ name, data, activeJobs, upcoming }) => (
+                        <div key={name} style={{ background: 'white', border: '1px solid var(--line)', borderRadius: '10px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
+                                <div style={{ minWidth: 0 }}>
+                                    <div style={{ fontWeight: 700, fontSize: '15px', color: 'var(--navy-ink)' }}>{name}</div>
+                                    {data.phone && <div style={{ fontSize: '13px', color: 'var(--muted)' }}>📞 {data.phone}</div>}
+                                </div>
+                                <span style={{ background: activeJobs.length > 0 ? '#dcfce7' : '#f3f4f6', color: activeJobs.length > 0 ? '#166534' : '#9ca3af', padding: '3px 10px', borderRadius: '999px', fontWeight: 700, fontSize: '12px', whiteSpace: 'nowrap' }}>
+                                    {activeJobs.length} active · {data.jobs.length} total
+                                </span>
+                            </div>
+                            <div style={{ fontSize: '12px', color: 'var(--muted)' }}>
+                                {upcoming ? (
+                                    <>Next: <strong style={{ color: 'var(--navy-ink)' }}>{upcoming.fields['Booking Ref']}</strong> · {fmtUKDate(upcoming.fields['Outbound Date'])} @ {upcoming.fields['Outbound Time']}</>
+                                ) : (
+                                    <em>No upcoming jobs</em>
+                                )}
+                            </div>
+                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '4px' }}>
+                                <button onClick={() => setSelectedDriver(name)} style={{ flex: '1 1 100px', padding: '10px', background: 'white', color: 'var(--amber-deep)', border: '1px solid var(--amber)', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit' }}>View jobs</button>
+                                {data.record && data.record.id && (
+                                    <>
+                                        <button onClick={() => openEditDriverModal(data.record)} style={{ flex: '1 1 80px', padding: '10px', background: 'white', color: 'var(--navy-ink)', border: '1px solid var(--line)', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit' }}>Edit</button>
+                                        <button onClick={() => handleDeleteDriver(data.record)} style={{ flex: '1 1 80px', padding: '10px', background: 'white', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit' }}>Delete</button>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Desktop summary table (hidden on phones) */}
+                <div className="drivers-table" style={{ background: 'white', borderRadius: '12px', border: '1px solid var(--line)', overflow: 'hidden', marginBottom: '32px' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
                         <thead>
                             <tr style={{ background: 'var(--navy)', color: 'white', textAlign: 'left' }}>
@@ -977,44 +1035,33 @@ function AdminApp() {
                             </tr>
                         </thead>
                         <tbody>
-                            {driverEntries.map(([name, data], i) => {
-                                const activeJobs = data.jobs.filter(b => !['Archived', 'Cancelled'].includes(b.fields['Status']));
-                                const upcoming = activeJobs
-                                    .filter(b => b.fields['Outbound Date'])
-                                    .sort((a, b) => new Date(a.fields['Outbound Date'] + 'T' + (a.fields['Outbound Time'] || '00:00')) - new Date(b.fields['Outbound Date'] + 'T' + (b.fields['Outbound Time'] || '00:00')))[0];
-
-                                return (
-                                    <tr key={name} style={{ borderBottom: '1px solid var(--line)', background: i % 2 === 0 ? 'white' : '#fafafa' }}>
-                                        <td style={{ padding: '12px 16px', fontWeight: 600, cursor: 'pointer' }} onClick={() => setSelectedDriver(name)}>{name} <span style={{ color: 'var(--amber-deep)', fontWeight: 400, fontSize: '11px' }}>view jobs →</span></td>
-                                        <td style={{ padding: '12px 16px', color: 'var(--muted)' }}>{data.phone || '–'}</td>
-                                        <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                                            <span style={{ background: activeJobs.length > 0 ? '#dcfce7' : '#f3f4f6', color: activeJobs.length > 0 ? '#166534' : '#9ca3af', padding: '2px 10px', borderRadius: '12px', fontWeight: 600, fontSize: '13px' }}>{activeJobs.length}</span>
-                                        </td>
-                                        <td style={{ padding: '12px 16px', textAlign: 'center', color: 'var(--muted)' }}>{data.jobs.length}</td>
-                                        <td style={{ padding: '12px 16px', fontSize: '13px' }}>
-                                            {upcoming ? (
-                                                <span>
-                                                    <strong>{upcoming.fields['Booking Ref']}</strong> — {fmtUKDate(upcoming.fields['Outbound Date'])} @ {upcoming.fields['Outbound Time']}
-                                                </span>
-                                            ) : (
-                                                <span style={{ color: '#9ca3af' }}>No upcoming jobs</span>
-                                            )}
-                                        </td>
-                                        <td style={{ padding: '12px 8px', textAlign: 'right', whiteSpace: 'nowrap' }}>
-                                            {data.record && data.record.id && (
-                                                <>
-                                                    <button onClick={(e) => { e.stopPropagation(); openEditDriverModal(data.record); }} style={{ background: 'transparent', color: 'var(--amber-deep)', border: '1px solid var(--amber)', borderRadius: '6px', padding: '5px 10px', fontSize: '12px', cursor: 'pointer', fontWeight: 700, fontFamily: 'inherit', marginRight: '6px' }}>Edit</button>
-                                                    <button onClick={(e) => { e.stopPropagation(); handleDeleteDriver(data.record); }} style={{ background: 'transparent', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: '6px', padding: '5px 10px', fontSize: '12px', cursor: 'pointer', fontWeight: 700, fontFamily: 'inherit' }}>Delete</button>
-                                                </>
-                                            )}
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                            {driverEntries.length === 0 && (
-                                <tr>
-                                    <td colSpan="6" style={{ padding: '30px', textAlign: 'center', color: 'var(--muted)' }}>You haven't added any drivers yet. Use the Add Driver form on the Active Jobs view.</td>
+                            {rows.map(({ name, data, activeJobs, upcoming }, i) => (
+                                <tr key={name} style={{ borderBottom: '1px solid var(--line)', background: i % 2 === 0 ? 'white' : '#fafafa' }}>
+                                    <td style={{ padding: '12px 16px', fontWeight: 600, cursor: 'pointer' }} onClick={() => setSelectedDriver(name)}>{name} <span style={{ color: 'var(--amber-deep)', fontWeight: 400, fontSize: '11px' }}>view jobs →</span></td>
+                                    <td style={{ padding: '12px 16px', color: 'var(--muted)' }}>{data.phone || '–'}</td>
+                                    <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                                        <span style={{ background: activeJobs.length > 0 ? '#dcfce7' : '#f3f4f6', color: activeJobs.length > 0 ? '#166534' : '#9ca3af', padding: '2px 10px', borderRadius: '12px', fontWeight: 600, fontSize: '13px' }}>{activeJobs.length}</span>
+                                    </td>
+                                    <td style={{ padding: '12px 16px', textAlign: 'center', color: 'var(--muted)' }}>{data.jobs.length}</td>
+                                    <td style={{ padding: '12px 16px', fontSize: '13px' }}>
+                                        {upcoming ? (
+                                            <span><strong>{upcoming.fields['Booking Ref']}</strong> — {fmtUKDate(upcoming.fields['Outbound Date'])} @ {upcoming.fields['Outbound Time']}</span>
+                                        ) : (
+                                            <span style={{ color: '#9ca3af' }}>No upcoming jobs</span>
+                                        )}
+                                    </td>
+                                    <td style={{ padding: '12px 8px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                                        {data.record && data.record.id && (
+                                            <>
+                                                <button onClick={(e) => { e.stopPropagation(); openEditDriverModal(data.record); }} style={{ background: 'transparent', color: 'var(--amber-deep)', border: '1px solid var(--amber)', borderRadius: '6px', padding: '5px 10px', fontSize: '12px', cursor: 'pointer', fontWeight: 700, fontFamily: 'inherit', marginRight: '6px' }}>Edit</button>
+                                                <button onClick={(e) => { e.stopPropagation(); handleDeleteDriver(data.record); }} style={{ background: 'transparent', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: '6px', padding: '5px 10px', fontSize: '12px', cursor: 'pointer', fontWeight: 700, fontFamily: 'inherit' }}>Delete</button>
+                                            </>
+                                        )}
+                                    </td>
                                 </tr>
+                            ))}
+                            {rows.length === 0 && (
+                                <tr><td colSpan="6" style={{ padding: '30px', textAlign: 'center', color: 'var(--muted)' }}>You haven't added any drivers yet.</td></tr>
                             )}
                         </tbody>
                     </table>
@@ -1155,8 +1202,8 @@ function AdminApp() {
                 )}
 
                 {viewMode !== 'calendar' && (
-                    <div style={{ marginBottom: '20px', display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-                        <div style={{ flex: '1 1 280px', minWidth: 0 }}>
+                    <div style={{ marginBottom: '20px', display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+                        <div style={{ flex: '1 1 240px', minWidth: 0 }}>
                             <input
                                 type="text"
                                 placeholder="Search by ref, name, or phone..."
@@ -1165,66 +1212,14 @@ function AdminApp() {
                                 style={{ width: '100%', minWidth: 0, padding: '12px 14px', borderRadius: '8px', border: '1px solid var(--line)', fontFamily: 'inherit', fontSize: '16px', boxSizing: 'border-box' }}
                             />
                         </div>
-                        
-                        <form onSubmit={handleAddDriver} className="add-driver-form" style={{ flex: '1 1 320px', minWidth: 0, display: 'grid', gap: '8px', background: 'var(--cream)', padding: '12px 14px', borderRadius: '8px', border: '1px solid var(--line)', boxSizing: 'border-box' }}>
-                            <input
-                                type="text"
-                                placeholder="Driver Name"
-                                value={newDriverName}
-                                onChange={e => setNewDriverName(e.target.value)}
-                                style={{ width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--line)', fontFamily: 'inherit', fontSize: '16px', boxSizing: 'border-box' }}
-                                required
-                            />
-                            <input
-                                type="tel"
-                                placeholder="Phone Number"
-                                value={newDriverPhone}
-                                onChange={e => setNewDriverPhone(e.target.value)}
-                                style={{ width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--line)', fontFamily: 'inherit', fontSize: '16px', boxSizing: 'border-box' }}
-                            />
-                            <input
-                                type="text"
-                                placeholder="Portal Username"
-                                value={newDriverUsername}
-                                onChange={e => setNewDriverUsername(e.target.value)}
-                                autoCapitalize="none"
-                                autoCorrect="off"
-                                style={{ width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--line)', fontFamily: 'inherit', fontSize: '16px', boxSizing: 'border-box' }}
-                                required
-                            />
-                            <input
-                                type="text"
-                                placeholder="Portal Password"
-                                value={newDriverPassword}
-                                onChange={e => setNewDriverPassword(e.target.value)}
-                                style={{ width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--line)', fontFamily: 'inherit', fontSize: '16px', boxSizing: 'border-box' }}
-                                required
-                            />
-                            <input
-                                type="text"
-                                placeholder="Vehicle Type (e.g. Mercedes V-Class)"
-                                value={newDriverVehicleType}
-                                onChange={e => setNewDriverVehicleType(e.target.value)}
-                                style={{ width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--line)', fontFamily: 'inherit', fontSize: '16px', boxSizing: 'border-box' }}
-                            />
-                            <input
-                                type="text"
-                                placeholder="Vehicle Registration"
-                                value={newDriverVehicleReg}
-                                onChange={e => setNewDriverVehicleReg(e.target.value.toUpperCase())}
-                                style={{ width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--line)', textTransform: 'uppercase', fontFamily: 'inherit', fontSize: '16px', boxSizing: 'border-box' }}
-                            />
-                            <input
-                                type="text"
-                                placeholder="Driver Badge Number"
-                                value={newDriverBadge}
-                                onChange={e => setNewDriverBadge(e.target.value)}
-                                style={{ width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--line)', fontFamily: 'inherit', fontSize: '16px', boxSizing: 'border-box', gridColumn: '1 / -1' }}
-                            />
-                            <button type="submit" disabled={isAddingDriver} className="btn btn-primary" style={{ gridColumn: '1 / -1', padding: '12px 16px', fontSize: '15px', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer' }}>
-                                {isAddingDriver ? 'Adding...' : 'Add Driver'}
+                        {viewMode === 'drivers' && (
+                            <button
+                                type="button"
+                                onClick={() => setShowAddDriver(true)}
+                                style={{ padding: '12px 18px', background: 'var(--amber)', color: 'var(--navy-ink)', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '15px', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+                                + Add Driver
                             </button>
-                        </form>
+                        )}
                     </div>
                 )}
 
@@ -1716,6 +1711,32 @@ function AdminApp() {
                                 <button type="button" onClick={() => setEditingJob(null)} style={{ padding: '10px 20px', background: 'transparent', border: '1px solid var(--line)', borderRadius: '6px', cursor: 'pointer' }}>Cancel</button>
                                 <button type="submit" disabled={isSavingEdit} style={{ padding: '10px 20px', background: 'var(--amber)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
                                     {isSavingEdit ? 'Saving...' : 'Save Booking'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {showAddDriver && (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '12px' }}>
+                    <div style={{ background: 'white', padding: '18px', borderRadius: '12px', width: '100%', maxWidth: '520px', maxHeight: '92vh', overflowY: 'auto', boxSizing: 'border-box' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                            <h2 style={{ margin: 0, fontFamily: 'Lexend', fontSize: '18px' }}>Add Driver</h2>
+                            <button onClick={() => setShowAddDriver(false)} style={{ background: 'transparent', border: 'none', fontSize: '22px', cursor: 'pointer', color: 'var(--muted)' }}>×</button>
+                        </div>
+                        <form onSubmit={handleAddDriver} className="add-driver-form" style={{ display: 'grid', gap: '10px' }}>
+                            <input type="text" placeholder="Driver Name" value={newDriverName} onChange={e => setNewDriverName(e.target.value)} required style={{ width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--line)', fontFamily: 'inherit', fontSize: '16px', boxSizing: 'border-box' }} />
+                            <input type="tel" placeholder="Phone Number" value={newDriverPhone} onChange={e => setNewDriverPhone(e.target.value)} style={{ width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--line)', fontFamily: 'inherit', fontSize: '16px', boxSizing: 'border-box' }} />
+                            <input type="text" placeholder="Portal Username" value={newDriverUsername} onChange={e => setNewDriverUsername(e.target.value)} autoCapitalize="none" autoCorrect="off" required style={{ width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--line)', fontFamily: 'inherit', fontSize: '16px', boxSizing: 'border-box' }} />
+                            <input type="text" placeholder="Portal Password" value={newDriverPassword} onChange={e => setNewDriverPassword(e.target.value)} required style={{ width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--line)', fontFamily: 'inherit', fontSize: '16px', boxSizing: 'border-box' }} />
+                            <input type="text" placeholder="Vehicle Type (e.g. Mercedes V-Class)" value={newDriverVehicleType} onChange={e => setNewDriverVehicleType(e.target.value)} style={{ width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--line)', fontFamily: 'inherit', fontSize: '16px', boxSizing: 'border-box' }} />
+                            <input type="text" placeholder="Vehicle Registration" value={newDriverVehicleReg} onChange={e => setNewDriverVehicleReg(e.target.value.toUpperCase())} style={{ width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--line)', textTransform: 'uppercase', fontFamily: 'inherit', fontSize: '16px', boxSizing: 'border-box' }} />
+                            <input type="text" placeholder="Driver Badge Number" value={newDriverBadge} onChange={e => setNewDriverBadge(e.target.value)} style={{ width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--line)', fontFamily: 'inherit', fontSize: '16px', boxSizing: 'border-box', gridColumn: '1 / -1' }} />
+                            <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '4px' }}>
+                                <button type="button" onClick={() => setShowAddDriver(false)} style={{ padding: '10px 16px', background: 'white', color: 'var(--ink)', border: '1px solid var(--line)', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
+                                <button type="submit" disabled={isAddingDriver} style={{ padding: '10px 18px', background: 'var(--amber)', color: 'var(--navy-ink)', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: isAddingDriver ? 'wait' : 'pointer', fontFamily: 'inherit' }}>
+                                    {isAddingDriver ? 'Adding…' : 'Add Driver'}
                                 </button>
                             </div>
                         </form>

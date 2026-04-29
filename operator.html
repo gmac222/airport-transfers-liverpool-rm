@@ -395,6 +395,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             .add-driver-form { grid-template-columns: 1fr 1fr; }
         }
 
+        /* Drivers overview: card list on phones, table on tablet+. */
+        .drivers-table { display: none; }
+        @media (min-width: 768px) {
+            .drivers-cards { display: none !important; }
+            .drivers-table { display: block; }
+        }
+
         /* Filter chip row scrolls horizontally on phones rather than
            wrapping into a tall stack. */
         .filter-control {
@@ -458,7 +465,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <div id="root"></div>
 
-    <script type="text/babel" src="operator.jsx?v=2026-04-29-11"></script>
+    <script type="text/babel" src="operator.jsx?v=2026-04-29-12"></script>
 
     <!-- Service Worker Registration -->
     <script>
