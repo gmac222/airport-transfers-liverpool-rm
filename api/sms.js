@@ -64,10 +64,7 @@ export default async function handler(req, res) {
                   <h3 style="margin-top: 0; color: #0E2747; font-size: 18px; margin-bottom: 12px;">Your Driver Details</h3>
                   <p style="margin: 6px 0; font-size: 15px;"><strong>Driver:</strong> ${fields['Driver Name']}</p>
                   <p style="margin: 6px 0; font-size: 15px;"><strong>Contact:</strong> ${fields['Driver Phone'] || '—'}</p>
-                </div>` : `
-                <div style="background: #F3EEE4; border-left: 4px solid #C7932F; padding: 20px; border-radius: 6px; margin: 30px 0;">
-                  <p style="margin: 0; font-size: 15px;">Your driver's name and phone number will be sent to you by SMS <strong>24 hours before pickup</strong>.</p>
-                </div>`}
+                </div>` : ''}
 
                 <div style="background: #F8F9FA; border-left: 4px solid #0B1E37; padding: 20px; border-radius: 6px; margin: 30px 0;">
                   <h3 style="margin-top: 0; color: #0E2747; font-size: 18px; margin-bottom: 12px;">Trip Summary</h3>
@@ -164,7 +161,7 @@ export default async function handler(req, res) {
         messages.push({
             to: formattedCustomerPhone,
             from: 'RMTransfers',
-            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nPayment received — your RM Transfers booking (${fields['Booking Ref']}) is fully confirmed.\n\n${tripBlock}\n\nWe've also emailed your full booking confirmation. View or save your booking here: https://airporttaxitransfersliverpool.co.uk/portal.html?ref=${fields['Booking Ref']}\n(Tip: tap the share/install icon to add a shortcut to your home screen.)\n\nWe'll text you your driver's name and phone number 24 hours before pickup.\n\nYour customer support contact is Roy Medlam — call ${SUPPORT_PHONE} any time.\n\n(Please do not reply to this text)`
+            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nPayment received — your RM Transfers booking (${fields['Booking Ref']}) is fully confirmed.\n\n${tripBlock}\n\nWe've also emailed your full booking confirmation. View or save your booking here: https://airporttaxitransfersliverpool.co.uk/portal.html?ref=${fields['Booking Ref']}\n(Tip: tap the share/install icon to add a shortcut to your home screen.)\n\nYour customer support contact is Roy Medlam — call ${SUPPORT_PHONE} any time.\n\n(Please do not reply to this text)`
         });
 
         await sendConfirmationEmail();
