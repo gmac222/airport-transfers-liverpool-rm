@@ -62,106 +62,130 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         .mono { font-family: 'JetBrains Mono', monospace; }
         .h1, .h2, h3 { font-family: 'Lexend', sans-serif; }
 
+        /* Mobile-first base — phone is the canonical viewport. */
+        body { overflow-x: hidden; }
+
         .header {
             background: var(--navy-ink);
             color: #fff;
-            padding: 20px;
+            padding: 12px 14px;
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
             justify-content: space-between;
+            gap: 10px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
         }
         .header h1 {
             margin: 0;
-            font-size: 20px;
+            font-size: 17px;
         }
 
         .wrap {
+            width: 100%;
             max-width: 1400px;
             margin: 0 auto;
-            padding: 40px 20px;
+            padding: 14px 12px;
+            box-sizing: border-box;
         }
 
         .jobs-list {
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 12px;
         }
 
         .job-card {
             background: #fff;
-            border-radius: 12px;
+            border-radius: 10px;
             border: 1px solid var(--line);
-            padding: 24px;
+            padding: 14px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.02);
             display: flex;
             flex-direction: column;
+            max-width: 100%;
+            box-sizing: border-box;
         }
 
         .job-header {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-            padding-bottom: 16px;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
             border-bottom: 1px solid var(--line);
         }
 
         .job-ref {
             font-weight: 700;
-            font-size: 18px;
+            font-size: 16px;
             color: var(--navy-ink);
         }
 
         .badge {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 700;
-            padding: 4px 8px;
-            border-radius: 6px;
+            padding: 3px 8px;
+            border-radius: 999px;
             text-transform: uppercase;
+            white-space: nowrap;
         }
         .badge-pending { background: rgba(230, 178, 75, .2); color: var(--amber-deep); }
         .badge-accepted { background: rgba(31, 122, 76, .1); color: var(--ok); }
 
         .job-details {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 24px;
-            font-size: 14px;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            margin-bottom: 14px;
+            font-size: 13px;
         }
         .detail span {
             display: block;
             color: var(--muted);
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
             text-transform: uppercase;
+            letter-spacing: 0.04em;
         }
         .detail strong {
             color: var(--navy-ink);
+            font-size: 14px;
+            word-break: break-word;
         }
 
         .job-actions {
             margin-top: auto;
             display: flex;
+            flex-direction: column;
             gap: 10px;
         }
-        .job-actions input {
-            flex: 1;
-            padding: 10px 14px;
+        .job-actions input,
+        .job-actions select {
+            width: 100%;
+            min-width: 0;
+            padding: 12px 14px;
             border: 1px solid var(--line);
             border-radius: 8px;
             font-family: inherit;
-            font-size: 14px;
+            font-size: 16px; /* prevents iOS zoom on focus */
+            box-sizing: border-box;
         }
         .job-actions button {
+            width: 100%;
             background: var(--amber);
             border: none;
             border-radius: 8px;
-            padding: 0 16px;
-            font-weight: 600;
+            padding: 14px;
+            font-weight: 700;
             color: var(--navy-ink);
             cursor: pointer;
             transition: background 0.2s;
+            font-size: 15px;
+            font-family: inherit;
         }
         .job-actions button:hover {
             background: var(--amber-deep);
@@ -179,7 +203,11 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             padding: 6px;
             border-radius: 12px;
             border: 1px solid rgba(14, 39, 71, 0.04);
+            max-width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
+        .segmented-btn { white-space: nowrap; }
 
         .segmented-btn {
             background: transparent;
@@ -361,57 +389,44 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         }
         .price-send-btn:disabled { opacity: 0.6; cursor: wait; }
 
-        @media (max-width: 768px) {
-            .wrap { padding: 14px 10px; }
-            .header { padding: 14px; flex-wrap: wrap; gap: 10px; }
-            .header h1 { font-size: 17px; }
-            .job-card { padding: 14px; border-radius: 10px; }
-            .job-details {
-                grid-template-columns: 1fr;
-                gap: 8px;
-                margin-bottom: 14px;
-                font-size: 13px;
-            }
-            .detail strong { font-size: 14px; }
+        /* Filter chip row scrolls horizontally on phones rather than
+           wrapping into a tall stack. */
+        .filter-control {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 4px;
+            gap: 6px;
+        }
+        .filter-btn { white-space: nowrap; }
+
+        /* Tablet & desktop — restore comfier spacing and a 2-col detail grid. */
+        @media (min-width: 768px) {
+            .header { padding: 20px; flex-wrap: nowrap; gap: 16px; position: static; }
+            .header h1 { font-size: 20px; }
+            .wrap { padding: 32px 20px; }
+            .job-card { padding: 22px; border-radius: 12px; }
             .job-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 8px;
-                margin-bottom: 12px;
-                padding-bottom: 12px;
+                flex-direction: row;
+                align-items: center;
+                gap: 12px;
+                margin-bottom: 16px;
+                padding-bottom: 16px;
             }
-            .job-ref { font-size: 16px; }
-            .job-actions { flex-direction: column; gap: 10px; }
-            .job-actions > div { flex-direction: column !important; align-items: stretch !important; }
+            .job-ref { font-size: 18px; }
+            .job-details {
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+                margin-bottom: 22px;
+                font-size: 14px;
+            }
+            .detail span { font-size: 12px; }
+            .detail strong { font-size: 15px; }
+            .job-actions { flex-direction: row; gap: 10px; }
             .job-actions input,
-            .job-actions select {
-                width: 100% !important;
-                min-width: 0 !important;
-                flex: 1 1 auto !important;
-                font-size: 16px; /* prevents iOS zoom on focus */
-            }
-            .job-actions button {
-                width: 100%;
-                padding: 14px;
-                font-size: 15px;
-            }
-            form { flex-direction: column !important; }
-            form input, form select { font-size: 16px !important; }
-
-            /* Price entry should dominate the viewport on mobile */
-            .price-entry { padding: 14px; }
-            .price-input-wrap input { font-size: 28px; padding: 16px 14px 16px 44px; }
-            .price-input-wrap::before { font-size: 28px; }
-            .price-send-btn { padding: 16px; font-size: 16px; }
-
-            /* Filter chip row scrolls horizontally instead of wrapping into a tall stack */
-            .filter-control {
-                flex-wrap: nowrap;
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-                padding-bottom: 4px;
-            }
-            .filter-btn { white-space: nowrap; }
+            .job-actions select { font-size: 14px; padding: 10px 14px; flex: 1; width: auto; }
+            .job-actions button { width: auto; padding: 0 16px; font-size: 14px; }
+            .filter-control { flex-wrap: wrap; overflow: visible; padding-bottom: 0; }
         }
 
     </style>
@@ -437,7 +452,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <div id="root"></div>
 
-    <script type="text/babel" src="operator.jsx?v=2026-04-29-7"></script>
+    <script type="text/babel" src="operator.jsx?v=2026-04-29-8"></script>
 
     <!-- Service Worker Registration -->
     <script>

@@ -805,22 +805,22 @@ function AdminApp() {
 
     return (
         <div>
-            <div className="header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    <img src="./assets/logo.png" alt="RM Transfers" style={{ height: '40px' }} />
-                    <div>
-                        <h1 style={{ margin: 0, fontSize: '20px' }}>Operator Dispatch Dashboard</h1>
-                        <div style={{fontSize: '14px', marginTop: '2px'}}>Logged in as {operatorName || 'Operator'}</div>
+            <div className="header">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                    <img src="./assets/logo.png" alt="RM Transfers" style={{ height: '32px', flexShrink: 0 }} />
+                    <div style={{ minWidth: 0 }}>
+                        <h1 style={{ margin: 0, lineHeight: 1.15 }}>Operator Dispatch</h1>
+                        <div style={{fontSize: '12px', marginTop: '2px', opacity: 0.85, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>Logged in as {operatorName || 'Operator'}</div>
                     </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '15px' }}>
-                    <a href="/stats.html" className="btn" style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', textDecoration: 'none', padding: '6px 12px', borderRadius: '6px', fontWeight: 'bold', fontSize: '14px', display: 'flex', alignItems: 'center' }}>
-                        Business Stats
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    <a href="/stats.html" className="btn" style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', textDecoration: 'none', padding: '6px 12px', borderRadius: '6px', fontWeight: 'bold', fontSize: '13px', display: 'inline-flex', alignItems: 'center' }}>
+                        Stats
                     </a>
                     <button
                         onClick={handleLogout}
-                        style={{ background: 'transparent', border: '1px solid white', color: 'white', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}
+                        style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.4)', color: 'white', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}
                     >
                         Log Out
                     </button>
@@ -1256,49 +1256,49 @@ function AdminApp() {
             </div>
 
             {editingJob && (
-                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '20px' }}>
-                    <div style={{ background: 'white', padding: '30px', borderRadius: '12px', width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
-                        <h2 style={{ marginTop: 0 }}>Edit Booking</h2>
-                        <form onSubmit={handleSaveBooking} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                            <div style={{ display: 'flex', gap: '15px' }}>
-                                <div style={{ flex: 1 }}>
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '12px' }}>
+                    <div style={{ background: 'white', padding: '18px', borderRadius: '12px', width: '100%', maxWidth: '600px', maxHeight: '92vh', overflowY: 'auto', boxSizing: 'border-box' }}>
+                        <h2 style={{ marginTop: 0, marginBottom: '10px', fontSize: '18px', fontFamily: 'Lexend' }}>Edit Booking</h2>
+                        <form onSubmit={handleSaveBooking} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                                <div style={{ flex: '1 1 180px', minWidth: 0 }}>
                                     <label>Customer Name</label>
-                                    <input type="text" value={editForm['Customer Name'] || ''} onChange={e => setEditForm({...editForm, 'Customer Name': e.target.value})} required style={{width:'100%', padding:'8px'}} />
+                                    <input type="text" value={editForm['Customer Name'] || ''} onChange={e => setEditForm({...editForm, 'Customer Name': e.target.value})} required style={{width:'100%', padding:'10px 12px', border:'1px solid var(--line)', borderRadius:'6px', fontSize:'16px', fontFamily:'inherit', boxSizing:'border-box'}} />
                                 </div>
-                                <div style={{ flex: 1 }}>
+                                <div style={{ flex: '1 1 180px', minWidth: 0 }}>
                                     <label>Phone</label>
-                                    <input type="text" value={editForm['Customer Phone'] || ''} onChange={e => setEditForm({...editForm, 'Customer Phone': e.target.value})} required style={{width:'100%', padding:'8px'}} />
+                                    <input type="text" value={editForm['Customer Phone'] || ''} onChange={e => setEditForm({...editForm, 'Customer Phone': e.target.value})} required style={{width:'100%', padding:'10px 12px', border:'1px solid var(--line)', borderRadius:'6px', fontSize:'16px', fontFamily:'inherit', boxSizing:'border-box'}} />
                                 </div>
-                                <div style={{ flex: 1 }}>
+                                <div style={{ flex: '1 1 180px', minWidth: 0 }}>
                                     <label>Email</label>
-                                    <input type="email" value={editForm['Customer Email'] || ''} onChange={e => setEditForm({...editForm, 'Customer Email': e.target.value})} style={{width:'100%', padding:'8px'}} />
+                                    <input type="email" value={editForm['Customer Email'] || ''} onChange={e => setEditForm({...editForm, 'Customer Email': e.target.value})} style={{width:'100%', padding:'10px 12px', border:'1px solid var(--line)', borderRadius:'6px', fontSize:'16px', fontFamily:'inherit', boxSizing:'border-box'}} />
                                 </div>
                             </div>
                             
                             <div>
                                 <label>Pickup Address</label>
-                                <input type="text" value={editForm['Home Address'] || ''} onChange={e => setEditForm({...editForm, 'Home Address': e.target.value})} required style={{width:'100%', padding:'8px'}} />
+                                <input type="text" value={editForm['Home Address'] || ''} onChange={e => setEditForm({...editForm, 'Home Address': e.target.value})} required style={{width:'100%', padding:'10px 12px', border:'1px solid var(--line)', borderRadius:'6px', fontSize:'16px', fontFamily:'inherit', boxSizing:'border-box'}} />
                             </div>
 
-                            <div style={{ display: 'flex', gap: '15px' }}>
-                                <div style={{ flex: 1 }}>
+                            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                                <div style={{ flex: '1 1 180px', minWidth: 0 }}>
                                     <label>Airport</label>
-                                    <select value={editForm['Airport'] || 'LJLA'} onChange={e => setEditForm({...editForm, 'Airport': e.target.value})} style={{width:'100%', padding:'8px'}}>
+                                    <select value={editForm['Airport'] || 'LJLA'} onChange={e => setEditForm({...editForm, 'Airport': e.target.value})} style={{width:'100%', padding:'10px 12px', border:'1px solid var(--line)', borderRadius:'6px', fontSize:'16px', fontFamily:'inherit', boxSizing:'border-box'}}>
                                         <option value="LJLA">Liverpool John Lennon</option>
                                         <option value="Manchester">Manchester</option>
                                     </select>
                                 </div>
-                                <div style={{ flex: 1 }}>
+                                <div style={{ flex: '1 1 180px', minWidth: 0 }}>
                                     <label>Trip Type</label>
-                                    <select value={editForm['Trip Type'] || 'oneway'} onChange={e => setEditForm({...editForm, 'Trip Type': e.target.value})} style={{width:'100%', padding:'8px'}}>
+                                    <select value={editForm['Trip Type'] || 'oneway'} onChange={e => setEditForm({...editForm, 'Trip Type': e.target.value})} style={{width:'100%', padding:'10px 12px', border:'1px solid var(--line)', borderRadius:'6px', fontSize:'16px', fontFamily:'inherit', boxSizing:'border-box'}}>
                                         <option value="oneway">One Way</option>
                                         <option value="return">Return</option>
                                     </select>
                                 </div>
                                 {editForm['Trip Type'] === 'oneway' && (
-                                    <div style={{ flex: 1 }}>
+                                    <div style={{ flex: '1 1 180px', minWidth: 0 }}>
                                         <label>Direction</label>
-                                        <select value={editForm['Oneway Direction'] || 'to'} onChange={e => setEditForm({...editForm, 'Oneway Direction': e.target.value})} style={{width:'100%', padding:'8px'}}>
+                                        <select value={editForm['Oneway Direction'] || 'to'} onChange={e => setEditForm({...editForm, 'Oneway Direction': e.target.value})} style={{width:'100%', padding:'10px 12px', border:'1px solid var(--line)', borderRadius:'6px', fontSize:'16px', fontFamily:'inherit', boxSizing:'border-box'}}>
                                             <option value="to">To Airport</option>
                                             <option value="from">From Airport</option>
                                         </select>
@@ -1306,46 +1306,46 @@ function AdminApp() {
                                 )}
                             </div>
 
-                            <div style={{ display: 'flex', gap: '15px' }}>
-                                <div style={{ flex: 1 }}>
+                            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                                <div style={{ flex: '1 1 180px', minWidth: 0 }}>
                                     <label>Outbound Date</label>
-                                    <input type="date" value={editForm['Outbound Date'] || ''} onChange={e => setEditForm({...editForm, 'Outbound Date': e.target.value})} style={{width:'100%', padding:'8px'}} />
+                                    <input type="date" value={editForm['Outbound Date'] || ''} onChange={e => setEditForm({...editForm, 'Outbound Date': e.target.value})} style={{width:'100%', padding:'10px 12px', border:'1px solid var(--line)', borderRadius:'6px', fontSize:'16px', fontFamily:'inherit', boxSizing:'border-box'}} />
                                 </div>
-                                <div style={{ flex: 1 }}>
+                                <div style={{ flex: '1 1 180px', minWidth: 0 }}>
                                     <label>Outbound Time</label>
-                                    <input type="time" value={editForm['Outbound Time'] || ''} onChange={e => setEditForm({...editForm, 'Outbound Time': e.target.value})} style={{width:'100%', padding:'8px'}} />
+                                    <input type="time" value={editForm['Outbound Time'] || ''} onChange={e => setEditForm({...editForm, 'Outbound Time': e.target.value})} style={{width:'100%', padding:'10px 12px', border:'1px solid var(--line)', borderRadius:'6px', fontSize:'16px', fontFamily:'inherit', boxSizing:'border-box'}} />
                                 </div>
-                                <div style={{ flex: 1 }}>
+                                <div style={{ flex: '1 1 180px', minWidth: 0 }}>
                                     <label>Outbound Flight</label>
-                                    <input type="text" value={editForm['Outbound Flight'] || ''} onChange={e => setEditForm({...editForm, 'Outbound Flight': e.target.value})} style={{width:'100%', padding:'8px'}} />
+                                    <input type="text" value={editForm['Outbound Flight'] || ''} onChange={e => setEditForm({...editForm, 'Outbound Flight': e.target.value})} style={{width:'100%', padding:'10px 12px', border:'1px solid var(--line)', borderRadius:'6px', fontSize:'16px', fontFamily:'inherit', boxSizing:'border-box'}} />
                                 </div>
                             </div>
 
-                            <div style={{ display: 'flex', gap: '15px' }}>
-                                <div style={{ flex: 1 }}>
+                            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                                <div style={{ flex: '1 1 180px', minWidth: 0 }}>
                                     <label>Return Date</label>
-                                    <input type="date" value={editForm['Return Date'] || ''} onChange={e => setEditForm({...editForm, 'Return Date': e.target.value})} style={{width:'100%', padding:'8px'}} />
+                                    <input type="date" value={editForm['Return Date'] || ''} onChange={e => setEditForm({...editForm, 'Return Date': e.target.value})} style={{width:'100%', padding:'10px 12px', border:'1px solid var(--line)', borderRadius:'6px', fontSize:'16px', fontFamily:'inherit', boxSizing:'border-box'}} />
                                 </div>
-                                <div style={{ flex: 1 }}>
+                                <div style={{ flex: '1 1 180px', minWidth: 0 }}>
                                     <label>Return Time</label>
-                                    <input type="time" value={editForm['Return Time'] || ''} onChange={e => setEditForm({...editForm, 'Return Time': e.target.value})} style={{width:'100%', padding:'8px'}} />
+                                    <input type="time" value={editForm['Return Time'] || ''} onChange={e => setEditForm({...editForm, 'Return Time': e.target.value})} style={{width:'100%', padding:'10px 12px', border:'1px solid var(--line)', borderRadius:'6px', fontSize:'16px', fontFamily:'inherit', boxSizing:'border-box'}} />
                                 </div>
-                                <div style={{ flex: 1 }}>
+                                <div style={{ flex: '1 1 180px', minWidth: 0 }}>
                                     <label>Return Flight</label>
-                                    <input type="text" value={editForm['Return Flight'] || ''} onChange={e => setEditForm({...editForm, 'Return Flight': e.target.value})} style={{width:'100%', padding:'8px'}} />
+                                    <input type="text" value={editForm['Return Flight'] || ''} onChange={e => setEditForm({...editForm, 'Return Flight': e.target.value})} style={{width:'100%', padding:'10px 12px', border:'1px solid var(--line)', borderRadius:'6px', fontSize:'16px', fontFamily:'inherit', boxSizing:'border-box'}} />
                                 </div>
                             </div>
 
-                            <div style={{ display: 'flex', gap: '15px' }}>
-                                <div style={{ flex: 1 }}>
+                            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                                <div style={{ flex: '1 1 180px', minWidth: 0 }}>
                                     <label>Passengers</label>
-                                    <input type="number" value={editForm['Passengers'] || 1} onChange={e => setEditForm({...editForm, 'Passengers': parseInt(e.target.value)})} style={{width:'100%', padding:'8px'}} />
+                                    <input type="number" value={editForm['Passengers'] || 1} onChange={e => setEditForm({...editForm, 'Passengers': parseInt(e.target.value)})} style={{width:'100%', padding:'10px 12px', border:'1px solid var(--line)', borderRadius:'6px', fontSize:'16px', fontFamily:'inherit', boxSizing:'border-box'}} />
                                 </div>
-                                <div style={{ flex: 1 }}>
+                                <div style={{ flex: '1 1 180px', minWidth: 0 }}>
                                     <label>Luggage</label>
-                                    <input type="number" value={editForm['Luggage'] || 0} onChange={e => setEditForm({...editForm, 'Luggage': parseInt(e.target.value)})} style={{width:'100%', padding:'8px'}} />
+                                    <input type="number" value={editForm['Luggage'] || 0} onChange={e => setEditForm({...editForm, 'Luggage': parseInt(e.target.value)})} style={{width:'100%', padding:'10px 12px', border:'1px solid var(--line)', borderRadius:'6px', fontSize:'16px', fontFamily:'inherit', boxSizing:'border-box'}} />
                                 </div>
-                                <div style={{ flex: 1 }}>
+                                <div style={{ flex: '1 1 180px', minWidth: 0 }}>
                                     <label>Operator Price (£) <span style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 400 }}>Set by admin</span></label>
                                     <input type="number" value={editForm['Operator Price'] || 0} readOnly style={{width:'100%', padding:'8px', background: '#f3f4f6', cursor: 'not-allowed', color: '#6b7280'}} />
                                 </div>
@@ -1377,7 +1377,7 @@ function AdminApp() {
                                             <option value="__custom__">Custom Driver</option>
                                         </select>
                                     </div>
-                                    <div style={{ flex: 1 }}>
+                                    <div style={{ flex: '1 1 180px', minWidth: 0 }}>
                                         <label style={{ fontSize: '13px', fontWeight: 600 }}>Driver Phone</label>
                                         <input type="text" value={editForm['Driver Phone'] || ''} onChange={e => setEditForm({...editForm, 'Driver Phone': e.target.value})} placeholder="07..." style={{width:'100%', padding:'8px', borderRadius: '6px', border: '1px solid #d1d5db'}} />
                                     </div>
@@ -1418,7 +1418,7 @@ function AdminApp() {
                                                 <option value="__custom__">Custom Driver</option>
                                             </select>
                                         </div>
-                                        <div style={{ flex: 1 }}>
+                                        <div style={{ flex: '1 1 180px', minWidth: 0 }}>
                                             <label style={{ fontSize: '13px', fontWeight: 600 }}>Return Driver Phone</label>
                                             <input type="text" value={editForm['Return Driver Phone'] || ''} onChange={e => setEditForm({...editForm, 'Return Driver Phone': e.target.value})} placeholder="07..." style={{width:'100%', padding:'8px', borderRadius: '6px', border: '1px solid #c4b5fd'}} />
                                         </div>
