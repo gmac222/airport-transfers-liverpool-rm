@@ -835,231 +835,144 @@ function AdminApp() {
                             </div>
                             {loading ? (
                                 <div className="loading">Loading...</div>
-                            ) : (
-                                <div className="table-scroll">
-                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                                    <thead>
-                                        <tr style={{ borderBottom: '2px solid var(--line)', textAlign: 'left' }}>
-                                            <th style={{ padding: '8px' }}>Ref</th>
-                                            <th style={{ padding: '8px' }}>Customer</th>
-                                            <th style={{ padding: '8px' }}>Date</th>
-                                            <th style={{ padding: '8px' }}>Status</th>
-                                            <th style={{ padding: '8px', minWidth: '110px', color: 'var(--amber-deep)', fontWeight: 700 }}>Customer £</th>
-                                            <th style={{ padding: '8px', minWidth: '110px', color: 'var(--amber-deep)', fontWeight: 700 }}>Operator £</th>
-                                            <th style={{ padding: '8px', minWidth: '80px' }}>Profit</th>
-                                            <th style={{ padding: '8px', minWidth: '180px', color: 'var(--amber-deep)', fontWeight: 700 }}>Payment Link</th>
-                                            <th style={{ padding: '8px', minWidth: '140px' }}>Driver</th>
-                                            <th style={{ padding: '8px', minWidth: '140px' }}>Return Driver</th>
-                                            <th style={{ padding: '8px', minWidth: '140px' }}>Operator</th>
-                                            <th style={{ padding: '8px', minWidth: '120px' }}>Quote</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {activeBookings
-                                            .filter(b => {
-                                                const q = jobsSearch.trim().toLowerCase();
-                                                if (!q) return true;
-                                                const f = b.fields;
-                                                return [
-                                                    f['Booking Ref'], f['Customer Name'], f['Customer Phone'],
-                                                    f['Driver Name'], f['Return Driver Name'], f['Operator'],
-                                                    f['Customer Email'], f['Home Address'], f['Status']
-                                                ].some(v => v && String(v).toLowerCase().includes(q));
-                                            })
-                                            .sort((a, b) => {
-                                                const da = new Date(a.fields['Submitted At'] || 0).getTime();
-                                                const db = new Date(b.fields['Submitted At'] || 0).getTime();
-                                                return db - da; // newest received first
-                                            })
-                                            .map((b, i) => {
-                                            const currentOp = b.fields['Operator'] || '';
+                            ) : (() => {
+                                const filtered = activeBookings
+                                    .filter(b => {
+                                        const q = jobsSearch.trim().toLowerCase();
+                                        if (!q) return true;
+                                        const f = b.fields;
+                                        return [
+                                            f['Booking Ref'], f['Customer Name'], f['Customer Phone'],
+                                            f['Driver Name'], f['Return Driver Name'], f['Operator'],
+                                            f['Customer Email'], f['Home Address'], f['Status']
+                                        ].some(v => v && String(v).toLowerCase().includes(q));
+                                    })
+                                    .sort((a, b) => {
+                                        const da = new Date(a.fields['Submitted At'] || 0).getTime();
+                                        const db = new Date(b.fields['Submitted At'] || 0).getTime();
+                                        return db - da;
+                                    });
+                                if (filtered.length === 0) {
+                                    return <div style={{ padding: '30px', textAlign: 'center', color: 'var(--muted)' }}>{jobsSearch.trim() ? `No bookings match "${jobsSearch}".` : 'No active bookings.'}</div>;
+                                }
+                                return (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                                        {filtered.map(b => {
+                                            const f = b.fields;
+                                            const currentOp = f['Operator'] || '';
+                                            const cpRaw = f['Customer Price'];
+                                            const opRaw = f['Operator Price'];
+                                            const cpDraft = priceDraftCustomer[b.id];
+                                            const opDraft = priceDraftOperator[b.id];
+                                            const cpValue = cpDraft !== undefined ? cpDraft : (cpRaw != null ? String(cpRaw) : '');
+                                            const opValue = opDraft !== undefined ? opDraft : (opRaw != null ? String(opRaw) : '');
+                                            const flashed = !!priceSavedFlash[b.id];
+                                            const cpClass = `price-cell${flashed ? ' saved' : (cpRaw == null && cpDraft === undefined ? ' empty' : '')}`;
+                                            const opClass = `price-cell${flashed ? ' saved' : (opRaw == null && opDraft === undefined ? ' empty' : '')}`;
+                                            const profit = (Number(cpRaw) || 0) - (Number(opRaw) || 0);
+                                            const hasBoth = cpRaw != null && opRaw != null;
+                                            const profitCls = !hasBoth ? 'zero' : profit > 0 ? 'positive' : profit < 0 ? 'negative' : 'zero';
+                                            const plRaw = f['Payment Link'];
+                                            const plDraft = paymentLinkDraft[b.id];
+                                            const plValue = plDraft !== undefined ? plDraft : (plRaw || '');
+                                            const plFlashed = !!paymentLinkSavedFlash[b.id];
+                                            const plFilled = plRaw && String(plRaw).trim();
+                                            const plBorder = plFlashed ? '#16a34a' : (plFilled ? 'var(--amber)' : '#fca5a5');
+                                            const plBg = plFlashed ? '#dcfce7' : (plFilled ? '#fffbeb' : '#fef2f2');
+                                            const status = f['Status'] || 'Pending';
+                                            const sentAlready = status !== 'Pending';
+                                            const canSend = !sentAlready && cpRaw != null && Number(cpRaw) > 0 && priceSavingId !== b.id;
                                             return (
-                                                <tr key={b.id} style={{ borderBottom: '1px solid var(--line)', background: i % 2 === 0 ? 'white' : '#fafafa' }}>
-                                                    <td style={{ padding: '8px', fontWeight: 600 }}>{b.fields['Booking Ref']}</td>
-                                                    <td style={{ padding: '8px' }}>{b.fields['Customer Name']}</td>
-                                                    <td style={{ padding: '8px' }}>{fmtUKDate(b.fields['Outbound Date'])} {b.fields['Outbound Time'] || ''}</td>
-                                                    <td style={{ padding: '8px' }}>
-                                                        <span style={{ fontSize: '11px', padding: '2px 6px', borderRadius: '4px', background: b.fields['Status'] === 'Accepted' ? '#dcfce7' : '#fef3c7', color: b.fields['Status'] === 'Accepted' ? '#166534' : '#92400e', fontWeight: 600 }}>{b.fields['Status']}</span>
-                                                    </td>
-                                                    {/* Always-visible price inputs */}
-                                                    {(() => {
-                                                        const cpRaw = b.fields['Customer Price'];
-                                                        const opRaw = b.fields['Operator Price'];
-                                                        const cpDraft = priceDraftCustomer[b.id];
-                                                        const opDraft = priceDraftOperator[b.id];
-                                                        const cpValue = cpDraft !== undefined
-                                                            ? cpDraft
-                                                            : (cpRaw != null ? String(cpRaw) : '');
-                                                        const opValue = opDraft !== undefined
-                                                            ? opDraft
-                                                            : (opRaw != null ? String(opRaw) : '');
-                                                        const flashed = !!priceSavedFlash[b.id];
-                                                        const cpClass = `price-cell${flashed ? ' saved' : (cpRaw == null && cpDraft === undefined ? ' empty' : '')}`;
-                                                        const opClass = `price-cell${flashed ? ' saved' : (opRaw == null && opDraft === undefined ? ' empty' : '')}`;
-                                                        const profit = (Number(cpRaw) || 0) - (Number(opRaw) || 0);
-                                                        const hasBoth = cpRaw != null && opRaw != null;
-                                                        const profitCls = !hasBoth ? 'zero' : profit > 0 ? 'positive' : profit < 0 ? 'negative' : 'zero';
-                                                        return (
-                                                            <React.Fragment>
-                                                                <td style={{ padding: '8px' }}>
-                                                                    <label className={cpClass}>
-                                                                        <span className="currency">£</span>
-                                                                        <input
-                                                                            type="number"
-                                                                            inputMode="decimal"
-                                                                            step="0.01"
-                                                                            min="0"
-                                                                            placeholder="0.00"
-                                                                            value={cpValue}
-                                                                            disabled={priceSavingId === b.id}
-                                                                            onChange={e => setPriceDraftCustomer(prev => ({ ...prev, [b.id]: e.target.value }))}
-                                                                            onBlur={e => {
-                                                                                const v = e.target.value;
-                                                                                const oldVal = cpRaw != null ? String(cpRaw) : '';
-                                                                                if (v !== oldVal) commitPrice(b.id, 'Customer Price', v);
-                                                                                setPriceDraftCustomer(prev => { const n = { ...prev }; delete n[b.id]; return n; });
-                                                                            }}
-                                                                            onKeyDown={e => { if (e.key === 'Enter') e.target.blur(); }}
-                                                                        />
-                                                                    </label>
-                                                                </td>
-                                                                <td style={{ padding: '8px' }}>
-                                                                    <label className={opClass}>
-                                                                        <span className="currency">£</span>
-                                                                        <input
-                                                                            type="number"
-                                                                            inputMode="decimal"
-                                                                            step="0.01"
-                                                                            min="0"
-                                                                            placeholder="0.00"
-                                                                            value={opValue}
-                                                                            disabled={priceSavingId === b.id}
-                                                                            onChange={e => setPriceDraftOperator(prev => ({ ...prev, [b.id]: e.target.value }))}
-                                                                            onBlur={e => {
-                                                                                const v = e.target.value;
-                                                                                const oldVal = opRaw != null ? String(opRaw) : '';
-                                                                                if (v !== oldVal) commitPrice(b.id, 'Operator Price', v);
-                                                                                setPriceDraftOperator(prev => { const n = { ...prev }; delete n[b.id]; return n; });
-                                                                            }}
-                                                                            onKeyDown={e => { if (e.key === 'Enter') e.target.blur(); }}
-                                                                        />
-                                                                    </label>
-                                                                </td>
-                                                                <td style={{ padding: '8px' }}>
-                                                                    <span className={`profit-pill ${profitCls}`}>
-                                                                        {hasBoth ? `£${profit.toFixed(2)}` : '–'}
-                                                                    </span>
-                                                                </td>
-                                                                {(() => {
-                                                                    const plRaw = b.fields['Payment Link'];
-                                                                    const plDraft = paymentLinkDraft[b.id];
-                                                                    const plValue = plDraft !== undefined ? plDraft : (plRaw || '');
-                                                                    const plFlashed = !!paymentLinkSavedFlash[b.id];
-                                                                    const plFilled = plRaw && String(plRaw).trim();
-                                                                    const plBorder = plFlashed ? '#16a34a' : (plFilled ? 'var(--amber)' : '#fca5a5');
-                                                                    const plBg = plFlashed ? '#dcfce7' : (plFilled ? '#fffbeb' : '#fef2f2');
-                                                                    return (
-                                                                        <td style={{ padding: '8px' }}>
-                                                                            <input
-                                                                                type="url"
-                                                                                inputMode="url"
-                                                                                placeholder="Paste link…"
-                                                                                value={plValue}
-                                                                                disabled={paymentLinkSavingId === b.id}
-                                                                                onChange={e => setPaymentLinkDraft(prev => ({ ...prev, [b.id]: e.target.value }))}
-                                                                                onBlur={e => {
-                                                                                    const v = e.target.value;
-                                                                                    const old = plRaw || '';
-                                                                                    if (v !== old) commitPaymentLink(b.id, v);
-                                                                                    setPaymentLinkDraft(prev => { const n = { ...prev }; delete n[b.id]; return n; });
-                                                                                }}
-                                                                                onKeyDown={e => { if (e.key === 'Enter') e.target.blur(); }}
-                                                                                style={{
-                                                                                    width: '100%',
-                                                                                    minWidth: '170px',
-                                                                                    padding: '6px 8px',
-                                                                                    border: `2px solid ${plBorder}`,
-                                                                                    background: plBg,
-                                                                                    borderRadius: '6px',
-                                                                                    fontSize: '12px',
-                                                                                    fontFamily: 'inherit',
-                                                                                    color: 'var(--navy-ink)',
-                                                                                    outline: 'none',
-                                                                                    boxSizing: 'border-box'
-                                                                                }}
-                                                                            />
-                                                                        </td>
-                                                                    );
-                                                                })()}
-                                                            </React.Fragment>
-                                                        );
-                                                    })()}
-                                                    <td style={{ padding: '8px' }}>
-                                                        <select value={b.fields['Driver Name'] || ''} onChange={e => handleReassignDriver(b.id, e.target.value)} style={{ width: '100%', padding: '6px 8px', border: '1px solid var(--line)', borderRadius: '6px', fontSize: '13px', fontFamily: 'inherit', fontWeight: b.fields['Driver Name'] ? 600 : 400 }}>
-                                                            <option value="">No driver</option>
-                                                            {driversList.map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
-                                                        </select>
-                                                    </td>
-                                                    <td style={{ padding: '8px' }}>
-                                                        {b.fields['Trip Type'] === 'return' ? (
-                                                            <select value={b.fields['Return Driver Name'] || ''} onChange={e => handleReassignReturnDriver(b.id, e.target.value)} style={{ width: '100%', padding: '6px 8px', border: '1px solid #c4b5fd', borderRadius: '6px', fontSize: '13px', fontFamily: 'inherit', background: '#faf5ff' }}>
-                                                                <option value="">Same as outbound</option>
+                                                <div key={b.id} style={{ border: '1px solid var(--line)', borderRadius: '12px', padding: '16px', background: 'white' }}>
+                                                    {/* Top row: ref + customer + status + open in dispatch */}
+                                                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '10px', marginBottom: '14px', paddingBottom: '12px', borderBottom: '1px solid var(--line)' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '14px', flexWrap: 'wrap' }}>
+                                                            <strong style={{ fontSize: '16px', fontFamily: 'Lexend' }}>{f['Booking Ref']}</strong>
+                                                            <span style={{ color: 'var(--navy-ink)' }}>{f['Customer Name']}</span>
+                                                            <span style={{ color: 'var(--muted)', fontSize: '13px' }}>{fmtUKDate(f['Outbound Date'])} {f['Outbound Time'] || ''}</span>
+                                                        </div>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                            <span style={{ fontSize: '12px', padding: '4px 10px', borderRadius: '999px', fontWeight: 700, background: status === 'Accepted' ? '#dcfce7' : status === 'Declined' ? '#fee2e2' : '#fef3c7', color: status === 'Accepted' ? '#166534' : status === 'Declined' ? '#b91c1c' : '#92400e' }}>{status}</span>
+                                                            <a href={`/operator.html?ref=${encodeURIComponent(f['Booking Ref'])}`} style={{ fontSize: '12px', color: 'var(--navy)', textDecoration: 'none', fontWeight: 600 }}>Dispatch →</a>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Pricing grid */}
+                                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px', marginBottom: '12px' }}>
+                                                        <div>
+                                                            <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--amber-deep)', textTransform: 'uppercase', marginBottom: '4px' }}>Customer £</div>
+                                                            <label className={cpClass} style={{ width: '100%' }}>
+                                                                <span className="currency">£</span>
+                                                                <input type="number" inputMode="decimal" step="0.01" min="0" placeholder="0.00" value={cpValue} disabled={priceSavingId === b.id}
+                                                                    onChange={e => setPriceDraftCustomer(prev => ({ ...prev, [b.id]: e.target.value }))}
+                                                                    onBlur={e => { const v = e.target.value; const old = cpRaw != null ? String(cpRaw) : ''; if (v !== old) commitPrice(b.id, 'Customer Price', v); setPriceDraftCustomer(prev => { const n = { ...prev }; delete n[b.id]; return n; }); }}
+                                                                    onKeyDown={e => { if (e.key === 'Enter') e.target.blur(); }} />
+                                                            </label>
+                                                        </div>
+                                                        <div>
+                                                            <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--amber-deep)', textTransform: 'uppercase', marginBottom: '4px' }}>Operator £</div>
+                                                            <label className={opClass} style={{ width: '100%' }}>
+                                                                <span className="currency">£</span>
+                                                                <input type="number" inputMode="decimal" step="0.01" min="0" placeholder="0.00" value={opValue} disabled={priceSavingId === b.id}
+                                                                    onChange={e => setPriceDraftOperator(prev => ({ ...prev, [b.id]: e.target.value }))}
+                                                                    onBlur={e => { const v = e.target.value; const old = opRaw != null ? String(opRaw) : ''; if (v !== old) commitPrice(b.id, 'Operator Price', v); setPriceDraftOperator(prev => { const n = { ...prev }; delete n[b.id]; return n; }); }}
+                                                                    onKeyDown={e => { if (e.key === 'Enter') e.target.blur(); }} />
+                                                            </label>
+                                                        </div>
+                                                        <div>
+                                                            <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '4px' }}>Profit</div>
+                                                            <span className={`profit-pill ${profitCls}`} style={{ display: 'inline-block', padding: '8px 12px', fontSize: '15px' }}>{hasBoth ? `£${profit.toFixed(2)}` : '–'}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Payment link full-width */}
+                                                    <div style={{ marginBottom: '12px' }}>
+                                                        <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--amber-deep)', textTransform: 'uppercase', marginBottom: '4px' }}>Payment Link</div>
+                                                        <input type="url" inputMode="url" placeholder="Paste payment link…" value={plValue} disabled={paymentLinkSavingId === b.id}
+                                                            onChange={e => setPaymentLinkDraft(prev => ({ ...prev, [b.id]: e.target.value }))}
+                                                            onBlur={e => { const v = e.target.value; const old = plRaw || ''; if (v !== old) commitPaymentLink(b.id, v); setPaymentLinkDraft(prev => { const n = { ...prev }; delete n[b.id]; return n; }); }}
+                                                            onKeyDown={e => { if (e.key === 'Enter') e.target.blur(); }}
+                                                            style={{ width: '100%', padding: '10px 12px', border: `2px solid ${plBorder}`, background: plBg, borderRadius: '8px', fontFamily: 'inherit', fontSize: '13px', color: 'var(--navy-ink)', outline: 'none', boxSizing: 'border-box' }} />
+                                                    </div>
+
+                                                    {/* Assignment dropdowns */}
+                                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '14px' }}>
+                                                        <div>
+                                                            <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '4px' }}>Driver</div>
+                                                            <select value={f['Driver Name'] || ''} onChange={e => handleReassignDriver(b.id, e.target.value)} style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--line)', borderRadius: '6px', fontSize: '13px', fontFamily: 'inherit', fontWeight: f['Driver Name'] ? 600 : 400 }}>
+                                                                <option value="">No driver</option>
                                                                 {driversList.map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
                                                             </select>
-                                                        ) : (
-                                                            <span style={{color:'#d1d5db', fontSize: '12px'}}>N/A</span>
+                                                        </div>
+                                                        {f['Trip Type'] === 'return' && (
+                                                            <div>
+                                                                <div style={{ fontSize: '11px', fontWeight: 700, color: '#7c3aed', textTransform: 'uppercase', marginBottom: '4px' }}>Return Driver</div>
+                                                                <select value={f['Return Driver Name'] || ''} onChange={e => handleReassignReturnDriver(b.id, e.target.value)} style={{ width: '100%', padding: '8px 10px', border: '1px solid #c4b5fd', borderRadius: '6px', fontSize: '13px', fontFamily: 'inherit', background: '#faf5ff' }}>
+                                                                    <option value="">Same as outbound</option>
+                                                                    {driversList.map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
+                                                                </select>
+                                                            </div>
                                                         )}
-                                                    </td>
-                                                    <td style={{ padding: '8px' }}>
-                                                        <select value={currentOp} onChange={e => handleReassignSingle(b.id, e.target.value)} style={{ width: '100%', padding: '6px 8px', border: '1px solid var(--line)', borderRadius: '6px', fontSize: '13px', fontFamily: 'inherit', fontWeight: currentOp ? 600 : 400, color: currentOp ? 'var(--navy-ink)' : '#e53e3e' }}>
-                                                            <option value="">Unassigned</option>
-                                                            {operators.map(op => <option key={op.id} value={op.name}>{op.name}</option>)}
-                                                        </select>
-                                                    </td>
-                                                    <td style={{ padding: '8px' }}>
-                                                        {(() => {
-                                                            const cp = b.fields['Customer Price'];
-                                                            const status = b.fields['Status'] || 'Pending';
-                                                            const sentAlready = status !== 'Pending';
-                                                            const canSend = !sentAlready && cp != null && Number(cp) > 0 && priceSavingId !== b.id;
-                                                            return (
-                                                                <button
-                                                                    onClick={() => handleSendQuote(b)}
-                                                                    disabled={!canSend || sendingQuote}
-                                                                    title={sentAlready ? `Status: ${status}` : (cp == null ? 'Set Customer Price first' : `Send £${Number(cp).toFixed(2)} quote`)}
-                                                                    style={{
-                                                                        padding: '8px 10px',
-                                                                        background: canSend ? 'var(--amber)' : '#e5e7eb',
-                                                                        color: canSend ? 'var(--navy-ink)' : '#6b7280',
-                                                                        border: 'none',
-                                                                        borderRadius: '6px',
-                                                                        fontWeight: 700,
-                                                                        fontSize: '12px',
-                                                                        cursor: canSend && !sendingQuote ? 'pointer' : 'not-allowed',
-                                                                        whiteSpace: 'nowrap'
-                                                                    }}>
-                                                                    {sendingQuote ? '…' : sentAlready ? status : cp == null ? 'No price' : `Send Quote to Customer (£${Number(cp).toFixed(0)})`}
-                                                                </button>
-                                                            );
-                                                        })()}
-                                                    </td>
-                                                </tr>
+                                                        <div>
+                                                            <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '4px' }}>Operator</div>
+                                                            <select value={currentOp} onChange={e => handleReassignSingle(b.id, e.target.value)} style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--line)', borderRadius: '6px', fontSize: '13px', fontFamily: 'inherit', fontWeight: currentOp ? 600 : 400, color: currentOp ? 'var(--navy-ink)' : '#e53e3e' }}>
+                                                                <option value="">Unassigned</option>
+                                                                {operators.map(op => <option key={op.id} value={op.name}>{op.name}</option>)}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Send Quote */}
+                                                    <button onClick={() => handleSendQuote(b)} disabled={!canSend || sendingQuote}
+                                                        style={{ width: '100%', padding: '12px', background: canSend ? 'var(--amber)' : '#e5e7eb', color: canSend ? 'var(--navy-ink)' : '#6b7280', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '14px', cursor: canSend && !sendingQuote ? 'pointer' : 'not-allowed', fontFamily: 'inherit' }}>
+                                                        {sendingQuote ? 'Sending quote…' : sentAlready ? `Quote already sent (${status})` : cpRaw == null || Number(cpRaw) <= 0 ? 'Enter Customer Price first' : `Send Quote to Customer — £${Number(cpRaw).toFixed(2)}`}
+                                                    </button>
+                                                </div>
                                             );
                                         })}
-                                        {activeBookings.length === 0 && (
-                                            <tr><td colSpan="12" style={{ padding: '30px', textAlign: 'center', color: 'var(--muted)' }}>No active bookings.</td></tr>
-                                        )}
-                                        {activeBookings.length > 0 && jobsSearch.trim() && activeBookings.filter(b => {
-                                            const q = jobsSearch.trim().toLowerCase();
-                                            const f = b.fields;
-                                            return [f['Booking Ref'], f['Customer Name'], f['Customer Phone'], f['Driver Name'], f['Return Driver Name'], f['Operator'], f['Customer Email'], f['Home Address'], f['Status']].some(v => v && String(v).toLowerCase().includes(q));
-                                        }).length === 0 && (
-                                            <tr><td colSpan="12" style={{ padding: '30px', textAlign: 'center', color: 'var(--muted)' }}>No bookings match "{jobsSearch}".</td></tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                                </div>
-                            )}
+                                    </div>
+                                );
+                            })()}
                         </div>
                     </div>
                 )}
