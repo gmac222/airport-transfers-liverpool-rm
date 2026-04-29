@@ -894,7 +894,7 @@ function BookingForm() {
           <span>Sending…</span>
         ) : (
           <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
-            Book Now <Icon name="arrow" size={16} />
+            Get My Fixed Price <Icon name="arrow" size={16} />
           </span>
         )}
       </button>
