@@ -213,15 +213,29 @@ function AdminApp() {
         if (viewMode === 'calendar' && !loading) {
             const calendarEl = document.getElementById('calendar');
             if (calendarEl) {
-                // Initialize FullCalendar
+                // Phone-first defaults. Below 768px we open a vertical
+                // agenda (listWeek) and trim the toolbar; tablets/desktops
+                // get the time-grid week view we always had.
+                const isMobile = window.matchMedia('(max-width: 767px)').matches;
+                const initialView = isMobile ? 'listWeek' : 'timeGridWeek';
+                const headerToolbar = isMobile
+                    ? { left: 'prev,next', center: 'title', right: 'today' }
+                    : { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay' };
+                const footerToolbar = isMobile
+                    ? { center: 'listWeek,dayGridMonth' }
+                    : false;
+
                 const calendar = new window.FullCalendar.Calendar(calendarEl, {
-                    initialView: 'timeGridWeek',
-                    headerToolbar: {
-                        left: 'prev,next today',
-                        center: 'title',
-                        right: 'dayGridMonth,timeGridWeek,timeGridDay'
-                    },
+                    initialView,
+                    headerToolbar,
+                    footerToolbar,
+                    titleFormat: isMobile ? { month: 'short', day: 'numeric' } : { year: 'numeric', month: 'long' },
                     height: 'auto',
+                    expandRows: true,
+                    dayMaxEvents: isMobile ? 2 : true,
+                    nowIndicator: true,
+                    listDayFormat: { weekday: 'short', day: 'numeric', month: 'short' },
+                    listDaySideFormat: false,
                     events: bookings.filter(b => b.fields['Status'] === 'Accepted' || b.fields['Status'] === 'Completed').flatMap(b => {
                         const status = b.fields['Status'] || 'Pending';
                         let color = 'var(--amber-deep)'; // Pending
@@ -256,33 +270,61 @@ function AdminApp() {
                         const record = arg.event.extendedProps.record;
                         const part = arg.event.extendedProps.tripPart;
                         const f = record.fields;
-                        
+                        const isList = arg.view && arg.view.type && arg.view.type.startsWith('list');
+
                         const timeStr = arg.timeText || (arg.event.start ? arg.event.start.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '');
-                        let flight = part === 'Outbound' ? f['Outbound Flight'] : f['Return Flight'];
-                        
-                        let outDir = f['Oneway Direction'] === 'from' ? 'From' : 'To';
-                        let retDir = f['Oneway Direction'] === 'from' ? 'To' : 'From';
-                        let direction = part === 'Outbound' ? outDir : retDir;
-                        let airport = f['Airport'] === 'Manchester' ? 'MAN' : 'LPL';
-                        
-                        let html = `
+                        const flight = part === 'Outbound' ? f['Outbound Flight'] : f['Return Flight'];
+                        const outDir = f['Oneway Direction'] === 'from' ? 'From' : 'To';
+                        const retDir = f['Oneway Direction'] === 'from' ? 'To' : 'From';
+                        const direction = part === 'Outbound' ? outDir : retDir;
+                        const airport = f['Airport'] === 'Manchester' ? 'MAN' : 'LPL';
+                        const customer = f['Customer Name'] || 'Customer';
+
+                        if (isList) {
+                            // Wider, comfier rendering for the list/agenda view used on phones.
+                            return { html: `
+                                <div style="padding: 4px 0; line-height: 1.45; cursor: pointer;">
+                                    <div style="font-weight: 700; font-size: 14px; color: var(--navy-ink);">${f['Booking Ref']} · <span style="color: var(--muted); font-weight: 600;">${part}</span></div>
+                                    <div style="font-size: 13px;">${customer} <span style="color: var(--muted);">(${f['Passengers']}pax ${f['Luggage'] || 0}bags)</span></div>
+                                    <div style="font-size: 12px; color: var(--muted);">${direction} ${airport}${flight ? ` · ✈️ ${flight}` : ''}</div>
+                                    <div style="font-size: 12px; color: var(--muted);">${f['Driver Name'] ? `🚗 ${f['Driver Name']}` : '🚗 <em>Unassigned</em>'}${part === 'Return' && f['Return Driver Name'] ? ` · 🔄 ${f['Return Driver Name']}` : ''}</div>
+                                </div>
+                            ` };
+                        }
+
+                        // Compact rendering for grid views (desktop).
+                        return { html: `
                             <div style="font-size: 11px; padding: 3px 5px; line-height: 1.4; color: white; white-space: normal; overflow: hidden; cursor: pointer;">
                                 <strong>${timeStr} | ${f['Booking Ref']}</strong><br/>
-                                <strong>${f['Customer Name']}</strong> (${f['Passengers']}pax ${f['Luggage'] || 0}bags)<br/>
+                                <strong>${customer}</strong> (${f['Passengers']}pax ${f['Luggage'] || 0}bags)<br/>
                                 <strong>${part.toUpperCase()}</strong>: ${direction} ${airport}<br/>
                                 ${flight ? `✈️ ${flight}<br/>` : ''}
                                 ${f['Driver Name'] ? `🚗 ${f['Driver Name']}` : '🚗 <i>Unassigned</i>'}
                                 ${part === 'Return' && f['Return Driver Name'] ? `<br/>🔄 Ret: ${f['Return Driver Name']}` : ''}
                             </div>
-                        `;
-                        return { html: html };
+                        ` };
                     },
                     eventClick: function(info) {
                         openEditModal(info.event.extendedProps.record);
                     }
                 });
                 calendar.render();
-                return () => calendar.destroy();
+
+                // Swap to the appropriate default view on viewport changes
+                // so a tablet rotated to portrait still gets the agenda.
+                const onResize = () => {
+                    const nowMobile = window.matchMedia('(max-width: 767px)').matches;
+                    const target = nowMobile ? 'listWeek' : 'timeGridWeek';
+                    if (calendar.view && calendar.view.type !== target && (calendar.view.type === 'listWeek' || calendar.view.type === 'timeGridWeek')) {
+                        calendar.changeView(target);
+                    }
+                };
+                window.addEventListener('resize', onResize);
+
+                return () => {
+                    window.removeEventListener('resize', onResize);
+                    calendar.destroy();
+                };
             }
         }
     }, [viewMode, bookings, loading]);
@@ -1230,7 +1272,7 @@ function AdminApp() {
                 ) : viewMode === 'drivers' ? (
                     renderDriversView()
                 ) : viewMode === 'calendar' ? (
-                    <div id="calendar" style={{ background: 'white', padding: '20px', borderRadius: '12px', border: '1px solid var(--line)' }}></div>
+                    <div id="calendar" className="calendar-shell"></div>
                 ) : viewMode === 'stats' ? (
                     renderOperatorStats()
                 ) : (

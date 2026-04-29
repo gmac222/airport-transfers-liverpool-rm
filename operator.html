@@ -395,6 +395,43 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             .add-driver-form { grid-template-columns: 1fr 1fr; }
         }
 
+        /* Calendar shell + FullCalendar mobile overrides */
+        .calendar-shell {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+            padding: 12px;
+            overflow-x: hidden;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        @media (min-width: 768px) {
+            .calendar-shell { padding: 20px; }
+        }
+        @media (max-width: 767px) {
+            .calendar-shell .fc .fc-toolbar { gap: 6px; flex-wrap: wrap; }
+            .calendar-shell .fc .fc-toolbar-title { font-size: 16px !important; }
+            .calendar-shell .fc .fc-toolbar-chunk { display: flex; gap: 6px; flex-wrap: wrap; }
+            .calendar-shell .fc .fc-button {
+                padding: 6px 10px !important;
+                font-size: 13px !important;
+                border-radius: 6px !important;
+            }
+            .calendar-shell .fc .fc-button-group { gap: 4px; }
+            .calendar-shell .fc-list-event-time { width: 70px; font-size: 12px; }
+            .calendar-shell .fc-list-day-cushion { padding: 8px 10px !important; font-size: 13px; }
+            .calendar-shell .fc-list-event-title { padding: 6px 8px !important; font-size: 13px; }
+            /* Hide the long event-time chunk on phones; the time lives in
+               the event content already. */
+            .calendar-shell .fc-list-event-graphic { display: none; }
+            /* Tighten daygrid month view on phones */
+            .calendar-shell .fc-daygrid-day-number { font-size: 12px; padding: 2px 4px; }
+            .calendar-shell .fc-col-header-cell-cushion { font-size: 11px; padding: 4px 0; }
+            .calendar-shell .fc-event-title { font-size: 11px; }
+            .calendar-shell .fc-daygrid-day-events { min-height: 0 !important; }
+            .calendar-shell .fc-daygrid-more-link { font-size: 11px; }
+        }
+
         /* Drivers overview: card list on phones, table on tablet+. */
         .drivers-table { display: none; }
         @media (min-width: 768px) {
@@ -465,7 +502,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <div id="root"></div>
 
-    <script type="text/babel" src="operator.jsx?v=2026-04-29-13"></script>
+    <script type="text/babel" src="operator.jsx?v=2026-04-29-14"></script>
 
     <!-- Service Worker Registration -->
     <script>
