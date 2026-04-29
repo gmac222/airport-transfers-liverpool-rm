@@ -17,6 +17,43 @@ function PortalApp() {
     const [inputRef, setInputRef] = useState('');
     const [declining, setDeclining] = useState(false);
     const [accepting, setAccepting] = useState(false);
+    const [installPrompt, setInstallPrompt] = useState(null);
+    const [installed, setInstalled] = useState(false);
+
+    // PWA install: capture the browser's install prompt so we can offer
+    // a clear "Add to Home Screen" button to the customer.
+    useEffect(() => {
+        const handleBeforeInstall = (e) => {
+            e.preventDefault();
+            setInstallPrompt(e);
+        };
+        const handleInstalled = () => {
+            setInstalled(true);
+            setInstallPrompt(null);
+        };
+        window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+        window.addEventListener('appinstalled', handleInstalled);
+        if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
+            setInstalled(true);
+        }
+        return () => {
+            window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+            window.removeEventListener('appinstalled', handleInstalled);
+        };
+    }, []);
+
+    const handleInstall = async () => {
+        if (!installPrompt) return;
+        installPrompt.prompt();
+        try { await installPrompt.userChoice; } catch (e) {}
+        setInstallPrompt(null);
+    };
+
+    // iOS doesn't support beforeinstallprompt — detect and show manual hint.
+    const isIOS = typeof navigator !== 'undefined'
+        && /iPad|iPhone|iPod/.test(navigator.userAgent)
+        && !window.MSStream;
+    const showIOSInstallHint = isIOS && !installed;
 
     const handleAccept = async () => {
         if (!booking) return;
@@ -392,8 +429,27 @@ function PortalApp() {
                 </div>
             </div>
 
+            {!installed && (installPrompt || showIOSInstallHint) && (
+                <div style={{ marginTop: '20px', padding: '16px 18px', background: 'rgba(230, 178, 75, 0.10)', border: '1px solid rgba(230, 178, 75, 0.35)', borderRadius: '14px', color: 'rgba(255,255,255,0.92)' }}>
+                    <div style={{ fontSize: '14px', fontWeight: 600, marginBottom: '6px' }}>📲 Save your booking to your home screen</div>
+                    <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', marginBottom: installPrompt ? '12px' : '6px', lineHeight: 1.5 }}>
+                        Open this booking in one tap on the day of travel — handy if your driver's running late or you need to call us.
+                    </div>
+                    {installPrompt ? (
+                        <button onClick={handleInstall} style={{ width: '100%', padding: '12px', background: 'var(--amber)', color: 'var(--navy-ink)', border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '14px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                            Add to Home Screen
+                        </button>
+                    ) : showIOSInstallHint ? (
+                        <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.85)', lineHeight: 1.5 }}>
+                            On iPhone: tap the <strong>Share</strong> button in Safari, then <strong>Add to Home Screen</strong>.
+                        </div>
+                    ) : null}
+                </div>
+            )}
+
             <div style={{textAlign: 'center', marginTop: '20px', padding: '14px', fontSize: '14px', color: 'rgba(255,255,255,0.7)'}}>
-                Need to speak to us? <a href="tel:07746899644" style={{color: 'var(--amber)', fontWeight: 600, textDecoration: 'none'}}>📞 07746 899644</a>
+                Customer support — Roy Medlam<br/>
+                <a href="tel:07746899644" style={{color: 'var(--amber)', fontWeight: 600, textDecoration: 'none'}}>📞 07746 899644</a>
             </div>
         </div>
     );
