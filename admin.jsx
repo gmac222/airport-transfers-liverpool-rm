@@ -331,10 +331,11 @@ function AdminApp() {
     const [acknowledgingId, setAcknowledgingId] = useState(null);
     const handleAcknowledgePayment = async (record) => {
         const f = record.fields;
-        if (!f['Driver Name'] || !f['Driver Phone']) {
-            return alert('No driver allocated yet — the operator needs to allocate a driver in the operator portal before payment can be acknowledged. The customer SMS includes the driver details.');
-        }
-        if (!window.confirm(`Acknowledge payment of £${f['Customer Price'] || f['Total Price'] || '?'} from ${f['Customer Name'] || 'customer'}?\n\nThis sets the booking to Accepted and sends the customer the driver details.`)) return;
+        const hasDriver = !!(f['Driver Name'] && f['Driver Phone']);
+        const driverNote = hasDriver
+            ? `\n\nThe customer will be sent driver details (${f['Driver Name']}).`
+            : `\n\nNo driver is allocated yet — the customer will be told their driver details will follow shortly.`;
+        if (!window.confirm(`Acknowledge payment of £${f['Customer Price'] || f['Total Price'] || '?'} from ${f['Customer Name'] || 'customer'}?${driverNote}`)) return;
         setAcknowledgingId(record.id);
         try {
             const patchRes = await fetch('/api/booking', {
@@ -345,10 +346,16 @@ function AdminApp() {
             const patchData = await patchRes.json();
             if (patchData.error) throw new Error(patchData.error);
 
+            // Tell the customer their payment has landed. If a driver is
+            // already allocated we use the full send-confirmation (driver
+            // name + phone). Otherwise we fire the lighter
+            // 'send-payment-received' which just confirms payment and
+            // promises driver details to follow.
+            const action = hasDriver ? 'send-confirmation' : 'send-payment-received';
             const smsRes = await fetch('/api/sms', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'send-confirmation', fields: f })
+                body: JSON.stringify({ action, fields: f })
             });
             const smsData = await smsRes.json();
             if (smsData.error) alert('Booking marked Accepted but confirmation SMS failed: ' + smsData.error);

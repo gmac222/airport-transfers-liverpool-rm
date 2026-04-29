@@ -303,12 +303,22 @@ module.exports = async (req, res) => {
                 // 3b. SMS to CUSTOMER if driver was CHANGED (not first assignment)
                 const oldDriverName = oldRecord['Driver Name'] || '';
                 const newDriverName = fields['Driver Name'] || '';
+                const isAlreadyPaid = (oldRecord['Status'] || rec['Status']) === 'Accepted';
                 if (oldDriverName && oldDriverName !== newDriverName) {
                     const customerPhone = formatPhone(rec['Phone'] || rec['Customer Phone'] || '');
                     if (customerPhone) {
                         const custMsg = `RM TRANSFERS – Driver Update\n\nHi ${rec['Customer Name'] || 'there'},\n\nApologies, the driver for your upcoming transfer has been changed.\n\nYour new driver is: ${newDriverName}\nDriver contact: ${fields['Driver Phone'] || '—'}\n\nBooking Ref: ${rec['Booking Ref'] || '—'}\nDate: ${fmtUKDate(rec['Outbound Date'])} at ${rec['Outbound Time'] || '—'}\nPickup: ${rec['Home Address'] || '—'}\n\nWe apologise for any inconvenience.\n\nNeed to speak to us? Call 07746 899644.\n\nRM Transfers`;
                         sendSms(customerPhone, custMsg);
                         console.log(`Customer notified of driver change: ${oldDriverName} → ${newDriverName}`);
+                    }
+                } else if (!oldDriverName && newDriverName && isAlreadyPaid) {
+                    // First-time driver assignment AFTER admin acknowledged
+                    // payment — customer's been waiting for these details.
+                    const customerPhone = formatPhone(rec['Phone'] || rec['Customer Phone'] || '');
+                    if (customerPhone) {
+                        const custMsg = `RM TRANSFERS – Driver Allocated\n\nHi ${rec['Customer Name'] || 'there'},\n\nGood news — your driver has been allocated.\n\nDriver: ${newDriverName}\nContact: ${fields['Driver Phone'] || '—'}\n\nBooking Ref: ${rec['Booking Ref'] || '—'}\nDate: ${fmtUKDate(rec['Outbound Date'])} at ${rec['Outbound Time'] || '—'}\nPickup: ${rec['Home Address'] || '—'}\n\nNeed to speak to us? Call 07746 899644.\n\nRM Transfers`;
+                        sendSms(customerPhone, custMsg);
+                        console.log(`Customer notified of first-time driver allocation post-payment: ${newDriverName}`);
                     }
                 }
             }

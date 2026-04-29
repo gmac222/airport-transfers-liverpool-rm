@@ -60,6 +60,17 @@ export default async function handler(req, res) {
         });
     }
 
+    // Sent when admin acknowledges payment but no driver has been allocated
+    // yet. Confirms the booking is paid and promises driver details to follow.
+    if (action === 'send-payment-received') {
+        if (!formattedCustomerPhone) return res.status(400).json({ error: 'Missing customer phone' });
+        messages.push({
+            to: formattedCustomerPhone,
+            from: 'RMTransfers',
+            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nPayment received! Your RM Transfers booking (${fields['Booking Ref']}) is fully confirmed for ${fmtUKDate(fields['Outbound Date'])} at ${fields['Outbound Time'] || ''}.\n\nWe'll text you your driver's name and phone number as soon as they're allocated.${SUPPORT_LINE}\n\n(Please do not reply to this text)`
+        });
+    }
+
     if (action === 'send-confirmation') {
         if (!formattedCustomerPhone) return res.status(400).json({ error: 'Missing customer phone' });
 
