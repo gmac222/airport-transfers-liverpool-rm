@@ -215,7 +215,7 @@ function FocusedJobCard({
                         );
                     })()}
 
-                    {isSuper && status === 'Awaiting Payment' && (
+                    {status === 'Awaiting Payment' && (
                         <button
                             onClick={() => handleAcknowledgePayment(booking)}
                             disabled={acknowledgingId === booking.id}
@@ -1065,7 +1065,7 @@ function AdminApp() {
                                                     </button>
 
                                                     {/* Acknowledge Payment — super admin only, shown once status is Awaiting Payment */}
-                                                    {isSuper && status === 'Awaiting Payment' && (
+                                                    {status === 'Awaiting Payment' && (
                                                         <button onClick={() => handleAcknowledgePayment(b)} disabled={acknowledgingId === b.id}
                                                             style={{ width: '100%', padding: '12px', marginTop: '10px', background: acknowledgingId === b.id ? '#a7f3d0' : '#10b981', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '14px', cursor: acknowledgingId === b.id ? 'wait' : 'pointer', fontFamily: 'inherit' }}>
                                                             {acknowledgingId === b.id ? 'Acknowledging…' : `✓ Acknowledge Payment & Send Driver Details${(f['Customer Price'] || f['Total Price']) ? ` (£${f['Customer Price'] || f['Total Price']})` : ''}`}

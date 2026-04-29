@@ -1,5 +1,21 @@
 const { useState, useEffect } = React;
 
+// Operators don't deal with money. Translate the underlying booking status
+// (which uses admin-side language like 'Awaiting Payment') into a label
+// that's relevant to a dispatch operator.
+const operatorStatusLabel = (status) => {
+    switch (status) {
+        case 'Pending': return 'Pending Quote';
+        case 'Awaiting Confirmation': return 'Awaiting Customer';
+        case 'Awaiting Payment':
+            return 'Awaiting Allocation';
+        case 'Accepted': return 'Confirmed';
+        case 'Declined': return 'Declined';
+        case 'Completed': return 'Completed';
+        default: return status || 'Pending';
+    }
+};
+
 // UK date helper — see admin.jsx for canonical version.
 const fmtUKDate = (raw) => {
     if (!raw) return '—';
@@ -67,7 +83,6 @@ function AdminApp() {
     const [driverPhones, setDriverPhones] = useState({});
     const [returnDriverNames, setReturnDriverNames] = useState({});
     const [returnDriverPhones, setReturnDriverPhones] = useState({});
-    const [prices, setPrices] = useState({});
     const [selectedDriver, setSelectedDriver] = useState(null);
 
     const handleLogin = (e) => {
@@ -350,65 +365,8 @@ function AdminApp() {
         setReturnDriverPhones(prev => ({ ...prev, [id]: phone }));
     };
 
-    const handlePriceChange = (id, price) => {
-        setPrices(prev => ({ ...prev, [id]: price }));
-    };
-
-    // STEP 1: send the price quote to the customer.
-    // No driver, no payment link yet — just price + accept/decline link.
-    const handleSendQuote = (id) => {
-        const priceRaw = prices[id];
-        if (!priceRaw || String(priceRaw).trim() === '' || Number(priceRaw) <= 0) {
-            return alert('Please enter a valid price (£) before sending the quote.');
-        }
-        const price = Number(priceRaw);
-        setAssigningId(id);
-
-        fetch('/api/booking', {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                id: id,
-                fields: {
-                    'Status': 'Awaiting Confirmation',
-                    'Customer Price': price,
-                    'Total Price': price
-                }
-            })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.error) throw new Error(data.error);
-
-            const record = bookings.find(b => b.id === id);
-            if (record) {
-                fetch('/api/sms', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'send-price-quote',
-                        fields: {
-                            'Booking Ref': record.fields['Booking Ref'],
-                            'Customer Name': record.fields['Customer Name'],
-                            'Customer Phone': record.fields['Customer Phone'],
-                            'Total Price': price
-                        }
-                    })
-                }).then(async res => {
-                    const smsData = await res.json();
-                    if (smsData.error) alert('Error sending quote SMS: ' + smsData.error);
-                }).catch(err => console.error('Error triggering sms:', err));
-            }
-
-            fetchBookings();
-        })
-        .catch(err => alert('Error sending quote: ' + err.message))
-        .finally(() => setAssigningId(null));
-    };
-
-    // STEP 2: customer has accepted the quote (status === 'Awaiting Payment').
-    // Operator allocates a driver to the booking. Payment-link work has
-    // been moved to the admin portal — operators only assign drivers here.
+    // Operator allocates a driver to a booking that's been routed to them.
+    // Quoting and payment are owned by the admin portal.
     const handleAssignDriver = (id) => {
         const driverName = driverNames[id];
         const driverPhone = driverPhones[id];
@@ -555,7 +513,6 @@ function AdminApp() {
         if (action === 'resend-driver') confirmText = "Resend Job SMS & Portal Link to Driver?";
         if (action === 'send-review-invite') confirmText = "Send Review Invite SMS to Customer?";
         if (action === 'send-confirmation') confirmText = "Resend driver details (name + phone) to customer?";
-        if (action === 'send-price-quote') confirmText = "Resend price quote SMS to customer?";
 
         if (!window.confirm(confirmText)) return;
         
@@ -766,7 +723,7 @@ function AdminApp() {
                                             <div><span style={{ color: 'var(--muted)' }}>Pickup:</span> {b.fields['Home Address']}</div>
                                             <div><span style={{ color: 'var(--muted)' }}>Airport:</span> {b.fields['Airport'] === 'Manchester' ? 'Manchester' : 'Liverpool'}</div>
                                             <div><span style={{ color: 'var(--muted)' }}>Flight:</span> {b.fields['Outbound Flight'] || 'N/A'}</div>
-                                            <div><span style={{ color: 'var(--muted)' }}>Price:</span> £{b.fields['Operator Price'] || b.fields['Total Price'] || '–'}</div>
+                                            <div><span style={{ color: 'var(--muted)' }}>Your fee:</span> {b.fields['Operator Price'] != null ? `£${b.fields['Operator Price']}` : <em style={{ color: '#9ca3af' }}>—</em>}</div>
                                         </div>
                                     </div>
                                 ))}
@@ -783,7 +740,7 @@ function AdminApp() {
                                         <div>
                                             <strong>{b.fields['Booking Ref']}</strong> — {b.fields['Customer Name']}
                                         </div>
-                                        <div style={{ color: 'var(--muted)' }}>{fmtUKDate(b.fields['Outbound Date'])} | £{b.fields['Operator Price'] || b.fields['Total Price'] || '–'}</div>
+                                        <div style={{ color: 'var(--muted)' }}>{fmtUKDate(b.fields['Outbound Date'])}{b.fields['Operator Price'] != null ? ` | £${b.fields['Operator Price']}` : ''}</div>
                                     </div>
                                 ))}
                             </div>
@@ -968,11 +925,11 @@ function AdminApp() {
                             >
                                 Enquiries
                             </button>
-                            <button 
-                                onClick={() => setActiveFilter('awaiting_payment')} 
+                            <button
+                                onClick={() => setActiveFilter('awaiting_payment')}
                                 className={`filter-btn filter-awaiting ${activeFilter === 'awaiting_payment' ? 'active' : ''}`}
                             >
-                                Awaiting Payment
+                                Awaiting Allocation
                             </button>
                             <button 
                                 onClick={() => setActiveFilter('paid')} 
@@ -1089,7 +1046,7 @@ function AdminApp() {
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                             <div className="job-ref">{fields['Booking Ref']}</div>
                                             <div className={`badge ${isPending || isAwaitingPayment ? 'badge-pending' : 'badge-accepted'}`}>
-                                                {status}
+                                                {operatorStatusLabel(status)}
                                             </div>
                                         </div>
                                         <div style={{ display: 'flex', gap: '8px' }}>
@@ -1198,60 +1155,31 @@ function AdminApp() {
                                     </div>
 
                                     {isPending ? (
-                                        <div className="job-actions" style={{ flexDirection: 'column', gap: '10px' }}>
-                                            <div className="price-entry">
-                                                <span className="price-entry-label">Step 1 — Quote the customer</span>
-                                                <div className="price-input-wrap">
-                                                    <input
-                                                        type="number"
-                                                        inputMode="decimal"
-                                                        min="0"
-                                                        step="1"
-                                                        placeholder="0"
-                                                        value={prices[id] !== undefined ? prices[id] : (fields['Customer Price'] || fields['Total Price'] || '')}
-                                                        onChange={e => handlePriceChange(id, e.target.value)}
-                                                        aria-label="Customer price in pounds"
-                                                    />
-                                                </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleSendQuote(id)}
-                                                    disabled={assigningId === id}
-                                                    className="price-send-btn"
-                                                >
-                                                    {assigningId === id ? 'Sending…' : 'Send Quote to Customer'}
-                                                </button>
-                                                <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '8px', lineHeight: 1.4 }}>
-                                                    Customer gets an SMS with the price and a link to accept or decline. Allocate a driver only once they accept.
-                                                </div>
-                                            </div>
+                                        <div className="job-actions" style={{background: '#f9fafb', padding: '12px 14px', borderRadius: '8px', border: '1px solid var(--line)', display: 'flex', flexDirection: 'column', gap: '6px'}}>
+                                            <span style={{fontSize: '14px', fontWeight: 600}}>⏳ Pending Quote</span>
+                                            <span style={{fontSize: '13px', color: 'var(--muted)'}}>
+                                                Admin is quoting the customer. You'll be asked to allocate a driver once the customer accepts.
+                                            </span>
                                         </div>
                                     ) : isAwaitingConfirmation ? (
                                         <div className="job-actions" style={{background: '#fefce8', padding: '10px 14px', borderRadius: '8px', border: '1px solid #facc15', display: 'flex', flexDirection: 'column', gap: '8px'}}>
                                             <span style={{fontSize: '14px', fontWeight: 600, color: '#a16207'}}>⏳ Awaiting customer confirmation</span>
-                                            <span style={{fontSize: '14px'}}>Quoted price: £{fields['Total Price'] || '—'}</span>
                                             <span style={{fontSize: '13px', color: 'var(--muted)'}}>
-                                                Customer has been sent the price and is choosing to accept or decline. The status will move to "Awaiting Payment" once they accept.
+                                                Admin has quoted the customer. You'll be asked to allocate a driver once the customer accepts.
                                             </span>
-                                            <button
-                                                onClick={() => handleDirectSMS(record, 'send-price-quote')}
-                                                style={{ padding: '8px', width: '100%', background: 'white', border: '1px solid #facc15', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', color: '#a16207', fontSize: '13px' }}
-                                            >
-                                                Resend Quote SMS
-                                            </button>
                                         </div>
                                     ) : isAwaitingPayment ? (
                                         <div className="job-actions" style={{ flexDirection: 'column', gap: '10px' }}>
                                             <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--navy-ink)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                                 {fields['Driver Name']
-                                                    ? '💳 Awaiting Payment'
-                                                    : `🚗 Step 2 — Allocate Driver${fields['Trip Type'] === 'return' ? ' (Outbound)' : ''}`}
+                                                    ? '✓ Driver Allocated'
+                                                    : `🚗 Allocate Driver${fields['Trip Type'] === 'return' ? ' (Outbound)' : ''}`}
                                             </div>
 
                                             {!fields['Driver Name'] && (
                                                 <>
                                                     <div style={{ fontSize: '13px', color: 'var(--muted)' }}>
-                                                        Customer accepted the £{fields['Total Price'] || '—'} quote. Allocate a driver and paste the payment link to send.
+                                                        Booking has been routed to you. Allocate a driver to confirm the job.
                                                     </div>
                                                     <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                                                         <select
@@ -1327,7 +1255,7 @@ function AdminApp() {
                                                         <span style={{fontSize: '14px', color: '#7c3aed'}}>Return Driver: {fields['Return Driver Name'] || fields['Driver Name']} {fields['Return Driver Phone'] ? `(${fields['Return Driver Phone']})` : fields['Driver Phone'] ? `(${fields['Driver Phone']})` : ''}</span>
                                                     )}
                                                     <div style={{ padding: '10px', background: '#f3f4f6', borderRadius: '6px', fontSize: '12px', color: 'var(--muted)', textAlign: 'center', marginTop: '4px' }}>
-                                                        Payment link &amp; payment confirmation are handled by the admin portal.
+                                                        Driver allocated. The job will be confirmed by admin.
                                                     </div>
                                                 </div>
                                             )}
@@ -1336,7 +1264,7 @@ function AdminApp() {
                                         <div className="job-actions" style={{background: '#fef2f2', padding: '10px 14px', borderRadius: '8px', border: '1px solid #fca5a5', display: 'flex', flexDirection: 'column', gap: '8px'}}>
                                             <span style={{fontSize: '14px', fontWeight: 600, color: '#b91c1c'}}>❌ Customer Declined</span>
                                             <span style={{fontSize: '13px', color: 'var(--muted)'}}>
-                                                The customer declined the £{fields['Total Price'] || '—'} quote. No driver was allocated and no payment was taken.
+                                                The customer declined this booking. No driver was allocated.
                                             </span>
                                         </div>
                                     ) : isCompleted ? (
