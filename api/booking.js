@@ -403,7 +403,9 @@ module.exports = async (req, res) => {
                 console.log(`Decline trigger fired for ${rec['Booking Ref']} (was ${oldRecord['Status'] || 'undefined'})`);
                 const ADMIN_NUMBERS = ['+447398233859', '+447746899644']; // Graham, Roy
                 const price = rec['Customer Price'] || rec['Total Price'];
-                const adminMsg = `RM TRANSFERS – Booking DECLINED by customer\n\nRef: ${rec['Booking Ref'] || '—'}\nCustomer: ${rec['Customer Name'] || '—'}\nPhone: ${rec['Customer Phone'] || '—'}\nQuote: £${price ?? '—'}\nPickup: ${rec['Home Address'] || '—'}\nDate: ${fmtUKDate(rec['Outbound Date'])} at ${rec['Outbound Time'] || '—'}\n\nOpen: https://airporttaxitransfersliverpool.co.uk/admin.html?ref=${rec['Booking Ref'] || ''}`;
+                // Use plain ASCII so ClickSend doesn't choke on Unicode dashes.
+                const dash = '-';
+                const adminMsg = `RM TRANSFERS ${dash} Booking DECLINED by customer\n\nRef: ${rec['Booking Ref'] || dash}\nCustomer: ${rec['Customer Name'] || dash}\nPhone: ${rec['Customer Phone'] || dash}\nQuote: GBP ${price ?? dash}\nPickup: ${rec['Home Address'] || dash}\nDate: ${fmtUKDate(rec['Outbound Date'])} at ${rec['Outbound Time'] || dash}\n\nOpen: https://airporttaxitransfersliverpool.co.uk/admin.html?ref=${rec['Booking Ref'] || ''}`;
                 // Await both so the serverless function can't terminate before
                 // ClickSend has actually been called.
                 await Promise.all(ADMIN_NUMBERS.map(n => sendSms(n, adminMsg)));
