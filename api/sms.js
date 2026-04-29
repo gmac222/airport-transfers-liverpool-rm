@@ -124,6 +124,20 @@ export default async function handler(req, res) {
         });
     }
 
+    // Customer accepted the quote but hasn't paid 24+ hours later — gentle
+    // nudge asking whether they still want to proceed. Fires from the
+    // /api/cron-nudge-unpaid daily cron and from the admin failsafe button.
+    if (action === 'send-payment-nudge') {
+        if (!formattedCustomerPhone) return res.status(400).json({ error: 'Missing customer phone' });
+        const price = fields['Customer Price'] ?? fields['Total Price'];
+        const priceLine = price ? ` (£${price})` : '';
+        messages.push({
+            to: formattedCustomerPhone,
+            from: 'RMTransfers',
+            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nWe haven't received payment for your RM Transfers booking (${fields['Booking Ref']})${priceLine} yet. Would you still like to go ahead?\n\nPay now or let us know via your portal: https://airporttaxitransfersliverpool.co.uk/portal.html?ref=${fields['Booking Ref']}\n\nIf you no longer need the transfer, please reply by tapping Decline so we can release the slot.${SUPPORT_LINE}\n\n(Please do not reply to this text)`
+        });
+    }
+
     // Step 2 of customer flow: payment link, sent after the customer accepts the quote.
     if (action === 'send-payment-link') {
         if (!formattedCustomerPhone) return res.status(400).json({ error: 'Missing customer phone' });

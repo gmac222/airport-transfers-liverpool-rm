@@ -26,7 +26,7 @@ function FocusedJobCard({
     handleSendQuote, sendingQuote,
     isSuper, handleAcknowledgePayment, acknowledgingId,
     openEditModal, handleDeleteJob, handleClearOperatorEditFlag,
-    dispatchToOperator,
+    dispatchToOperator, resendQuote, sendPaymentNudge,
     onClose, onLogout
 }) {
     if (loading) {
@@ -230,6 +230,19 @@ function FocusedJobCard({
                         );
                     })()}
 
+                    {(status === 'Awaiting Confirmation' || status === 'Awaiting Payment') && (
+                        <div style={{ display: 'flex', gap: '8px', marginTop: '10px', flexWrap: 'wrap' }}>
+                            <button onClick={() => resendQuote(booking)} style={{ flex: '1 1 160px', padding: '12px', background: 'white', color: 'var(--amber-deep)', border: '1px solid var(--amber)', borderRadius: '10px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px' }}>
+                                ↻ Resend Quote SMS
+                            </button>
+                            {status === 'Awaiting Payment' && (
+                                <button onClick={() => sendPaymentNudge(booking)} style={{ flex: '1 1 180px', padding: '12px', background: 'white', color: '#a16207', border: '1px solid #facc15', borderRadius: '10px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px' }}>
+                                    ⏰ Send Payment Nudge{f['Payment Nudge Sent'] ? ' (again)' : ''}
+                                </button>
+                            )}
+                        </div>
+                    )}
+
                     {status === 'Awaiting Payment' && (
                         <button
                             onClick={() => handleAcknowledgePayment(booking)}
@@ -340,6 +353,32 @@ function AdminApp() {
         setEditingJob(record.id);
         setEditForm({ ...record.fields });
     };
+    const openCreateModal = () => {
+        setEditingJob('new');
+        setEditForm({
+            'Booking Ref': 'ATL-' + Array.from({ length: 8 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)]).join(''),
+            'Trip Type': 'oneway',
+            'Oneway Direction': 'to',
+            'Airport': 'LJLA',
+            'Customer Name': '',
+            'Customer Phone': '',
+            'Customer Email': '',
+            'Home Address': '',
+            'Outbound Date': '',
+            'Outbound Time': '',
+            'Outbound Flight': '',
+            'Return Date': '',
+            'Return Time': '',
+            'Return Flight': '',
+            'Passengers': 1,
+            'Luggage': 0,
+            'Notes': '',
+            'Total Price': 0,
+            'Operator Price': 0,
+            'Status': 'Pending',
+            'Submitted At': new Date().toISOString()
+        });
+    };
     const closeEditModal = () => {
         setEditingJob(null);
         setEditForm({});
@@ -348,6 +387,24 @@ function AdminApp() {
         e.preventDefault();
         if (!editingJob) return;
         setIsSavingEdit(true);
+
+        if (editingJob === 'new') {
+            fetch('/api/booking?action=create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fields: editForm })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) throw new Error(data.error);
+                closeEditModal();
+                fetchBookings();
+            })
+            .catch(err => alert('Error creating booking: ' + err.message))
+            .finally(() => setIsSavingEdit(false));
+            return;
+        }
+
         // Admin edits override the 'Edited By Operator' flag — admin has
         // implicitly seen and signed off on the change.
         const fields = { ...editForm, 'Edited By Operator': false };
@@ -407,6 +464,68 @@ function AdminApp() {
             console.error('Could not flag dispatch:', err);
         }
         window.location.href = `/operator.html?ref=${encodeURIComponent(f['Booking Ref'])}`;
+    };
+
+    const resendQuote = async (record) => {
+        const f = record.fields;
+        const cp = f['Customer Price'] ?? f['Total Price'];
+        if (!cp) return alert('No price on this booking yet — set Customer Price before resending.');
+        if (!f['Customer Phone']) return alert('No customer phone on this booking.');
+        if (!window.confirm(`Resend the quote SMS (£${cp}) to ${f['Customer Name'] || 'the customer'}?`)) return;
+        try {
+            const res = await fetch('/api/sms', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'send-price-quote',
+                    fields: {
+                        'Booking Ref': f['Booking Ref'],
+                        'Customer Name': f['Customer Name'],
+                        'Customer Phone': f['Customer Phone'],
+                        'Customer Price': cp,
+                        'Total Price': cp
+                    }
+                })
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            alert('Quote SMS resent.');
+        } catch (err) {
+            alert('Could not resend quote: ' + err.message);
+        }
+    };
+
+    const sendPaymentNudge = async (record) => {
+        const f = record.fields;
+        if (!f['Customer Phone']) return alert('No customer phone on this booking.');
+        if (!window.confirm(`Send a payment-nudge SMS to ${f['Customer Name'] || 'the customer'} asking if they still want to proceed?`)) return;
+        try {
+            const smsRes = await fetch('/api/sms', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'send-payment-nudge',
+                    fields: {
+                        'Booking Ref': f['Booking Ref'],
+                        'Customer Name': f['Customer Name'],
+                        'Customer Phone': f['Customer Phone'],
+                        'Customer Price': f['Customer Price'] ?? f['Total Price']
+                    }
+                })
+            });
+            const smsData = await smsRes.json();
+            if (smsData.error) throw new Error(smsData.error);
+            // Mark as nudged so the cron doesn't fire on top of us.
+            await fetch('/api/booking', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: record.id, fields: { 'Payment Nudge Sent': true } })
+            });
+            fetchBookings();
+            alert('Nudge SMS sent.');
+        } catch (err) {
+            alert('Could not send nudge: ' + err.message);
+        }
     };
 
     const archiveBooking = async (record) => {
@@ -926,6 +1045,8 @@ function AdminApp() {
                 handleDeleteJob={handleDeleteJob}
                 handleClearOperatorEditFlag={handleClearOperatorEditFlag}
                 dispatchToOperator={dispatchToOperator}
+                resendQuote={resendQuote}
+                sendPaymentNudge={sendPaymentNudge}
                 onClose={() => {
                     setFocusRef('');
                     // Drop the ref from the URL without a reload
@@ -952,6 +1073,9 @@ function AdminApp() {
                     </div>
                 </div>
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                    <button onClick={openCreateModal} style={{ background: 'var(--amber)', color: 'var(--navy-ink)', border: 'none', padding: '6px 12px', borderRadius: '6px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                        + New Manual Booking
+                    </button>
                     {localStorage.getItem('adminIsSuper') === 'true' && (
                         <a href="/superadmin.html" style={{ background: 'var(--amber)', color: 'var(--navy-ink)', textDecoration: 'none', padding: '6px 12px', borderRadius: '6px', fontWeight: 700, fontSize: '14px' }}>💰 Finance</a>
                     )}
@@ -1226,7 +1350,21 @@ function AdminApp() {
                                                         {sendingQuote ? 'Sending quote…' : sentAlready ? `Quote already sent (${status})` : cpRaw == null || Number(cpRaw) <= 0 ? 'Enter Customer Price first' : `Send Quote to Customer — £${Number(cpRaw).toFixed(2)}`}
                                                     </button>
 
-                                                    {/* Acknowledge Payment — super admin only, shown once status is Awaiting Payment */}
+                                                    {/* Resend buttons — shown after the first quote went out */}
+                                                    {(status === 'Awaiting Confirmation' || status === 'Awaiting Payment') && (
+                                                        <div style={{ display: 'flex', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
+                                                            <button onClick={() => resendQuote(b)} style={{ flex: '1 1 180px', padding: '10px', background: 'white', color: 'var(--amber-deep)', border: '1px solid var(--amber)', borderRadius: '8px', fontWeight: 600, fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                                                                ↻ Resend Quote SMS
+                                                            </button>
+                                                            {status === 'Awaiting Payment' && (
+                                                                <button onClick={() => sendPaymentNudge(b)} style={{ flex: '1 1 200px', padding: '10px', background: 'white', color: '#a16207', border: '1px solid #facc15', borderRadius: '8px', fontWeight: 600, fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                                                                    ⏰ Send Payment Nudge{f['Payment Nudge Sent'] ? ' (again)' : ''}
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    )}
+
+                                                    {/* Acknowledge Payment — shown once status is Awaiting Payment */}
                                                     {status === 'Awaiting Payment' && (
                                                         <button onClick={() => handleAcknowledgePayment(b)} disabled={acknowledgingId === b.id}
                                                             style={{ width: '100%', padding: '12px', marginTop: '10px', background: acknowledgingId === b.id ? '#a7f3d0' : '#10b981', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '14px', cursor: acknowledgingId === b.id ? 'wait' : 'pointer', fontFamily: 'inherit' }}>
@@ -1330,7 +1468,7 @@ function AdminApp() {
                 <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px' }}>
                     <div style={{ background: 'white', borderRadius: '14px', width: '100%', maxWidth: '640px', maxHeight: '92vh', overflowY: 'auto', padding: '24px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                            <h2 style={{ margin: 0, fontFamily: 'Lexend', fontSize: '20px' }}>Edit Booking</h2>
+                            <h2 style={{ margin: 0, fontFamily: 'Lexend', fontSize: '20px' }}>{editingJob === 'new' ? 'New Manual Booking' : 'Edit Booking'}</h2>
                             <button onClick={closeEditModal} style={{ background: 'transparent', border: 'none', fontSize: '22px', cursor: 'pointer', color: 'var(--muted)' }}>×</button>
                         </div>
                         <form onSubmit={handleSaveEdit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -1429,7 +1567,7 @@ function AdminApp() {
                             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '8px' }}>
                                 <button type="button" onClick={closeEditModal} style={{ padding: '10px 16px', background: 'white', color: 'var(--ink)', border: '1px solid var(--line)', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
                                 <button type="submit" disabled={isSavingEdit} style={{ padding: '10px 18px', background: 'var(--navy)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: isSavingEdit ? 'wait' : 'pointer', fontFamily: 'inherit' }}>
-                                    {isSavingEdit ? 'Saving…' : 'Save Changes'}
+                                    {isSavingEdit ? 'Saving…' : (editingJob === 'new' ? 'Create Booking' : 'Save Changes')}
                                 </button>
                             </div>
                         </form>

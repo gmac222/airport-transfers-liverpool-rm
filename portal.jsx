@@ -62,7 +62,7 @@ function PortalApp() {
             const res = await fetch('/api/booking', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: booking.id, fields: { Status: 'Awaiting Payment' } })
+                body: JSON.stringify({ id: booking.id, fields: { Status: 'Awaiting Payment', 'Awaiting Payment Since': new Date().toISOString(), 'Payment Nudge Sent': false } })
             });
             const data = await res.json();
             if (data.error) throw new Error(data.error);

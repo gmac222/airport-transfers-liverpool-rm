@@ -4,5 +4,8 @@
     { "source": "/driver-app/", "destination": "/driver-app-build/index.html" },
     { "source": "/driver-app/assets/:path*", "destination": "/driver-app-build/assets/:path*" },
     { "source": "/driver-app/:path*", "destination": "/driver-app-build/index.html" }
+  ],
+  "crons": [
+    { "path": "/api/cron-nudge-unpaid", "schedule": "0 9 * * *" }
   ]
 }
