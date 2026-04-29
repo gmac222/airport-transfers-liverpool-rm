@@ -1,5 +1,189 @@
 const { useState, useEffect } = React;
 
+// Mobile-first single-job card. Shown on /admin.html?ref=ATL-XXXX (the
+// SMS deep-link) so graham/roy can act on a job without wading through
+// the table on a phone.
+function FocusedJobCard({
+    bookingRef, booking, loading, operators, driversList,
+    priceDraftCustomer, priceDraftOperator,
+    setPriceDraftCustomer, setPriceDraftOperator,
+    priceSavingId, priceSavedFlash, commitPrice,
+    handleReassignDriver, handleReassignReturnDriver, handleReassignSingle,
+    onClose, onLogout
+}) {
+    if (loading) {
+        return (
+            <div style={{ minHeight: '100vh', background: 'var(--cream)', padding: '20px' }}>
+                <div className="card" style={{ maxWidth: '560px', margin: '0 auto', textAlign: 'center', padding: '40px 20px' }}>
+                    <div style={{ color: 'var(--muted)' }}>Loading booking {bookingRef}…</div>
+                </div>
+            </div>
+        );
+    }
+    if (!booking) {
+        return (
+            <div style={{ minHeight: '100vh', background: 'var(--cream)', padding: '20px' }}>
+                <div className="card" style={{ maxWidth: '560px', margin: '0 auto', padding: '24px', textAlign: 'center' }}>
+                    <h2 style={{ margin: '0 0 6px 0', fontFamily: 'Lexend' }}>Booking not found</h2>
+                    <p style={{ color: 'var(--muted)', marginBottom: '20px' }}>We couldn't find a booking with reference <strong>{bookingRef}</strong>.</p>
+                    <button onClick={onClose} style={{ padding: '10px 20px', background: 'var(--navy)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>Open full admin</button>
+                </div>
+            </div>
+        );
+    }
+    const f = booking.fields;
+    const isReturn = f['Trip Type'] === 'return';
+    const cpRaw = f['Customer Price'];
+    const opRaw = f['Operator Price'];
+    const cpDraft = priceDraftCustomer[booking.id];
+    const opDraft = priceDraftOperator[booking.id];
+    const cpValue = cpDraft !== undefined ? cpDraft : (cpRaw != null ? String(cpRaw) : '');
+    const opValue = opDraft !== undefined ? opDraft : (opRaw != null ? String(opRaw) : '');
+    const flashed = !!priceSavedFlash[booking.id];
+    const cpClass = `price-cell${flashed ? ' saved' : (cpRaw == null && cpDraft === undefined ? ' empty' : '')}`;
+    const opClass = `price-cell${flashed ? ' saved' : (opRaw == null && opDraft === undefined ? ' empty' : '')}`;
+    const profit = (Number(cpRaw) || 0) - (Number(opRaw) || 0);
+    const hasBothPrices = cpRaw != null && opRaw != null;
+    const profitCls = !hasBothPrices ? 'zero' : profit > 0 ? 'positive' : profit < 0 ? 'negative' : 'zero';
+    const status = f['Status'] || 'Pending';
+    const currentOp = f['Operator'] || '';
+
+    const detail = (label, value) => (
+        <div style={{ paddingBottom: '8px' }}>
+            <div style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--muted)', fontWeight: 700, letterSpacing: '0.04em' }}>{label}</div>
+            <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--navy-ink)', wordBreak: 'break-word' }}>{value || <span style={{color:'#9ca3af'}}>—</span>}</div>
+        </div>
+    );
+
+    return (
+        <div style={{ minHeight: '100vh', background: 'var(--cream)', paddingBottom: '40px' }}>
+            <div className="header" style={{ padding: '12px 16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <img src="./assets/logo.png" alt="RM" style={{ height: '28px' }} />
+                    <strong style={{ fontSize: '15px' }}>{f['Booking Ref']}</strong>
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}>All jobs</button>
+                    <button onClick={onLogout} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.4)', color: 'white', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>Log out</button>
+                </div>
+            </div>
+
+            <div style={{ maxWidth: '560px', margin: '16px auto', padding: '0 12px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                {/* Status pill */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{
+                        fontSize: '12px', padding: '4px 10px', borderRadius: '999px', fontWeight: 700,
+                        background: status === 'Accepted' ? '#dcfce7' : status === 'Declined' ? '#fee2e2' : '#fef3c7',
+                        color: status === 'Accepted' ? '#166534' : status === 'Declined' ? '#b91c1c' : '#92400e'
+                    }}>{status}</span>
+                    <a href={`tel:${f['Customer Phone']}`} style={{ fontSize: '13px', color: 'var(--navy)', textDecoration: 'none', fontWeight: 600 }}>📞 Call customer</a>
+                </div>
+
+                {/* Pricing — the headline action */}
+                <div className="card" style={{ padding: '16px' }}>
+                    <h3 style={{ margin: '0 0 12px 0', fontFamily: 'Lexend', fontSize: '16px' }}>💷 Pricing</h3>
+                    <div style={{ display: 'grid', gap: '10px' }}>
+                        <div>
+                            <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--amber-deep)', textTransform: 'uppercase', marginBottom: '4px' }}>Customer Price</div>
+                            <label className={cpClass} style={{ width: '100%' }}>
+                                <span className="currency">£</span>
+                                <input
+                                    type="number" inputMode="decimal" step="0.01" min="0" placeholder="0.00"
+                                    value={cpValue}
+                                    disabled={priceSavingId === booking.id}
+                                    onChange={e => setPriceDraftCustomer(prev => ({ ...prev, [booking.id]: e.target.value }))}
+                                    onBlur={e => {
+                                        const v = e.target.value;
+                                        const old = cpRaw != null ? String(cpRaw) : '';
+                                        if (v !== old) commitPrice(booking.id, 'Customer Price', v);
+                                        setPriceDraftCustomer(prev => { const n = { ...prev }; delete n[booking.id]; return n; });
+                                    }}
+                                    onKeyDown={e => { if (e.key === 'Enter') e.target.blur(); }}
+                                />
+                            </label>
+                        </div>
+                        <div>
+                            <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--amber-deep)', textTransform: 'uppercase', marginBottom: '4px' }}>Operator Price</div>
+                            <label className={opClass} style={{ width: '100%' }}>
+                                <span className="currency">£</span>
+                                <input
+                                    type="number" inputMode="decimal" step="0.01" min="0" placeholder="0.00"
+                                    value={opValue}
+                                    disabled={priceSavingId === booking.id}
+                                    onChange={e => setPriceDraftOperator(prev => ({ ...prev, [booking.id]: e.target.value }))}
+                                    onBlur={e => {
+                                        const v = e.target.value;
+                                        const old = opRaw != null ? String(opRaw) : '';
+                                        if (v !== old) commitPrice(booking.id, 'Operator Price', v);
+                                        setPriceDraftOperator(prev => { const n = { ...prev }; delete n[booking.id]; return n; });
+                                    }}
+                                    onKeyDown={e => { if (e.key === 'Enter') e.target.blur(); }}
+                                />
+                            </label>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                            <span style={{ fontSize: '12px', textTransform: 'uppercase', color: 'var(--muted)', fontWeight: 700 }}>Profit</span>
+                            <span className={`profit-pill ${profitCls}`}>{hasBothPrices ? `£${profit.toFixed(2)}` : '–'}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Trip details */}
+                <div className="card" style={{ padding: '16px' }}>
+                    <h3 style={{ margin: '0 0 12px 0', fontFamily: 'Lexend', fontSize: '16px' }}>🧳 Trip</h3>
+                    <div style={{ display: 'grid', gap: '8px' }}>
+                        {detail('Customer', `${f['Customer Name'] || ''} · ${f['Customer Phone'] || ''}`)}
+                        {detail('Trip Type', isReturn ? 'Return' : `One Way (${f['Oneway Direction'] === 'from' ? 'From' : 'To'} airport)`)}
+                        {detail('Airport', f['Airport'])}
+                        {detail('Outbound', `${f['Outbound Date'] || ''} ${f['Outbound Time'] || ''}`)}
+                        {f['Outbound Flight'] && detail('Flight', f['Outbound Flight'])}
+                        {isReturn && detail('Return', `${f['Return Date'] || ''} ${f['Return Time'] || ''}`)}
+                        {detail('Pickup', f['Home Address'])}
+                        {detail('Pax / Bags', `${f['Passengers'] || 0} pax · ${f['Luggage'] || 0} bags`)}
+                        {f['Notes'] && detail('Notes', f['Notes'])}
+                    </div>
+                </div>
+
+                {/* Assignment */}
+                <div className="card" style={{ padding: '16px' }}>
+                    <h3 style={{ margin: '0 0 12px 0', fontFamily: 'Lexend', fontSize: '16px' }}>🚗 Assignment</h3>
+                    <div style={{ display: 'grid', gap: '12px' }}>
+                        <div>
+                            <div style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '4px' }}>Operator</div>
+                            <select value={currentOp} onChange={e => handleReassignSingle(booking.id, e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid var(--line)', borderRadius: '8px', fontFamily: 'inherit', fontSize: '15px' }}>
+                                <option value="">Unassigned</option>
+                                {operators.map(op => <option key={op.id} value={op.name}>{op.name}</option>)}
+                            </select>
+                        </div>
+                        <div>
+                            <div style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '4px' }}>Outbound Driver</div>
+                            <select value={f['Driver Name'] || ''} onChange={e => handleReassignDriver(booking.id, e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid var(--line)', borderRadius: '8px', fontFamily: 'inherit', fontSize: '15px' }}>
+                                <option value="">No driver</option>
+                                {driversList.map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
+                            </select>
+                        </div>
+                        {isReturn && (
+                            <div>
+                                <div style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', color: '#7c3aed', marginBottom: '4px' }}>Return Driver</div>
+                                <select value={f['Return Driver Name'] || ''} onChange={e => handleReassignReturnDriver(booking.id, e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #c4b5fd', borderRadius: '8px', fontFamily: 'inherit', fontSize: '15px', background: '#faf5ff' }}>
+                                    <option value="">Same as outbound</option>
+                                    {driversList.map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
+                                </select>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <a
+                    href={`/operator.html?ref=${encodeURIComponent(f['Booking Ref'])}`}
+                    style={{ display: 'block', textAlign: 'center', padding: '14px', background: 'var(--amber)', color: 'var(--navy-ink)', textDecoration: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '15px' }}>
+                    Open in Dispatch Portal →
+                </a>
+            </div>
+        </div>
+    );
+}
+
 function AdminApp() {
     const [isLoggedIn, setIsLoggedIn] = useState(localStorage.getItem('adminLoggedIn') === 'true');
     const [username, setUsername] = useState('');
@@ -12,6 +196,14 @@ function AdminApp() {
     const [loading, setLoading] = useState(true);
     const [view, setView] = useState('jobs'); // jobs | operators
     const [jobsSearch, setJobsSearch] = useState('');
+
+    // If the URL carries ?ref=ATL-XXXX (an SMS deep-link), focus on that
+    // single job in a mobile-friendly card view.
+    const initialFocusRef = (() => {
+        try { return new URLSearchParams(window.location.search).get('ref') || ''; }
+        catch (e) { return ''; }
+    })();
+    const [focusRef, setFocusRef] = useState(initialFocusRef);
 
     // New operator form
     const [newOp, setNewOp] = useState({ name: '', username: '', password: '', phone: '', email: '' });
@@ -296,6 +488,40 @@ function AdminApp() {
     const opNames = operators.map(o => o.name);
     const activeBookings = bookings.filter(b => !['Archived','Cancelled'].includes(b.fields['Status']));
     const unassignedCount = activeBookings.filter(b => !b.fields['Operator']).length;
+
+    // ─── SMS deep-link: single-job card view ───────────────────────
+    if (focusRef) {
+        const focusBooking = bookings.find(b => (b.fields['Booking Ref'] || '').toLowerCase() === focusRef.toLowerCase());
+        return (
+            <FocusedJobCard
+                bookingRef={focusRef}
+                booking={focusBooking}
+                loading={loading}
+                operators={operators}
+                driversList={driversList}
+                priceDraftCustomer={priceDraftCustomer}
+                priceDraftOperator={priceDraftOperator}
+                setPriceDraftCustomer={setPriceDraftCustomer}
+                setPriceDraftOperator={setPriceDraftOperator}
+                priceSavingId={priceSavingId}
+                priceSavedFlash={priceSavedFlash}
+                commitPrice={commitPrice}
+                handleReassignDriver={handleReassignDriver}
+                handleReassignReturnDriver={handleReassignReturnDriver}
+                handleReassignSingle={handleReassignSingle}
+                onClose={() => {
+                    setFocusRef('');
+                    // Drop the ref from the URL without a reload
+                    try {
+                        const u = new URL(window.location.href);
+                        u.searchParams.delete('ref');
+                        window.history.replaceState({}, '', u.toString());
+                    } catch (e) {}
+                }}
+                onLogout={handleLogout}
+            />
+        );
+    }
 
     return (
         <div>

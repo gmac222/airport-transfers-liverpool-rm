@@ -239,7 +239,7 @@ export default async function handler(req, res) {
             messages.push({
                 to: num,
                 from: 'RMTransfers',
-                body: `NEW BOOKING: ${fields['Booking Ref']}\nName: ${fields['Customer Name']}\nFrom: ${fields['Home Address']}\nTo: ${fields['Airport Name']}\nType: ${fields['Trip Type']}\nPax: ${fields['Passengers']} Bags: ${fields['Luggage']}\nPhone: ${fields['Customer Phone']}\nAdmin: https://airporttaxitransfersliverpool.co.uk/operator.html?ref=${fields['Booking Ref']}`
+                body: `NEW BOOKING: ${fields['Booking Ref']}\nName: ${fields['Customer Name']}\nFrom: ${fields['Home Address']}\nTo: ${fields['Airport Name']}\nType: ${fields['Trip Type']}\nPax: ${fields['Passengers']} Bags: ${fields['Luggage']}\nPhone: ${fields['Customer Phone']}\nOpen: https://airporttaxitransfersliverpool.co.uk/admin.html?ref=${fields['Booking Ref']}`
             });
         });
     }
