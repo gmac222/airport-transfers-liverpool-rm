@@ -1451,8 +1451,9 @@ function AdminApp() {
                                                         </td>
                                                         <td style={{ padding: '8px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{cp ? `£${cp.toFixed(2)}` : '—'}</td>
                                                         <td style={{ padding: '8px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: profitColor, fontWeight: 700 }}>{(cp || op) ? `£${profit.toFixed(2)}` : '—'}</td>
-                                                        <td style={{ padding: '8px' }}>
-                                                            <button onClick={() => unarchiveBooking(b)} title="Restore this booking to active" style={{ background: 'transparent', color: 'var(--navy)', border: '1px solid var(--line)', borderRadius: '6px', padding: '4px 10px', fontSize: '12px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>Restore</button>
+                                                        <td style={{ padding: '8px', whiteSpace: 'nowrap' }}>
+                                                            <button onClick={() => unarchiveBooking(b)} title="Restore this booking to active" style={{ background: 'transparent', color: 'var(--navy)', border: '1px solid var(--line)', borderRadius: '6px', padding: '4px 10px', fontSize: '12px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit', marginRight: '6px' }}>Restore</button>
+                                                            <button onClick={() => handleDeleteJob(b)} title="Permanently delete — cannot be undone" style={{ background: 'transparent', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: '6px', padding: '4px 10px', fontSize: '12px', cursor: 'pointer', fontWeight: 700, fontFamily: 'inherit' }}>Delete</button>
                                                         </td>
                                                     </tr>
                                                 );
