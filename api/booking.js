@@ -212,7 +212,7 @@ module.exports = async (req, res) => {
             const priceTouched = fields['Customer Price'] !== undefined ||
                                  fields['Operator Price'] !== undefined ||
                                  fields['Total Price'] !== undefined;
-            if (fields['Driver Name'] !== undefined || fields['Return Driver Name'] !== undefined || fields['Status'] !== undefined || priceTouched) {
+            if (fields['Driver Name'] !== undefined || fields['Return Driver Name'] !== undefined || fields['Status'] !== undefined || fields['Dispatched To Operator'] !== undefined || priceTouched) {
                 try {
                     const existingRes = await fetch(url, {
                         headers: { 'Authorization': `Bearer ${AIRTABLE_API_KEY}` }
@@ -357,6 +357,32 @@ module.exports = async (req, res) => {
                         const custMsg = `RM TRANSFERS – Driver Allocated\n\nHi ${rec['Customer Name'] || 'there'},\n\nGood news — your driver has been allocated.\n\nDriver: ${newDriverName}\nContact: ${fields['Driver Phone'] || '—'}\n\nBooking Ref: ${rec['Booking Ref'] || '—'}\nDate: ${fmtUKDate(rec['Outbound Date'])} at ${rec['Outbound Time'] || '—'}\nPickup: ${rec['Home Address'] || '—'}\n\nNeed to speak to us? Call 07746 899644.\n\nRM Transfers`;
                         sendSms(customerPhone, custMsg);
                         console.log(`Customer notified of first-time driver allocation post-payment: ${newDriverName}`);
+                    }
+                }
+            }
+
+            // ─── Step 3b-bis: Dispatched To Operator just flipped on → SMS the operator
+            // Fires on the false→true transition only. We look up the
+            // assigned operator's phone in the Operators table.
+            if (fields['Dispatched To Operator'] === true && oldRecord['Dispatched To Operator'] !== true) {
+                const opName = rec['Operator'] || oldRecord['Operator'];
+                if (opName) {
+                    try {
+                        const opUrl = `https://api.airtable.com/v0/${BASE_ID}/Operators?filterByFormula=` + encodeURIComponent(`{Name}='${opName.replace(/'/g, "\\'")}'`);
+                        const opRes = await fetch(opUrl, { headers: { 'Authorization': `Bearer ${AIRTABLE_API_KEY}` } });
+                        const opData = await opRes.json();
+                        const opRecord = opData.records && opData.records[0];
+                        const opPhone = opRecord && formatPhone(opRecord.fields['Phone']);
+                        if (opPhone) {
+                            const isReturn = (rec['Trip Type'] || '') === 'return';
+                            const dispatchMsg = `RM TRANSFERS – New Job Dispatched\n\nA new ${isReturn ? 'return' : 'one-way'} booking has been added to your operator portal.\n\nRef: ${rec['Booking Ref'] || '—'}\nDate: ${fmtUKDate(rec['Outbound Date'])} at ${rec['Outbound Time'] || '—'}\nAirport: ${rec['Airport'] || '—'}\nPax/Bags: ${rec['Passengers'] || '?'} / ${rec['Luggage'] || '?'}\n\nAllocate a driver here: https://airporttaxitransfersliverpool.co.uk/operator.html?ref=${rec['Booking Ref'] || ''}`;
+                            sendSms(opPhone, dispatchMsg);
+                            console.log(`Operator ${opName} notified of dispatch: ${rec['Booking Ref']}`);
+                        } else {
+                            console.warn(`Operator ${opName} has no phone in the Operators table — skipping dispatch SMS.`);
+                        }
+                    } catch (lookupErr) {
+                        console.error('Operator dispatch SMS lookup failed:', lookupErr);
                     }
                 }
             }

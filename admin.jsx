@@ -440,15 +440,16 @@ function AdminApp() {
         .catch(err => alert('Error deleting booking: ' + err.message));
     };
 
-    // Dispatch the booking to its assigned operator. This is the moment
-    // the booking becomes visible in the operator portal — until now it
-    // sits in admin only. We require an Operator to be assigned first,
-    // flip Dispatched To Operator = true, then jump to that operator's
-    // portal pre-filtered to this job.
+    // Dispatch the booking to its assigned operator. The booking becomes
+    // visible in the operator's portal and the operator gets an SMS heads-up.
+    // Admin stays on the admin portal — no navigation.
     const dispatchToOperator = async (record) => {
         const f = record.fields;
         if (!f['Operator']) {
             return alert('Assign an Operator before dispatching this booking.');
+        }
+        if (f['Dispatched To Operator'] === true) {
+            return alert(`${f['Booking Ref']} is already dispatched to ${f['Operator']}.`);
         }
         try {
             const res = await fetch('/api/booking', {
@@ -458,12 +459,11 @@ function AdminApp() {
             });
             const data = await res.json();
             if (data.error) throw new Error(data.error);
+            fetchBookings();
+            alert(`Dispatched to ${f['Operator']}. They'll get an SMS heads-up.`);
         } catch (err) {
-            // Don't block navigation — admin can retry from the operator
-            // portal screen if the patch fails.
-            console.error('Could not flag dispatch:', err);
+            alert('Could not dispatch: ' + err.message);
         }
-        window.location.href = `/operator.html?ref=${encodeURIComponent(f['Booking Ref'])}`;
     };
 
     const resendQuote = async (record) => {
