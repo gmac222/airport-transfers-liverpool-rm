@@ -162,25 +162,30 @@ function AdminApp() {
             });
     };
 
+    // Fetch THIS operator's drivers only. Pulled out so add/edit/delete
+    // can refresh the list.
+    const fetchDrivers = () => {
+        if (!operatorName) return;
+        fetch('/api/drivers?operator=' + encodeURIComponent(operatorName))
+            .then(res => res.json())
+            .then(data => {
+                const fetched = data.drivers || [];
+                setDriversList([
+                    { name: "Select a driver...", phone: "" },
+                    ...fetched,
+                    { name: "Custom Driver", phone: "" }
+                ]);
+            })
+            .catch(err => console.error("Failed to fetch drivers:", err));
+    };
+
     useEffect(() => {
-        if (isLoggedIn) {
-            fetchBookings();
-            
-            // Fetch dynamic drivers list from Airtable
-            fetch('/api/drivers')
-                .then(res => res.json())
-                .then(data => {
-                    if (data.drivers && data.drivers.length > 0) {
-                        setDriversList([
-                            { name: "Select a driver...", phone: "" },
-                            ...data.drivers,
-                            { name: "Custom Driver", phone: "" }
-                        ]);
-                    }
-                })
-                .catch(err => console.error("Failed to fetch drivers:", err));
-        }
+        if (isLoggedIn) fetchBookings();
     }, [isLoggedIn]);
+
+    useEffect(() => {
+        if (isLoggedIn && operatorName) fetchDrivers();
+    }, [isLoggedIn, operatorName]);
 
     // Deep-link from new-booking SMS (?ref=ATL-XXXX). Once bookings have
     // loaded, scroll the matching card into view and briefly highlight it.
@@ -281,12 +286,70 @@ function AdminApp() {
         }
     }, [viewMode, bookings, loading]);
 
+    // Per-driver edit/delete state
+    const [editingDriverId, setEditingDriverId] = useState(null);
+    const [driverEditForm, setDriverEditForm] = useState({});
+    const [isSavingDriver, setIsSavingDriver] = useState(false);
+
+    const openEditDriverModal = (driver) => {
+        setEditingDriverId(driver.id);
+        setDriverEditForm({
+            'Name': driver.name || '',
+            'Phone': driver.phone || '',
+            'Username': driver.username || '',
+            'Vehicle Type': driver.vehicleType || '',
+            'Vehicle Registration': driver.vehicleRegistration || '',
+            'Badge Number': driver.badgeNumber || ''
+        });
+    };
+    const closeEditDriverModal = () => {
+        setEditingDriverId(null);
+        setDriverEditForm({});
+    };
+    const handleSaveDriver = async (e) => {
+        e.preventDefault();
+        if (!editingDriverId) return;
+        setIsSavingDriver(true);
+        try {
+            const res = await fetch('/api/drivers', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: editingDriverId, fields: driverEditForm, operator: operatorName })
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            closeEditDriverModal();
+            fetchDrivers();
+        } catch (err) {
+            alert('Could not update driver: ' + err.message);
+        } finally {
+            setIsSavingDriver(false);
+        }
+    };
+
+    const handleDeleteDriver = async (driver) => {
+        if (!window.confirm(`Permanently delete driver ${driver.name}? They will no longer be able to log in to the driver portal.`)) return;
+        try {
+            const res = await fetch('/api/drivers', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: driver.id, operator: operatorName })
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            fetchDrivers();
+        } catch (err) {
+            alert('Could not delete driver: ' + err.message);
+        }
+    };
+
     const handleAddDriver = async (e) => {
         e.preventDefault();
         if (!newDriverName.trim()) return alert("Driver name is required.");
         if (!newDriverUsername.trim() || !newDriverPassword.trim()) {
             return alert("Username and password are required for portal login.");
         }
+        if (!operatorName) return alert('Cannot add driver: not logged in as an operator.');
 
         setIsAddingDriver(true);
         try {
@@ -300,19 +363,15 @@ function AdminApp() {
                     password: newDriverPassword.trim(),
                     vehicleType: newDriverVehicleType.trim(),
                     vehicleRegistration: newDriverVehicleReg.trim(),
-                    badgeNumber: newDriverBadge.trim()
+                    badgeNumber: newDriverBadge.trim(),
+                    operator: operatorName
                 })
             });
             const data = await res.json();
 
             if (data.error) throw new Error(data.error);
 
-            // Add the new driver to the list locally or refetch
-            setDriversList(prev => [
-                ...prev.slice(0, prev.length - 1), // all except custom driver
-                { name: data.driver.fields['Name'], phone: data.driver.fields['Phone'] || '' },
-                { name: "Custom Driver", phone: "" } // put custom driver back at the end
-            ]);
+            fetchDrivers();
 
             setNewDriverName('');
             setNewDriverPhone('');
@@ -782,20 +841,25 @@ function AdminApp() {
 
     // ── Drivers View ──────────────────────────────────────────────────────
     const renderDriversView = () => {
-        // Build driver → jobs map from ALL bookings (not just filtered)
+        // The operator only manages their own drivers. Build the entries
+        // straight from driversList (already scoped server-side to this
+        // operator) and join in jobs from operatorBookings.
+        const myDrivers = driversList.filter(d => d.name !== 'Select a driver...' && d.name !== 'Custom Driver');
         const driverJobMap = {};
-        bookings.forEach(b => {
-            const dName = b.fields['Driver Name'];
-            if (!dName) return;
-            if (!driverJobMap[dName]) driverJobMap[dName] = { phone: b.fields['Driver Phone'] || '', jobs: [] };
-            driverJobMap[dName].jobs.push(b);
+        myDrivers.forEach(d => {
+            driverJobMap[d.name] = {
+                phone: d.phone || '',
+                jobs: [],
+                record: d
+            };
         });
-
-        // Also include drivers from the drivers list that may have zero jobs
-        driversList.forEach(d => {
-            if (d.name === 'Select a driver...' || d.name === 'Custom Driver') return;
-            if (!driverJobMap[d.name]) driverJobMap[d.name] = { phone: d.phone || '', jobs: [] };
-            if (!driverJobMap[d.name].phone && d.phone) driverJobMap[d.name].phone = d.phone;
+        operatorBookings.forEach(b => {
+            const dName = b.fields['Driver Name'];
+            if (!dName || !driverJobMap[dName]) return;
+            driverJobMap[dName].jobs.push(b);
+            if (!driverJobMap[dName].phone && b.fields['Driver Phone']) {
+                driverJobMap[dName].phone = b.fields['Driver Phone'];
+            }
         });
 
         const driverEntries = Object.entries(driverJobMap).sort((a, b) => a[0].localeCompare(b[0]));
@@ -909,7 +973,7 @@ function AdminApp() {
                                 <th style={{ padding: '12px 16px', fontWeight: 600, textAlign: 'center' }}>Active</th>
                                 <th style={{ padding: '12px 16px', fontWeight: 600, textAlign: 'center' }}>Total</th>
                                 <th style={{ padding: '12px 16px', fontWeight: 600 }}>Next Job</th>
-                                <th style={{ padding: '12px 16px', fontWeight: 600, textAlign: 'center' }}></th>
+                                <th style={{ padding: '12px 16px', fontWeight: 600, textAlign: 'right' }}>Manage</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -920,8 +984,8 @@ function AdminApp() {
                                     .sort((a, b) => new Date(a.fields['Outbound Date'] + 'T' + (a.fields['Outbound Time'] || '00:00')) - new Date(b.fields['Outbound Date'] + 'T' + (b.fields['Outbound Time'] || '00:00')))[0];
 
                                 return (
-                                    <tr key={name} style={{ borderBottom: '1px solid var(--line)', background: i % 2 === 0 ? 'white' : '#fafafa', cursor: 'pointer' }} onClick={() => setSelectedDriver(name)}>
-                                        <td style={{ padding: '12px 16px', fontWeight: 600 }}>{name}</td>
+                                    <tr key={name} style={{ borderBottom: '1px solid var(--line)', background: i % 2 === 0 ? 'white' : '#fafafa' }}>
+                                        <td style={{ padding: '12px 16px', fontWeight: 600, cursor: 'pointer' }} onClick={() => setSelectedDriver(name)}>{name} <span style={{ color: 'var(--amber-deep)', fontWeight: 400, fontSize: '11px' }}>view jobs →</span></td>
                                         <td style={{ padding: '12px 16px', color: 'var(--muted)' }}>{data.phone || '–'}</td>
                                         <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                                             <span style={{ background: activeJobs.length > 0 ? '#dcfce7' : '#f3f4f6', color: activeJobs.length > 0 ? '#166534' : '#9ca3af', padding: '2px 10px', borderRadius: '12px', fontWeight: 600, fontSize: '13px' }}>{activeJobs.length}</span>
@@ -936,15 +1000,20 @@ function AdminApp() {
                                                 <span style={{ color: '#9ca3af' }}>No upcoming jobs</span>
                                             )}
                                         </td>
-                                        <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                                            <span style={{ fontSize: '12px', color: 'var(--amber-deep)', fontWeight: 600 }}>View →</span>
+                                        <td style={{ padding: '12px 8px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                                            {data.record && data.record.id && (
+                                                <>
+                                                    <button onClick={(e) => { e.stopPropagation(); openEditDriverModal(data.record); }} style={{ background: 'transparent', color: 'var(--amber-deep)', border: '1px solid var(--amber)', borderRadius: '6px', padding: '5px 10px', fontSize: '12px', cursor: 'pointer', fontWeight: 700, fontFamily: 'inherit', marginRight: '6px' }}>Edit</button>
+                                                    <button onClick={(e) => { e.stopPropagation(); handleDeleteDriver(data.record); }} style={{ background: 'transparent', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: '6px', padding: '5px 10px', fontSize: '12px', cursor: 'pointer', fontWeight: 700, fontFamily: 'inherit' }}>Delete</button>
+                                                </>
+                                            )}
                                         </td>
                                     </tr>
                                 );
                             })}
                             {driverEntries.length === 0 && (
                                 <tr>
-                                    <td colSpan="6" style={{ padding: '30px', textAlign: 'center', color: 'var(--muted)' }}>No drivers found. Add drivers from the Active Jobs view.</td>
+                                    <td colSpan="6" style={{ padding: '30px', textAlign: 'center', color: 'var(--muted)' }}>You haven't added any drivers yet. Use the Add Driver form on the Active Jobs view.</td>
                                 </tr>
                             )}
                         </tbody>
@@ -1647,6 +1716,49 @@ function AdminApp() {
                                 <button type="button" onClick={() => setEditingJob(null)} style={{ padding: '10px 20px', background: 'transparent', border: '1px solid var(--line)', borderRadius: '6px', cursor: 'pointer' }}>Cancel</button>
                                 <button type="submit" disabled={isSavingEdit} style={{ padding: '10px 20px', background: 'var(--amber)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
                                     {isSavingEdit ? 'Saving...' : 'Save Booking'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {editingDriverId && (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '12px' }}>
+                    <div style={{ background: 'white', padding: '18px', borderRadius: '12px', width: '100%', maxWidth: '520px', maxHeight: '92vh', overflowY: 'auto', boxSizing: 'border-box' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                            <h2 style={{ margin: 0, fontFamily: 'Lexend', fontSize: '18px' }}>Edit Driver</h2>
+                            <button onClick={closeEditDriverModal} style={{ background: 'transparent', border: 'none', fontSize: '22px', cursor: 'pointer', color: 'var(--muted)' }}>×</button>
+                        </div>
+                        <form onSubmit={handleSaveDriver} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            <div>
+                                <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)' }}>Name</label>
+                                <input type="text" value={driverEditForm['Name'] || ''} onChange={e => setDriverEditForm({ ...driverEditForm, 'Name': e.target.value })} required style={{ width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--line)', fontFamily: 'inherit', fontSize: '16px', boxSizing: 'border-box' }} />
+                            </div>
+                            <div>
+                                <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)' }}>Phone</label>
+                                <input type="tel" value={driverEditForm['Phone'] || ''} onChange={e => setDriverEditForm({ ...driverEditForm, 'Phone': e.target.value })} style={{ width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--line)', fontFamily: 'inherit', fontSize: '16px', boxSizing: 'border-box' }} />
+                            </div>
+                            <div>
+                                <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)' }}>Portal Username</label>
+                                <input type="text" value={driverEditForm['Username'] || ''} onChange={e => setDriverEditForm({ ...driverEditForm, 'Username': e.target.value })} autoCapitalize="none" autoCorrect="off" style={{ width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--line)', fontFamily: 'inherit', fontSize: '16px', boxSizing: 'border-box' }} />
+                            </div>
+                            <div>
+                                <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)' }}>Vehicle Type</label>
+                                <input type="text" value={driverEditForm['Vehicle Type'] || ''} onChange={e => setDriverEditForm({ ...driverEditForm, 'Vehicle Type': e.target.value })} style={{ width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--line)', fontFamily: 'inherit', fontSize: '16px', boxSizing: 'border-box' }} />
+                            </div>
+                            <div>
+                                <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)' }}>Vehicle Registration</label>
+                                <input type="text" value={driverEditForm['Vehicle Registration'] || ''} onChange={e => setDriverEditForm({ ...driverEditForm, 'Vehicle Registration': e.target.value.toUpperCase() })} style={{ width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--line)', fontFamily: 'inherit', fontSize: '16px', textTransform: 'uppercase', boxSizing: 'border-box' }} />
+                            </div>
+                            <div>
+                                <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)' }}>Driver Badge Number</label>
+                                <input type="text" value={driverEditForm['Badge Number'] || ''} onChange={e => setDriverEditForm({ ...driverEditForm, 'Badge Number': e.target.value })} style={{ width: '100%', minWidth: 0, padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--line)', fontFamily: 'inherit', fontSize: '16px', boxSizing: 'border-box' }} />
+                            </div>
+                            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '6px' }}>
+                                <button type="button" onClick={closeEditDriverModal} style={{ padding: '10px 16px', background: 'white', color: 'var(--ink)', border: '1px solid var(--line)', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
+                                <button type="submit" disabled={isSavingDriver} style={{ padding: '10px 18px', background: 'var(--navy)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: isSavingDriver ? 'wait' : 'pointer', fontFamily: 'inherit' }}>
+                                    {isSavingDriver ? 'Saving…' : 'Save Changes'}
                                 </button>
                             </div>
                         </form>
