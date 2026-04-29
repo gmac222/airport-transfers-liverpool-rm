@@ -166,7 +166,7 @@ function FocusedJobCard({
                             const plBg = plFlashed ? '#dcfce7' : (plFilled ? '#fffbeb' : '#fef2f2');
                             return (
                                 <div style={{ marginTop: '4px' }}>
-                                    <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--amber-deep)', textTransform: 'uppercase', marginBottom: '4px' }}>Payment Link (Revolut, etc.)</div>
+                                    <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--amber-deep)', textTransform: 'uppercase', marginBottom: '4px' }}>Payment Link</div>
                                     <input
                                         type="url"
                                         inputMode="url"

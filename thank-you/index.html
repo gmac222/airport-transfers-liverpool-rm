@@ -304,7 +304,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 </svg>
             </div>
             <h1>Booking request received</h1>
-            <p id="dynamic-text">We'll text you shortly with a secure Revolut payment link. Once paid, we'll send your driver's details. If you've booked for today, we'll call as soon as possible.</p>
+            <p id="dynamic-text">We'll text you shortly with a secure payment link. Once paid, we'll send your driver's details. If you've booked for today, we'll call as soon as possible.</p>
             
             <div class="booking-details" id="booking-details" style="display: none;">
                 <div class="row">
@@ -369,7 +369,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 document.getElementById('price-val').textContent = '£' + price + ' fixed ' + (type === 'return' ? 'return' : 'one-way');
                 
                 if (type === 'return') {
-                    document.getElementById('dynamic-text').innerHTML = "We'll text you shortly with a secure Revolut payment link. Once paid, we'll send your driver's details for both legs. If you've booked for today, we'll call as soon as possible.";
+                    document.getElementById('dynamic-text').innerHTML = "We'll text you shortly with a secure payment link. Once paid, we'll send your driver's details for both legs. If you've booked for today, we'll call as soon as possible.";
                 }
             }
         });

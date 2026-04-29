@@ -208,7 +208,7 @@ s_quote = draw_step(
     [
         'Default operator: RM Transfers (admin can change)',
         'Operator Price defaults to Customer Price (editable)',
-        'Pastes the Revolut payment link into the card',
+        'Pastes the payment link into the card',
     ],
     fill=HexColor('#FFFFFF'), badge='ADMIN PORTAL',
 )
@@ -248,7 +248,7 @@ s_decline = draw_step(
 # Column 3 — Customer pays / 24h nudge
 s_pay = draw_step(
     3, 'Customer',
-    '4. Customer pays via Revolut link',
+    '4. Customer pays via payment link',
     [
         'Pays through the operator\'s payment link',
         'No charge if they declined or never paid',
@@ -389,7 +389,7 @@ states = [
      'Admin only.'),
     ('Awaiting Payment',
      HexColor('#FFEDD5'), HexColor('#9A3412'),
-     'Customer accepted the price. Waiting for them to pay via the Revolut link.',
+     'Customer accepted the price. Waiting for them to pay via the payment link.',
      'Admin only. (Operator still hidden, until admin has dispatched.)'),
     ('Accepted',
      GREEN_BG, HexColor('#166534'),
