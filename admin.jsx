@@ -200,7 +200,7 @@ function AdminApp() {
 
     const startEditPrice = (b) => {
         setEditingPriceId(b.id);
-        setCostPriceVal(b.fields['Cost Price'] ?? '');
+        setCostPriceVal(b.fields['Customer Price'] ?? '');
         setOpPriceVal(b.fields['Operator Price'] ?? '');
     };
 
@@ -211,7 +211,7 @@ function AdminApp() {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id: bookingId, fields: {
-                    'Cost Price': costPriceVal !== '' ? parseFloat(costPriceVal) : null,
+                    'Customer Price': costPriceVal !== '' ? parseFloat(costPriceVal) : null,
                     'Operator Price': opPriceVal !== '' ? parseFloat(opPriceVal) : null
                 }})
             });
@@ -384,7 +384,7 @@ function AdminApp() {
                                             <th style={{ padding: '8px' }}>Customer</th>
                                             <th style={{ padding: '8px' }}>Date</th>
                                             <th style={{ padding: '8px' }}>Status</th>
-                                            <th style={{ padding: '8px' }}>Cost Price</th>
+                                            <th style={{ padding: '8px' }}>Customer Price</th>
                                             <th style={{ padding: '8px' }}>Operator Price</th>
                                             <th style={{ padding: '8px' }}>Outbound Driver</th>
                                             <th style={{ padding: '8px' }}>Reassign Driver</th>
@@ -410,8 +410,8 @@ function AdminApp() {
                                                         {editingPriceId === b.id ? (
                                                             <input type="number" step="0.01" value={costPriceVal} onChange={e => setCostPriceVal(e.target.value)} style={{ width: '70px', padding: '4px 6px', border: '1px solid var(--amber)', borderRadius: '4px', fontSize: '12px' }} autoFocus />
                                                         ) : (
-                                                            <span onClick={() => startEditPrice(b)} style={{ cursor: 'pointer', fontWeight: 600, color: b.fields['Cost Price'] ? 'var(--navy-ink)' : '#9ca3af' }} title="Click to edit">
-                                                                {b.fields['Cost Price'] != null ? `£${Number(b.fields['Cost Price']).toFixed(2)}` : '–'}
+                                                            <span onClick={() => startEditPrice(b)} style={{ cursor: 'pointer', fontWeight: 600, color: b.fields['Customer Price'] ? 'var(--navy-ink)' : '#9ca3af' }} title="Click to edit">
+                                                                {b.fields['Customer Price'] != null ? `£${Number(b.fields['Customer Price']).toFixed(2)}` : '–'}
                                                             </span>
                                                         )}
                                                     </td>
