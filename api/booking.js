@@ -340,10 +340,16 @@ module.exports = async (req, res) => {
             if (fields['Driver Name'] && fields['Driver Phone']) {
                 const newDriverPhone = formatPhone(fields['Driver Phone']);
 
-                // 3a. SMS to the NEW driver
+                // 3a. SMS to the NEW driver. Awaited + ASCII so we can see
+                // a real ClickSend error in Vercel logs and so the
+                // serverless function can't terminate before the request
+                // is sent.
                 if (newDriverPhone) {
-                    const driverMsg = `RM TRANSFERS – New Job Assigned\n\nRef: ${rec['Booking Ref'] || '—'}\nCustomer: ${rec['Customer Name'] || '—'}\nPickup: ${rec['Home Address'] || '—'}\nAirport: ${rec['Airport'] || '—'}\nDate: ${fmtUKDate(rec['Outbound Date'])} at ${rec['Outbound Time'] || '—'}\nPassengers: ${rec['Passengers'] || '—'} | Bags: ${rec['Luggage'] || '—'}\n\nView your jobs: https://airporttaxitransfersliverpool.co.uk/driver-portal.html`;
-                    sendSms(newDriverPhone, driverMsg);
+                    console.log(`Driver SMS trigger fired for ${rec['Booking Ref']} -> ${fields['Driver Name']} @ ${newDriverPhone}`);
+                    const driverMsg = `RM TRANSFERS - New Job Assigned\n\nRef: ${rec['Booking Ref'] || '-'}\nCustomer: ${rec['Customer Name'] || '-'}\nPickup: ${rec['Home Address'] || '-'}\nAirport: ${rec['Airport'] || '-'}\nDate: ${fmtUKDate(rec['Outbound Date'])} at ${rec['Outbound Time'] || '-'}\nPassengers: ${rec['Passengers'] || '-'} | Bags: ${rec['Luggage'] || '-'}\n\nView your jobs: https://airporttaxitransfersliverpool.co.uk/driver-portal.html`;
+                    await sendSms(newDriverPhone, driverMsg);
+                } else {
+                    console.warn(`Driver SMS skipped — could not format phone for ${fields['Driver Name']}: ${fields['Driver Phone']}`);
                 }
 
                 // 3b. SMS to CUSTOMER if driver was CHANGED (not first assignment)
@@ -353,20 +359,25 @@ module.exports = async (req, res) => {
                 if (oldDriverName && oldDriverName !== newDriverName) {
                     const customerPhone = formatPhone(rec['Phone'] || rec['Customer Phone'] || '');
                     if (customerPhone) {
-                        const custMsg = `RM TRANSFERS – Driver Update\n\nHi ${rec['Customer Name'] || 'there'},\n\nApologies, the driver for your upcoming transfer has been changed.\n\nYour new driver is: ${newDriverName}\nDriver contact: ${fields['Driver Phone'] || '—'}\n\nBooking Ref: ${rec['Booking Ref'] || '—'}\nDate: ${fmtUKDate(rec['Outbound Date'])} at ${rec['Outbound Time'] || '—'}\nPickup: ${rec['Home Address'] || '—'}\n\nWe apologise for any inconvenience.\n\nNeed to speak to us? Call 07746 899644.\n\nRM Transfers`;
-                        sendSms(customerPhone, custMsg);
-                        console.log(`Customer notified of driver change: ${oldDriverName} → ${newDriverName}`);
+                        const custMsg = `RM TRANSFERS - Driver Update\n\nHi ${rec['Customer Name'] || 'there'},\n\nApologies, the driver for your upcoming transfer has been changed.\n\nYour new driver is: ${newDriverName}\nDriver contact: ${fields['Driver Phone'] || '-'}\n\nBooking Ref: ${rec['Booking Ref'] || '-'}\nDate: ${fmtUKDate(rec['Outbound Date'])} at ${rec['Outbound Time'] || '-'}\nPickup: ${rec['Home Address'] || '-'}\n\nWe apologise for any inconvenience.\n\nNeed to speak to us? Call 07746 899644.\n\nRM Transfers`;
+                        await sendSms(customerPhone, custMsg);
+                        console.log(`Customer notified of driver change: ${oldDriverName} -> ${newDriverName}`);
                     }
                 } else if (!oldDriverName && newDriverName && isAlreadyPaid) {
                     // First-time driver assignment AFTER admin acknowledged
                     // payment — customer's been waiting for these details.
                     const customerPhone = formatPhone(rec['Phone'] || rec['Customer Phone'] || '');
                     if (customerPhone) {
-                        const custMsg = `RM TRANSFERS – Driver Allocated\n\nHi ${rec['Customer Name'] || 'there'},\n\nGood news — your driver has been allocated.\n\nDriver: ${newDriverName}\nContact: ${fields['Driver Phone'] || '—'}\n\nBooking Ref: ${rec['Booking Ref'] || '—'}\nDate: ${fmtUKDate(rec['Outbound Date'])} at ${rec['Outbound Time'] || '—'}\nPickup: ${rec['Home Address'] || '—'}\n\nNeed to speak to us? Call 07746 899644.\n\nRM Transfers`;
-                        sendSms(customerPhone, custMsg);
+                        const custMsg = `RM TRANSFERS - Driver Allocated\n\nHi ${rec['Customer Name'] || 'there'},\n\nGood news, your driver has been allocated.\n\nDriver: ${newDriverName}\nContact: ${fields['Driver Phone'] || '-'}\n\nBooking Ref: ${rec['Booking Ref'] || '-'}\nDate: ${fmtUKDate(rec['Outbound Date'])} at ${rec['Outbound Time'] || '-'}\nPickup: ${rec['Home Address'] || '-'}\n\nNeed to speak to us? Call 07746 899644.\n\nRM Transfers`;
+                        await sendSms(customerPhone, custMsg);
                         console.log(`Customer notified of first-time driver allocation post-payment: ${newDriverName}`);
                     }
                 }
+            } else if (fields['Driver Name'] !== undefined) {
+                // Operator picked a driver but the PATCH carried no phone
+                // — this happens when the operator picks via the quick
+                // dropdown and the driver record has no phone on file.
+                console.warn(`Driver Name set to '${fields['Driver Name']}' on ${rec['Booking Ref']} but no Driver Phone in PATCH — SMS skipped.`);
             }
 
             // ─── Step 3b-bis: notify operator + auto-assign default driver
