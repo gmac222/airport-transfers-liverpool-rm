@@ -10,7 +10,8 @@ function AdminApp() {
     const [operators, setOperators] = useState([]);
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [view, setView] = useState('operators'); // operators | jobs
+    const [view, setView] = useState('jobs'); // jobs | operators
+    const [jobsSearch, setJobsSearch] = useState('');
 
     // New operator form
     const [newOp, setNewOp] = useState({ name: '', username: '', password: '', phone: '', email: '' });
@@ -277,11 +278,11 @@ function AdminApp() {
             <div className="wrap">
                 {/* Tab controls */}
                 <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
-                    <button onClick={() => setView('operators')} style={{ padding: '10px 20px', borderRadius: '8px', border: view === 'operators' ? '2px solid var(--navy)' : '1px solid var(--line)', background: view === 'operators' ? 'var(--navy)' : 'white', color: view === 'operators' ? 'white' : 'var(--ink)', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px' }}>
-                        Manage Operators ({operators.length})
-                    </button>
                     <button onClick={() => setView('jobs')} style={{ padding: '10px 20px', borderRadius: '8px', border: view === 'jobs' ? '2px solid var(--navy)' : '1px solid var(--line)', background: view === 'jobs' ? 'var(--navy)' : 'white', color: view === 'jobs' ? 'white' : 'var(--ink)', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px' }}>
                         Job Assignments {unassignedCount > 0 && <span style={{ background: '#e53e3e', color: 'white', borderRadius: '10px', padding: '1px 8px', fontSize: '12px', marginLeft: '6px' }}>{unassignedCount}</span>}
+                    </button>
+                    <button onClick={() => setView('operators')} style={{ padding: '10px 20px', borderRadius: '8px', border: view === 'operators' ? '2px solid var(--navy)' : '1px solid var(--line)', background: view === 'operators' ? 'var(--navy)' : 'white', color: view === 'operators' ? 'white' : 'var(--ink)', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px' }}>
+                        Manage Operators ({operators.length})
                     </button>
                 </div>
 
@@ -373,7 +374,16 @@ function AdminApp() {
 
                         {/* Jobs table */}
                         <div className="card" style={{ overflow: 'auto' }}>
-                            <h2 style={{ fontFamily: 'Lexend', fontSize: '18px', margin: '0 0 16px 0' }}>Active Bookings ({activeBookings.length})</h2>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
+                                <h2 style={{ fontFamily: 'Lexend', fontSize: '18px', margin: 0 }}>Active Bookings ({activeBookings.length})</h2>
+                                <input
+                                    type="search"
+                                    value={jobsSearch}
+                                    onChange={e => setJobsSearch(e.target.value)}
+                                    placeholder="Search ref, customer, phone, driver, operator…"
+                                    style={{ flex: '0 1 320px', padding: '8px 12px', border: '1px solid var(--line)', borderRadius: '6px', fontFamily: 'inherit', fontSize: '13px' }}
+                                />
+                            </div>
                             {loading ? (
                                 <div className="loading">Loading...</div>
                             ) : (
@@ -395,7 +405,23 @@ function AdminApp() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {activeBookings.sort((a,b) => new Date(a.fields['Outbound Date']+'T'+(a.fields['Outbound Time']||'00:00')) - new Date(b.fields['Outbound Date']+'T'+(b.fields['Outbound Time']||'00:00'))).map((b, i) => {
+                                        {activeBookings
+                                            .filter(b => {
+                                                const q = jobsSearch.trim().toLowerCase();
+                                                if (!q) return true;
+                                                const f = b.fields;
+                                                return [
+                                                    f['Booking Ref'], f['Customer Name'], f['Customer Phone'],
+                                                    f['Driver Name'], f['Return Driver Name'], f['Operator'],
+                                                    f['Customer Email'], f['Home Address'], f['Status']
+                                                ].some(v => v && String(v).toLowerCase().includes(q));
+                                            })
+                                            .sort((a, b) => {
+                                                const da = new Date(a.fields['Submitted At'] || 0).getTime();
+                                                const db = new Date(b.fields['Submitted At'] || 0).getTime();
+                                                return db - da; // newest received first
+                                            })
+                                            .map((b, i) => {
                                             const currentOp = b.fields['Operator'] || '';
                                             return (
                                                 <tr key={b.id} style={{ borderBottom: '1px solid var(--line)', background: i % 2 === 0 ? 'white' : '#fafafa' }}>
@@ -463,6 +489,13 @@ function AdminApp() {
                                         })}
                                         {activeBookings.length === 0 && (
                                             <tr><td colSpan="12" style={{ padding: '30px', textAlign: 'center', color: 'var(--muted)' }}>No active bookings.</td></tr>
+                                        )}
+                                        {activeBookings.length > 0 && jobsSearch.trim() && activeBookings.filter(b => {
+                                            const q = jobsSearch.trim().toLowerCase();
+                                            const f = b.fields;
+                                            return [f['Booking Ref'], f['Customer Name'], f['Customer Phone'], f['Driver Name'], f['Return Driver Name'], f['Operator'], f['Customer Email'], f['Home Address'], f['Status']].some(v => v && String(v).toLowerCase().includes(q));
+                                        }).length === 0 && (
+                                            <tr><td colSpan="12" style={{ padding: '30px', textAlign: 'center', color: 'var(--muted)' }}>No bookings match "{jobsSearch}".</td></tr>
                                         )}
                                     </tbody>
                                 </table>
