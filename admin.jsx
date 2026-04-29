@@ -836,7 +836,25 @@ function AdminApp() {
                         <a href="/superadmin.html" style={{ background: 'var(--amber)', color: 'var(--navy-ink)', textDecoration: 'none', padding: '6px 12px', borderRadius: '6px', fontWeight: 700, fontSize: '14px' }}>💰 Finance</a>
                     )}
                     <a href="/stats.html" style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', textDecoration: 'none', padding: '6px 12px', borderRadius: '6px', fontWeight: 'bold', fontSize: '14px' }}>Stats</a>
-                    <a href="/operator.html" style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', textDecoration: 'none', padding: '6px 12px', borderRadius: '6px', fontWeight: 'bold', fontSize: '14px' }}>Operator Portal →</a>
+                    {operators.length <= 1 ? (
+                        <a href={operators.length === 1 ? `/operator.html?as=${encodeURIComponent(operators[0].username || operators[0].name)}` : '/operator.html'} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', textDecoration: 'none', padding: '6px 12px', borderRadius: '6px', fontWeight: 'bold', fontSize: '14px' }}>Operator Portal →</a>
+                    ) : (
+                        <select
+                            onChange={e => {
+                                const v = e.target.value;
+                                if (!v) return;
+                                window.location.href = `/operator.html?as=${encodeURIComponent(v)}`;
+                            }}
+                            defaultValue=""
+                            style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', padding: '6px 12px', borderRadius: '6px', fontWeight: 'bold', fontSize: '14px', fontFamily: 'inherit', cursor: 'pointer' }}>
+                            <option value="" disabled style={{ color: 'var(--navy-ink)' }}>Operator Portal →</option>
+                            {operators.map(op => (
+                                <option key={op.id} value={op.username || op.name} style={{ color: 'var(--navy-ink)' }}>
+                                    {op.name}
+                                </option>
+                            ))}
+                        </select>
+                    )}
                     <button onClick={handleLogout} style={{ background: 'transparent', border: '1px solid white', color: 'white', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>Log Out</button>
                 </div>
             </div>

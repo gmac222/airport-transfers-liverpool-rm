@@ -14,7 +14,11 @@ const fmtUKDate = (raw) => {
 function AdminApp() {
     const [isLoggedIn, setIsLoggedIn] = useState(localStorage.getItem('operatorLoggedIn') === 'true');
     const [operatorName, setOperatorName] = useState(localStorage.getItem('operatorName') || '');
-    const [username, setUsername] = useState('');
+    const [username, setUsername] = useState(() => {
+        // Admin can deep-link with ?as=<username> to pre-fill the login.
+        try { return new URLSearchParams(window.location.search).get('as') || ''; }
+        catch (e) { return ''; }
+    });
     const [password, setPassword] = useState('');
     const [loginError, setLoginError] = useState('');
     const [isLoggingIn, setIsLoggingIn] = useState(false);
