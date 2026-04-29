@@ -73,7 +73,7 @@ export default async function handler(req, res) {
                   <p style="margin: 6px 0; font-size: 15px;"><strong>Outbound:</strong> ${fmtUKDate(fields['Outbound Date'])} at ${fields['Outbound Time'] || '—'}</p>
                   ${fields['Outbound Flight'] ? `<p style="margin: 6px 0; font-size: 15px;"><strong>Flight:</strong> ${fields['Outbound Flight']}</p>` : ''}
                   ${fields['Trip Type'] === 'return' && fields['Return Date'] ? `<p style="margin: 6px 0; font-size: 15px;"><strong>Return:</strong> ${fmtUKDate(fields['Return Date'])} at ${fields['Return Time'] || '—'}</p>` : ''}
-                  ${(fields['Passengers'] || fields['Luggage']) ? `<p style="margin: 6px 0; font-size: 15px;"><strong>Pax / Bags:</strong> ${fields['Passengers'] || '?'} / ${fields['Luggage'] || '?'}</p>` : ''}
+                  ${(fields['Passengers'] || fields['Luggage']) ? `<p style="margin: 6px 0; font-size: 15px;"><strong>Passengers / Bags:</strong> ${fields['Passengers'] || '?'} / ${fields['Luggage'] || '?'}</p>` : ''}
                 </div>
 
                 <p style="font-size: 16px;">Your driver will be ready to meet you on time at your pickup location. They will assist you with your luggage and ensure a comfortable ride in one of our premium vehicles.</p>
@@ -170,7 +170,7 @@ export default async function handler(req, res) {
             tripBlock += `\nReturn: ${fmtUKDate(fields['Return Date'])} at ${fields['Return Time'] || '—'}`;
         }
         if (fields['Outbound Flight']) tripBlock += `\nFlight: ${fields['Outbound Flight']}`;
-        if (fields['Passengers'] || fields['Luggage']) tripBlock += `\nPax/Bags: ${fields['Passengers'] || '?'} / ${fields['Luggage'] || '?'}`;
+        if (fields['Passengers'] || fields['Luggage']) tripBlock += `\nPassengers/Bags: ${fields['Passengers'] || '?'} / ${fields['Luggage'] || '?'}`;
 
         messages.push({
             to: formattedCustomerPhone,
@@ -210,7 +210,7 @@ export default async function handler(req, res) {
             messages.push({
                 to: formattedDriverPhone,
                 from: 'RMTransfers',
-                body: `CONFIRMED JOB: Payment received for ${fields['Customer Name']}\nRef: ${fields['Booking Ref']}\nPickup: ${fields['Home Address']}\nDate: ${fmtUKDate(fields['Outbound Date'])} @ ${fields['Outbound Time']}\nFlight: ${fields['Outbound Flight'] || 'N/A'}\nPax: ${fields['Passengers'] || '?'} Bags: ${fields['Luggage'] || '?'}\nCustomer: ${fields['Customer Phone']}\nPrice: £${fields['Total Price']}\n\nDriver Portal: https://airporttaxitransfersliverpool.co.uk/driver-action.html?ref=${fields['Booking Ref']}`
+                body: `CONFIRMED JOB: Payment received for ${fields['Customer Name']}\nRef: ${fields['Booking Ref']}\nPickup: ${fields['Home Address']}\nDate: ${fmtUKDate(fields['Outbound Date'])} @ ${fields['Outbound Time']}\nFlight: ${fields['Outbound Flight'] || 'N/A'}\nPassengers: ${fields['Passengers'] || '?'} Bags: ${fields['Luggage'] || '?'}\nCustomer: ${fields['Customer Phone']}\nPrice: £${fields['Total Price']}\n\nDriver Portal: https://airporttaxitransfersliverpool.co.uk/driver-action.html?ref=${fields['Booking Ref']}`
             });
         }
 
@@ -276,7 +276,7 @@ export default async function handler(req, res) {
         messages.push({
             to: formattedDriverPhone,
             from: 'RMTransfers',
-            body: `REMINDER: Job tomorrow for ${fields['Customer Name']}\nRef: ${fields['Booking Ref']}\nPickup: ${fields['Home Address']}\nDestination: ${fields['Airport Name'] || 'See booking'}\nDate: ${fmtUKDate(fields['Outbound Date'])} @ ${fields['Outbound Time']}\nFlight: ${fields['Outbound Flight'] || 'N/A'}\nPax: ${fields['Passengers'] || '?'} Bags: ${fields['Luggage'] || '?'}\nCustomer: ${fields['Customer Phone']}\n\nDriver Portal: https://airporttaxitransfersliverpool.co.uk/driver-action.html?ref=${fields['Booking Ref']}`
+            body: `REMINDER: Job tomorrow for ${fields['Customer Name']}\nRef: ${fields['Booking Ref']}\nPickup: ${fields['Home Address']}\nDestination: ${fields['Airport Name'] || 'See booking'}\nDate: ${fmtUKDate(fields['Outbound Date'])} @ ${fields['Outbound Time']}\nFlight: ${fields['Outbound Flight'] || 'N/A'}\nPassengers: ${fields['Passengers'] || '?'} Bags: ${fields['Luggage'] || '?'}\nCustomer: ${fields['Customer Phone']}\n\nDriver Portal: https://airporttaxitransfersliverpool.co.uk/driver-action.html?ref=${fields['Booking Ref']}`
         });
     }
 
@@ -293,7 +293,7 @@ export default async function handler(req, res) {
             messages.push({
                 to: formattedDriverPhone,
                 from: 'RMTransfers',
-                body: `REMINDER: Job tomorrow for ${fields['Customer Name']}\nRef: ${fields['Booking Ref']}\nPickup: ${fields['Home Address']}\nDestination: ${fields['Airport Name'] || 'See booking'}\nDate: ${fmtUKDate(fields['Outbound Date'])} @ ${fields['Outbound Time']}\nFlight: ${fields['Outbound Flight'] || 'N/A'}\nPax: ${fields['Passengers'] || '?'} Bags: ${fields['Luggage'] || '?'}\nCustomer: ${fields['Customer Phone']}\n\nDriver Portal: https://airporttaxitransfersliverpool.co.uk/driver-action.html?ref=${fields['Booking Ref']}`
+                body: `REMINDER: Job tomorrow for ${fields['Customer Name']}\nRef: ${fields['Booking Ref']}\nPickup: ${fields['Home Address']}\nDestination: ${fields['Airport Name'] || 'See booking'}\nDate: ${fmtUKDate(fields['Outbound Date'])} @ ${fields['Outbound Time']}\nFlight: ${fields['Outbound Flight'] || 'N/A'}\nPassengers: ${fields['Passengers'] || '?'} Bags: ${fields['Luggage'] || '?'}\nCustomer: ${fields['Customer Phone']}\n\nDriver Portal: https://airporttaxitransfersliverpool.co.uk/driver-action.html?ref=${fields['Booking Ref']}`
             });
         }
     }
@@ -304,7 +304,7 @@ export default async function handler(req, res) {
             messages.push({
                 to: num,
                 from: 'RMTransfers',
-                body: `NEW BOOKING: ${fields['Booking Ref']}\nName: ${fields['Customer Name']}\nFrom: ${fields['Home Address']}\nTo: ${fields['Airport Name']}\nType: ${fields['Trip Type']}\nPax: ${fields['Passengers']} Bags: ${fields['Luggage']}\nPhone: ${fields['Customer Phone']}\nOpen: https://airporttaxitransfersliverpool.co.uk/admin.html?ref=${fields['Booking Ref']}`
+                body: `NEW BOOKING: ${fields['Booking Ref']}\nName: ${fields['Customer Name']}\nFrom: ${fields['Home Address']}\nTo: ${fields['Airport Name']}\nType: ${fields['Trip Type']}\nPassengers: ${fields['Passengers']} Bags: ${fields['Luggage']}\nPhone: ${fields['Customer Phone']}\nOpen: https://airporttaxitransfersliverpool.co.uk/admin.html?ref=${fields['Booking Ref']}`
             });
         });
     }

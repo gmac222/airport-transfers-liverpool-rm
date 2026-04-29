@@ -430,7 +430,7 @@ function DriverPortal() {
                                         </div>
                                         <div className="meta">
                                             <span>📋 {f['Booking Ref'] || '—'}</span>
-                                            <span>👥 {f['Passengers'] || 1} pax</span>
+                                            <span>👥 {f['Passengers'] || 1} passengers</span>
                                             <span>🧳 {f['Luggage'] || 0} bags</span>
                                             {f['Trip Type'] === 'return' && <span>🔄 Return</span>}
                                         </div>

@@ -342,7 +342,7 @@ module.exports = async (req, res) => {
 
                 // 3a. SMS to the NEW driver
                 if (newDriverPhone) {
-                    const driverMsg = `RM TRANSFERS – New Job Assigned\n\nRef: ${rec['Booking Ref'] || '—'}\nCustomer: ${rec['Customer Name'] || '—'}\nPickup: ${rec['Home Address'] || '—'}\nAirport: ${rec['Airport'] || '—'}\nDate: ${fmtUKDate(rec['Outbound Date'])} at ${rec['Outbound Time'] || '—'}\nPax: ${rec['Passengers'] || '—'} | Bags: ${rec['Luggage'] || '—'}\n\nView your jobs: https://airporttaxitransfersliverpool.co.uk/driver-portal.html`;
+                    const driverMsg = `RM TRANSFERS – New Job Assigned\n\nRef: ${rec['Booking Ref'] || '—'}\nCustomer: ${rec['Customer Name'] || '—'}\nPickup: ${rec['Home Address'] || '—'}\nAirport: ${rec['Airport'] || '—'}\nDate: ${fmtUKDate(rec['Outbound Date'])} at ${rec['Outbound Time'] || '—'}\nPassengers: ${rec['Passengers'] || '—'} | Bags: ${rec['Luggage'] || '—'}\n\nView your jobs: https://airporttaxitransfersliverpool.co.uk/driver-portal.html`;
                     sendSms(newDriverPhone, driverMsg);
                 }
 
@@ -383,7 +383,7 @@ module.exports = async (req, res) => {
                         const opPhone = opRecord && formatPhone(opRecord.fields['Phone']);
                         if (opPhone) {
                             const isReturn = (rec['Trip Type'] || '') === 'return';
-                            const dispatchMsg = `RM TRANSFERS – New Job Dispatched\n\nA new ${isReturn ? 'return' : 'one-way'} booking has been added to your operator portal.\n\nRef: ${rec['Booking Ref'] || '—'}\nDate: ${fmtUKDate(rec['Outbound Date'])} at ${rec['Outbound Time'] || '—'}\nAirport: ${rec['Airport'] || '—'}\nPax/Bags: ${rec['Passengers'] || '?'} / ${rec['Luggage'] || '?'}\n\nAllocate a driver here: https://airporttaxitransfersliverpool.co.uk/operator.html?ref=${rec['Booking Ref'] || ''}`;
+                            const dispatchMsg = `RM TRANSFERS – New Job Dispatched\n\nA new ${isReturn ? 'return' : 'one-way'} booking has been added to your operator portal.\n\nRef: ${rec['Booking Ref'] || '—'}\nDate: ${fmtUKDate(rec['Outbound Date'])} at ${rec['Outbound Time'] || '—'}\nAirport: ${rec['Airport'] || '—'}\nPassengers/Bags: ${rec['Passengers'] || '?'} / ${rec['Luggage'] || '?'}\n\nAllocate a driver here: https://airporttaxitransfersliverpool.co.uk/operator.html?ref=${rec['Booking Ref'] || ''}`;
                             sendSms(opPhone, dispatchMsg);
                             console.log(`Operator ${opName} notified of dispatch: ${rec['Booking Ref']}`);
                         } else {
@@ -418,7 +418,7 @@ module.exports = async (req, res) => {
 
                 // 4a. SMS to the NEW return driver
                 if (retPhone) {
-                    const retMsg = `RM TRANSFERS – Return Leg Assigned\n\nRef: ${rec['Booking Ref'] || '—'}\nCustomer: ${rec['Customer Name'] || '—'}\nPickup: ${rec['Airport'] || '—'} Airport\nDrop-off: ${rec['Home Address'] || '—'}\nReturn Date: ${fmtUKDate(rec['Return Date'])} at ${rec['Return Time'] || '—'}\nPax: ${rec['Passengers'] || '—'} | Bags: ${rec['Luggage'] || '—'}\n\nView your jobs: https://airporttaxitransfersliverpool.co.uk/driver-portal.html`;
+                    const retMsg = `RM TRANSFERS – Return Leg Assigned\n\nRef: ${rec['Booking Ref'] || '—'}\nCustomer: ${rec['Customer Name'] || '—'}\nPickup: ${rec['Airport'] || '—'} Airport\nDrop-off: ${rec['Home Address'] || '—'}\nReturn Date: ${fmtUKDate(rec['Return Date'])} at ${rec['Return Time'] || '—'}\nPassengers: ${rec['Passengers'] || '—'} | Bags: ${rec['Luggage'] || '—'}\n\nView your jobs: https://airporttaxitransfersliverpool.co.uk/driver-portal.html`;
                     sendSms(retPhone, retMsg);
                 }
 

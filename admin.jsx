@@ -278,7 +278,7 @@ function FocusedJobCard({
                         {f['Outbound Flight'] && detail('Flight', f['Outbound Flight'])}
                         {isReturn && detail('Return', `${fmtUKDate(f['Return Date'])} ${f['Return Time'] || ''}`.trim())}
                         {detail('Pickup', f['Home Address'])}
-                        {detail('Pax / Bags', `${f['Passengers'] || 0} pax · ${f['Luggage'] || 0} bags`)}
+                        {detail('Passengers / Bags', `${f['Passengers'] || 0} passengers · ${f['Luggage'] || 0} bags`)}
                         {f['Notes'] && detail('Notes', f['Notes'])}
                     </div>
                 </div>

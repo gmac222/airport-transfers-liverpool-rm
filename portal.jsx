@@ -272,7 +272,7 @@ function PortalApp() {
                         </div>
                         <div className="detail-item">
                             <span>Passengers / Luggage</span>
-                            <strong>{fields['Passengers']} Pax / {fields['Luggage']} Bags</strong>
+                            <strong>{fields['Passengers']} Passengers / {fields['Luggage']} Bags</strong>
                         </div>
                         {fields['Total Price'] && (
                             <div className="detail-item">

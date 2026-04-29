@@ -285,7 +285,7 @@ function AdminApp() {
                             return { html: `
                                 <div style="padding: 4px 0; line-height: 1.45; cursor: pointer;">
                                     <div style="font-weight: 700; font-size: 14px; color: var(--navy-ink);">${f['Booking Ref']} · <span style="color: var(--muted); font-weight: 600;">${part}</span></div>
-                                    <div style="font-size: 13px;">${customer} <span style="color: var(--muted);">(${f['Passengers']}pax ${f['Luggage'] || 0}bags)</span></div>
+                                    <div style="font-size: 13px;">${customer} <span style="color: var(--muted);">(${f['Passengers']} passengers, ${f['Luggage'] || 0} bags)</span></div>
                                     <div style="font-size: 12px; color: var(--muted);">${direction} ${airport}${flight ? ` · ✈️ ${flight}` : ''}</div>
                                     <div style="font-size: 12px; color: var(--muted);">${f['Driver Name'] ? `🚗 ${f['Driver Name']}` : '🚗 <em>Unassigned</em>'}${part === 'Return' && f['Return Driver Name'] ? ` · 🔄 ${f['Return Driver Name']}` : ''}</div>
                                 </div>
@@ -296,7 +296,7 @@ function AdminApp() {
                         return { html: `
                             <div style="font-size: 11px; padding: 3px 5px; line-height: 1.4; color: white; white-space: normal; overflow: hidden; cursor: pointer;">
                                 <strong>${timeStr} | ${f['Booking Ref']}</strong><br/>
-                                <strong>${customer}</strong> (${f['Passengers']}pax ${f['Luggage'] || 0}bags)<br/>
+                                <strong>${customer}</strong> (${f['Passengers']} passengers, ${f['Luggage'] || 0} bags)<br/>
                                 <strong>${part.toUpperCase()}</strong>: ${direction} ${airport}<br/>
                                 ${flight ? `✈️ ${flight}<br/>` : ''}
                                 ${f['Driver Name'] ? `🚗 ${f['Driver Name']}` : '🚗 <i>Unassigned</i>'}
@@ -1321,8 +1321,8 @@ function AdminApp() {
                                             </div>
                                         )}
                                         <div className="detail">
-                                            <span>Bags & Pax</span>
-                                            <strong>{fields['Passengers']} Pax, {fields['Luggage'] || 0} Bags</strong>
+                                            <span>Passengers & Bags</span>
+                                            <strong>{fields['Passengers']} Passengers, {fields['Luggage'] || 0} Bags</strong>
                                         </div>
                                         <div className="detail">
                                             <span>Trip Type & Airport</span>
