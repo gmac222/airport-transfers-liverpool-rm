@@ -855,10 +855,7 @@ function AdminApp() {
                     <a href="/stats.html" className="btn" style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', textDecoration: 'none', padding: '6px 12px', borderRadius: '6px', fontWeight: 'bold', fontSize: '14px', display: 'flex', alignItems: 'center' }}>
                         Business Stats
                     </a>
-                    <button onClick={openCreateModal} className="btn" style={{ background: 'var(--amber)', color: 'var(--navy-ink)', border: 'none', padding: '6px 12px', borderRadius: '6px', fontWeight: 'bold', fontSize: '14px', display: 'flex', alignItems: 'center', cursor: 'pointer', fontFamily: 'inherit' }}>
-                        + New Manual Booking
-                    </button>
-                    <button 
+                    <button
                         onClick={handleLogout}
                         style={{ background: 'transparent', border: '1px solid white', color: 'white', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}
                     >
