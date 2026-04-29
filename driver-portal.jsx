@@ -52,6 +52,40 @@ function DriverPortal() {
         setIsLoggedIn(false);
     };
 
+    // Track which booking is currently mid-action so we can disable the
+    // button + show a spinner. { ref: 'on-the-way' | 'arrived' | 'complete-job' }
+    const [actionBusy, setActionBusy] = useState({});
+    const isBusy = (ref, action) => actionBusy[ref] === action;
+    const setBusy = (ref, action) => setActionBusy(prev => ({ ...prev, [ref]: action }));
+    const clearBusy = (ref) => setActionBusy(prev => { const n = { ...prev }; delete n[ref]; return n; });
+
+    const ACTION_PROMPTS = {
+        'on-the-way': "Send 'I'm on the way' SMS to the customer?",
+        'arrived': "Send 'I've arrived' SMS to the customer?",
+        'complete-job': 'Mark this job as complete? The customer will get a Trustpilot review invite 24h later.'
+    };
+    const sendDriverAction = async (ref, action) => {
+        if (!ref) return;
+        if (!window.confirm(ACTION_PROMPTS[action] || 'Send this notification?')) return;
+        setBusy(ref, action);
+        try {
+            const res = await fetch('/api/driver-action', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ref, action })
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            // Refresh bookings so any status change (complete-job sets
+            // Status -> Completed/Archived) is reflected locally.
+            fetchBookings();
+        } catch (err) {
+            alert('Could not send: ' + err.message);
+        } finally {
+            clearBusy(ref);
+        }
+    };
+
     // Fetch bookings
     const fetchBookings = () => {
         fetch('/api/booking?action=list&view=driver', { method: 'POST' })
@@ -404,12 +438,29 @@ function DriverPortal() {
                                     <div className="job-actions">
                                         <span className={`job-status ${statusClass}`}>{status}</span>
                                         {status === 'Accepted' && (
-                                            <a href={`/driver-action.html?ref=${f['Booking Ref']}`}
-                                               className="btn-action btn-gold"
-                                               onClick={e => e.stopPropagation()}
-                                               style={{ marginTop: '6px', fontSize: '12px' }}>
-                                                🚗 Start Job
-                                            </a>
+                                            <div onClick={e => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '6px' }}>
+                                                <button
+                                                    onClick={() => sendDriverAction(f['Booking Ref'], 'on-the-way')}
+                                                    disabled={!!actionBusy[f['Booking Ref']]}
+                                                    className="btn-action btn-gold"
+                                                    style={{ fontSize: '12px', padding: '8px 10px', justifyContent: 'center', cursor: actionBusy[f['Booking Ref']] ? 'wait' : 'pointer' }}>
+                                                    {isBusy(f['Booking Ref'], 'on-the-way') ? 'Sending…' : "🚗 I'm On The Way"}
+                                                </button>
+                                                <button
+                                                    onClick={() => sendDriverAction(f['Booking Ref'], 'arrived')}
+                                                    disabled={!!actionBusy[f['Booking Ref']]}
+                                                    className="btn-action"
+                                                    style={{ fontSize: '12px', padding: '8px 10px', justifyContent: 'center', background: '#3b82f6', color: 'white', border: 'none', cursor: actionBusy[f['Booking Ref']] ? 'wait' : 'pointer' }}>
+                                                    {isBusy(f['Booking Ref'], 'arrived') ? 'Sending…' : "📍 I've Arrived"}
+                                                </button>
+                                                <button
+                                                    onClick={() => sendDriverAction(f['Booking Ref'], 'complete-job')}
+                                                    disabled={!!actionBusy[f['Booking Ref']]}
+                                                    className="btn-action"
+                                                    style={{ fontSize: '12px', padding: '8px 10px', justifyContent: 'center', background: '#10b981', color: 'white', border: 'none', cursor: actionBusy[f['Booking Ref']] ? 'wait' : 'pointer' }}>
+                                                    {isBusy(f['Booking Ref'], 'complete-job') ? 'Saving…' : '✅ Complete Job'}
+                                                </button>
+                                            </div>
                                         )}
                                     </div>
                                 </div>
@@ -453,17 +504,40 @@ function DriverPortal() {
                                 </div>
                             ))}
                         </div>
-                        <div className="modal-foot">
+                        <div className="modal-foot" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             {selectedJob.fields['Customer Phone'] && (
-                                <a href={`tel:${selectedJob.fields['Customer Phone']}`} className="btn-action btn-gold" style={{ flex: 1, justifyContent: 'center' }}>
+                                <a href={`tel:${selectedJob.fields['Customer Phone']}`} className="btn-action btn-gold" style={{ justifyContent: 'center' }}>
                                     📞 Call Customer
                                 </a>
                             )}
-                            {selectedJob.fields['Status'] === 'Accepted' && (
-                                <a href={`/driver-action.html?ref=${selectedJob.fields['Booking Ref']}`} className="btn-action btn-gold" style={{ flex: 1, justifyContent: 'center' }}>
-                                    🚗 Start Job
-                                </a>
-                            )}
+                            {selectedJob.fields['Status'] === 'Accepted' && (() => {
+                                const ref = selectedJob.fields['Booking Ref'];
+                                return (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        <button
+                                            onClick={() => sendDriverAction(ref, 'on-the-way')}
+                                            disabled={!!actionBusy[ref]}
+                                            className="btn-action btn-gold"
+                                            style={{ justifyContent: 'center', cursor: actionBusy[ref] ? 'wait' : 'pointer' }}>
+                                            {isBusy(ref, 'on-the-way') ? 'Sending…' : "🚗 I'm On The Way"}
+                                        </button>
+                                        <button
+                                            onClick={() => sendDriverAction(ref, 'arrived')}
+                                            disabled={!!actionBusy[ref]}
+                                            className="btn-action"
+                                            style={{ justifyContent: 'center', background: '#3b82f6', color: 'white', border: 'none', cursor: actionBusy[ref] ? 'wait' : 'pointer' }}>
+                                            {isBusy(ref, 'arrived') ? 'Sending…' : "📍 I've Arrived"}
+                                        </button>
+                                        <button
+                                            onClick={() => sendDriverAction(ref, 'complete-job')}
+                                            disabled={!!actionBusy[ref]}
+                                            className="btn-action"
+                                            style={{ justifyContent: 'center', background: '#10b981', color: 'white', border: 'none', cursor: actionBusy[ref] ? 'wait' : 'pointer' }}>
+                                            {isBusy(ref, 'complete-job') ? 'Saving…' : '✅ Complete Job'}
+                                        </button>
+                                    </div>
+                                );
+                            })()}
                         </div>
                     </div>
                 </div>
