@@ -93,7 +93,9 @@ export default async function handler(req, res) {
                 scheduleTime = Math.floor(sendDate.getTime() / 1000);
             }
 
-            // Update Airtable status to Archived
+            // Update Airtable status to Archived. typecast:true lets
+            // Airtable auto-create the option if it isn't on the Status
+            // single-select yet.
             const updateRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}/${recordId}`, {
                 method: 'PATCH',
                 headers: {
@@ -101,17 +103,16 @@ export default async function handler(req, res) {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    fields: {
-                        'Status': 'Archived'
-                    }
+                    fields: { 'Status': 'Archived' },
+                    typecast: true
                 })
             });
 
             if (!updateRes.ok) {
-                console.error("Airtable update error:", await updateRes.text());
+                const detail = await updateRes.text();
+                console.error("Airtable update error (Archived):", detail);
             }
         } else if (action === 'complete-job') {
-            // Just update Airtable status to Completed
             const updateRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}/${recordId}`, {
                 method: 'PATCH',
                 headers: {
@@ -119,17 +120,20 @@ export default async function handler(req, res) {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    fields: {
-                        'Status': 'Completed'
-                    }
+                    fields: { 'Status': 'Completed' },
+                    typecast: true
                 })
             });
 
             if (!updateRes.ok) {
-                console.error("Airtable update error:", await updateRes.text());
-                return res.status(500).json({ error: 'Failed to update Airtable' });
+                const detail = await updateRes.text();
+                console.error("Airtable update error (Completed):", detail);
+                let parsed = null;
+                try { parsed = JSON.parse(detail); } catch (e) {}
+                const msg = parsed?.error?.message || parsed?.error?.type || detail || 'Failed to update Airtable';
+                return res.status(500).json({ error: msg });
             }
-            
+
             return res.status(200).json({ success: true, message: 'Job marked as completed' });
         }
 
