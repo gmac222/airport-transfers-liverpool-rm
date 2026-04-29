@@ -1,5 +1,15 @@
 const { useState, useEffect } = React;
 
+const fmtUKDate = (raw) => {
+    if (!raw) return '—';
+    const s = String(raw);
+    const ymd = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (ymd) return `${ymd[3]}/${ymd[2]}/${ymd[1]}`;
+    const d = new Date(s);
+    if (isNaN(d.getTime())) return s;
+    return d.toLocaleDateString('en-GB');
+};
+
 function PortalApp() {
     const [booking, setBooking] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -217,7 +227,7 @@ function PortalApp() {
                         </div>
                         <div className="detail-item">
                             <span>Outbound Date & Time</span>
-                            <strong>{fields['Outbound Date']} at {fields['Outbound Time']}</strong>
+                            <strong>{fmtUKDate(fields['Outbound Date'])} at {fields['Outbound Time']}</strong>
                         </div>
                         <div className="detail-item">
                             <span>Pickup Location</span>

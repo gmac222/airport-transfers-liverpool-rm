@@ -12,6 +12,18 @@ export default async function handler(req, res) {
     const SUPPORT_PHONE = '07746 899644';
     const SUPPORT_LINE = `\n\nNeed to speak to us? Call ${SUPPORT_PHONE}.`;
 
+    // UK date helper for SMS / email bodies. Airtable returns ISO
+    // (YYYY-MM-DD); customers expect DD/MM/YYYY.
+    const fmtUKDate = (raw) => {
+        if (!raw) return '';
+        const s = String(raw);
+        const ymd = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (ymd) return `${ymd[3]}/${ymd[2]}/${ymd[1]}`;
+        const d = new Date(s);
+        if (isNaN(d.getTime())) return s;
+        return d.toLocaleDateString('en-GB');
+    };
+
     const formatPhone = (phone) => {
         if (!phone) return null;
         let p = String(phone).replace(/\s+/g, '').replace(/[^0-9+]/g, '');
@@ -51,9 +63,9 @@ export default async function handler(req, res) {
     if (action === 'send-confirmation') {
         if (!formattedCustomerPhone) return res.status(400).json({ error: 'Missing customer phone' });
 
-        const outDate = fields['Outbound Date'];
+        const outDate = fmtUKDate(fields['Outbound Date']);
         const outTime = fields['Outbound Time'];
-        const retDate = fields['Return Date'];
+        const retDate = fmtUKDate(fields['Return Date']);
         const retTime = fields['Return Time'];
         
         let tripDetails = '';
@@ -77,7 +89,7 @@ export default async function handler(req, res) {
             messages.push({
                 to: formattedDriverPhone,
                 from: 'RMTransfers',
-                body: `CONFIRMED JOB: Payment received for ${fields['Customer Name']}\nRef: ${fields['Booking Ref']}\nPickup: ${fields['Home Address']}\nDate: ${fields['Outbound Date']} @ ${fields['Outbound Time']}\nFlight: ${fields['Outbound Flight'] || 'N/A'}\nPax: ${fields['Passengers'] || '?'} Bags: ${fields['Luggage'] || '?'}\nCustomer: ${fields['Customer Phone']}\nPrice: £${fields['Total Price']}\n\nDriver Portal: https://airporttaxitransfersliverpool.co.uk/driver-action.html?ref=${fields['Booking Ref']}`
+                body: `CONFIRMED JOB: Payment received for ${fields['Customer Name']}\nRef: ${fields['Booking Ref']}\nPickup: ${fields['Home Address']}\nDate: ${fmtUKDate(fields['Outbound Date'])} @ ${fields['Outbound Time']}\nFlight: ${fields['Outbound Flight'] || 'N/A'}\nPax: ${fields['Passengers'] || '?'} Bags: ${fields['Luggage'] || '?'}\nCustomer: ${fields['Customer Phone']}\nPrice: £${fields['Total Price']}\n\nDriver Portal: https://airporttaxitransfersliverpool.co.uk/driver-action.html?ref=${fields['Booking Ref']}`
             });
         }
 
@@ -109,8 +121,8 @@ export default async function handler(req, res) {
                   <h3 style="margin-top: 0; color: #0E2747; font-size: 18px; margin-bottom: 12px;">Trip Summary</h3>
                   <p style="margin: 6px 0; font-size: 15px;"><strong>From:</strong> ${fields['Trip Type'] === 'return' ? fields['Home Address'] : (fields['Oneway Direction'] === 'from' ? fields['Airport Name'] : fields['Home Address'])}</p>
                   <p style="margin: 6px 0; font-size: 15px;"><strong>To:</strong> ${fields['Trip Type'] === 'return' ? fields['Airport Name'] + ' (Return)' : (fields['Oneway Direction'] === 'from' ? fields['Home Address'] : fields['Airport Name'])}</p>
-                  <p style="margin: 6px 0; font-size: 15px;"><strong>Outbound:</strong> ${fields['Outbound Date']} at ${fields['Outbound Time']}</p>
-                  ${fields['Trip Type'] === 'return' && fields['Return Date'] ? `<p style="margin: 6px 0; font-size: 15px;"><strong>Return:</strong> ${fields['Return Date']} at ${fields['Return Time']}</p>` : ''}
+                  <p style="margin: 6px 0; font-size: 15px;"><strong>Outbound:</strong> ${fmtUKDate(fields['Outbound Date'])} at ${fields['Outbound Time']}</p>
+                  ${fields['Trip Type'] === 'return' && fields['Return Date'] ? `<p style="margin: 6px 0; font-size: 15px;"><strong>Return:</strong> ${fmtUKDate(fields['Return Date'])} at ${fields['Return Time']}</p>` : ''}
                 </div>
                 
                 <p style="font-size: 16px;">Your driver will be ready to meet you on time at your pickup location. They will assist you with your luggage and ensure a comfortable ride in one of our premium vehicles.</p>
@@ -166,7 +178,7 @@ export default async function handler(req, res) {
         messages.push({
             to: formattedDriverPhone,
             from: 'RMTransfers',
-            body: `RESEND JOB: ${fields['Trip Type'] === 'return' ? 'RETURN' : 'ONE WAY'} for ${fields['Customer Name']}\nPickup: ${fields['Home Address']}\nDate: ${fields['Outbound Date']} @ ${fields['Outbound Time']}\nFlight: ${fields['Outbound Flight'] || 'N/A'}\nCustomer: ${fields['Customer Phone']}\nPrice: £${fields['Total Price']}\nPortal: https://airporttaxitransfersliverpool.co.uk/driver-action.html?ref=${fields['Booking Ref']}`
+            body: `RESEND JOB: ${fields['Trip Type'] === 'return' ? 'RETURN' : 'ONE WAY'} for ${fields['Customer Name']}\nPickup: ${fields['Home Address']}\nDate: ${fmtUKDate(fields['Outbound Date'])} @ ${fields['Outbound Time']}\nFlight: ${fields['Outbound Flight'] || 'N/A'}\nCustomer: ${fields['Customer Phone']}\nPrice: £${fields['Total Price']}\nPortal: https://airporttaxitransfersliverpool.co.uk/driver-action.html?ref=${fields['Booking Ref']}`
         });
     }
 
@@ -202,7 +214,7 @@ export default async function handler(req, res) {
         messages.push({
             to: formattedCustomerPhone,
             from: 'RMTransfers',
-            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nFriendly reminder from RM Transfers!\n\nYour booking (${fields['Booking Ref']}) is scheduled for ${fields['Outbound Date']} at ${fields['Outbound Time']}.\n\nYour driver will be ${fields['Driver Name'] || 'assigned shortly'}.${SUPPORT_LINE}`
+            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nFriendly reminder from RM Transfers!\n\nYour booking (${fields['Booking Ref']}) is scheduled for ${fmtUKDate(fields['Outbound Date'])} at ${fields['Outbound Time']}.\n\nYour driver will be ${fields['Driver Name'] || 'assigned shortly'}.${SUPPORT_LINE}`
         });
     }
 
@@ -211,7 +223,7 @@ export default async function handler(req, res) {
         messages.push({
             to: formattedDriverPhone,
             from: 'RMTransfers',
-            body: `REMINDER: Job tomorrow for ${fields['Customer Name']}\nRef: ${fields['Booking Ref']}\nPickup: ${fields['Home Address']}\nDestination: ${fields['Airport Name'] || 'See booking'}\nDate: ${fields['Outbound Date']} @ ${fields['Outbound Time']}\nFlight: ${fields['Outbound Flight'] || 'N/A'}\nPax: ${fields['Passengers'] || '?'} Bags: ${fields['Luggage'] || '?'}\nCustomer: ${fields['Customer Phone']}\n\nDriver Portal: https://airporttaxitransfersliverpool.co.uk/driver-action.html?ref=${fields['Booking Ref']}`
+            body: `REMINDER: Job tomorrow for ${fields['Customer Name']}\nRef: ${fields['Booking Ref']}\nPickup: ${fields['Home Address']}\nDestination: ${fields['Airport Name'] || 'See booking'}\nDate: ${fmtUKDate(fields['Outbound Date'])} @ ${fields['Outbound Time']}\nFlight: ${fields['Outbound Flight'] || 'N/A'}\nPax: ${fields['Passengers'] || '?'} Bags: ${fields['Luggage'] || '?'}\nCustomer: ${fields['Customer Phone']}\n\nDriver Portal: https://airporttaxitransfersliverpool.co.uk/driver-action.html?ref=${fields['Booking Ref']}`
         });
     }
 
@@ -221,14 +233,14 @@ export default async function handler(req, res) {
             messages.push({
                 to: formattedCustomerPhone,
                 from: 'RMTransfers',
-                body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nFriendly reminder from RM Transfers!\n\nYour booking (${fields['Booking Ref']}) is scheduled for ${fields['Outbound Date']} at ${fields['Outbound Time']}.\n\nYour driver will be ${fields['Driver Name'] || 'assigned shortly'}.${SUPPORT_LINE}`
+                body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nFriendly reminder from RM Transfers!\n\nYour booking (${fields['Booking Ref']}) is scheduled for ${fmtUKDate(fields['Outbound Date'])} at ${fields['Outbound Time']}.\n\nYour driver will be ${fields['Driver Name'] || 'assigned shortly'}.${SUPPORT_LINE}`
             });
         }
         if (formattedDriverPhone) {
             messages.push({
                 to: formattedDriverPhone,
                 from: 'RMTransfers',
-                body: `REMINDER: Job tomorrow for ${fields['Customer Name']}\nRef: ${fields['Booking Ref']}\nPickup: ${fields['Home Address']}\nDestination: ${fields['Airport Name'] || 'See booking'}\nDate: ${fields['Outbound Date']} @ ${fields['Outbound Time']}\nFlight: ${fields['Outbound Flight'] || 'N/A'}\nPax: ${fields['Passengers'] || '?'} Bags: ${fields['Luggage'] || '?'}\nCustomer: ${fields['Customer Phone']}\n\nDriver Portal: https://airporttaxitransfersliverpool.co.uk/driver-action.html?ref=${fields['Booking Ref']}`
+                body: `REMINDER: Job tomorrow for ${fields['Customer Name']}\nRef: ${fields['Booking Ref']}\nPickup: ${fields['Home Address']}\nDestination: ${fields['Airport Name'] || 'See booking'}\nDate: ${fmtUKDate(fields['Outbound Date'])} @ ${fields['Outbound Time']}\nFlight: ${fields['Outbound Flight'] || 'N/A'}\nPax: ${fields['Passengers'] || '?'} Bags: ${fields['Luggage'] || '?'}\nCustomer: ${fields['Customer Phone']}\n\nDriver Portal: https://airporttaxitransfersliverpool.co.uk/driver-action.html?ref=${fields['Booking Ref']}`
             });
         }
     }

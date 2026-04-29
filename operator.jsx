@@ -1,5 +1,16 @@
 const { useState, useEffect } = React;
 
+// UK date helper — see admin.jsx for canonical version.
+const fmtUKDate = (raw) => {
+    if (!raw) return '—';
+    const s = String(raw);
+    const ymd = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (ymd) return `${ymd[3]}/${ymd[2]}/${ymd[1]}`;
+    const d = new Date(s);
+    if (isNaN(d.getTime())) return s;
+    return d.toLocaleDateString('en-GB');
+};
+
 function AdminApp() {
     const [isLoggedIn, setIsLoggedIn] = useState(localStorage.getItem('operatorLoggedIn') === 'true');
     const [operatorName, setOperatorName] = useState(localStorage.getItem('operatorName') || '');
@@ -761,7 +772,7 @@ function AdminApp() {
                                                 <strong style={{ fontSize: '15px' }}>{b.fields['Booking Ref']}</strong>
                                                 <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '4px', background: statusColor(b.fields['Status']), color: 'white', fontWeight: 600 }}>{b.fields['Status']}</span>
                                             </div>
-                                            <span style={{ fontSize: '13px', color: 'var(--muted)' }}>{b.fields['Outbound Date']} @ {b.fields['Outbound Time']}</span>
+                                            <span style={{ fontSize: '13px', color: 'var(--muted)' }}>{fmtUKDate(b.fields['Outbound Date'])} @ {b.fields['Outbound Time']}</span>
                                         </div>
                                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px', fontSize: '13px' }}>
                                             <div><span style={{ color: 'var(--muted)' }}>Customer:</span> <strong>{b.fields['Customer Name']}</strong></div>
@@ -786,7 +797,7 @@ function AdminApp() {
                                         <div>
                                             <strong>{b.fields['Booking Ref']}</strong> — {b.fields['Customer Name']}
                                         </div>
-                                        <div style={{ color: 'var(--muted)' }}>{b.fields['Outbound Date']} | £{b.fields['Operator Price'] || b.fields['Total Price'] || '–'}</div>
+                                        <div style={{ color: 'var(--muted)' }}>{fmtUKDate(b.fields['Outbound Date'])} | £{b.fields['Operator Price'] || b.fields['Total Price'] || '–'}</div>
                                     </div>
                                 ))}
                             </div>
@@ -838,7 +849,7 @@ function AdminApp() {
                                         <td style={{ padding: '12px 16px', fontSize: '13px' }}>
                                             {upcoming ? (
                                                 <span>
-                                                    <strong>{upcoming.fields['Booking Ref']}</strong> — {upcoming.fields['Outbound Date']} @ {upcoming.fields['Outbound Time']}
+                                                    <strong>{upcoming.fields['Booking Ref']}</strong> — {fmtUKDate(upcoming.fields['Outbound Date'])} @ {upcoming.fields['Outbound Time']}
                                                 </span>
                                             ) : (
                                                 <span style={{ color: '#9ca3af' }}>No upcoming jobs</span>
@@ -874,7 +885,7 @@ function AdminApp() {
                         .map(b => (
                             <div key={b.id} style={{ background: 'white', border: '1px solid var(--line)', borderRadius: '10px', padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', borderLeft: `4px solid ${statusColor(b.fields['Status'])}` }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px' }}>
-                                    <strong>{b.fields['Outbound Date']} @ {b.fields['Outbound Time']}</strong>
+                                    <strong>{fmtUKDate(b.fields['Outbound Date'])} @ {b.fields['Outbound Time']}</strong>
                                     <span style={{ fontSize: '12px', padding: '2px 8px', borderRadius: '4px', background: statusColor(b.fields['Status']), color: 'white', fontWeight: 600 }}>{b.fields['Status']}</span>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px', fontSize: '13px', flexWrap: 'wrap' }}>
@@ -1140,7 +1151,7 @@ function AdminApp() {
                                         </div>
                                         <div className="detail">
                                             <span>Date & Time</span>
-                                            <strong>{fields['Outbound Date']} @ {fields['Outbound Time']}</strong>
+                                            <strong>{fmtUKDate(fields['Outbound Date'])} @ {fields['Outbound Time']}</strong>
                                         </div>
                                         <div className="detail">
                                             <span>Pickup</span>
@@ -1172,7 +1183,7 @@ function AdminApp() {
                                             <React.Fragment>
                                                 <div className="detail">
                                                     <span>Return Date & Time</span>
-                                                    <strong>{fields['Return Date']} @ {fields['Return Time']}</strong>
+                                                    <strong>{fmtUKDate(fields['Return Date'])} @ {fields['Return Time']}</strong>
                                                 </div>
                                                 {fields['Return Flight'] && (
                                                     <div className="detail">

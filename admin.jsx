@@ -1,5 +1,17 @@
 const { useState, useEffect } = React;
 
+// UK date helper. Accepts an Airtable ISO date ('2026-04-30'), a full
+// ISO timestamp, or null. Returns DD/MM/YYYY or '—'.
+const fmtUKDate = (raw) => {
+    if (!raw) return '—';
+    const s = String(raw);
+    const ymd = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (ymd) return `${ymd[3]}/${ymd[2]}/${ymd[1]}`;
+    const d = new Date(s);
+    if (isNaN(d.getTime())) return s;
+    return d.toLocaleDateString('en-GB');
+};
+
 // Mobile-first single-job card. Shown on /admin.html?ref=ATL-XXXX (the
 // SMS deep-link) so graham/roy can act on a job without wading through
 // the table on a phone.
@@ -167,9 +179,9 @@ function FocusedJobCard({
                         {detail('Customer', `${f['Customer Name'] || ''} · ${f['Customer Phone'] || ''}`)}
                         {detail('Trip Type', isReturn ? 'Return' : `One Way (${f['Oneway Direction'] === 'from' ? 'From' : 'To'} airport)`)}
                         {detail('Airport', f['Airport'])}
-                        {detail('Outbound', `${f['Outbound Date'] || ''} ${f['Outbound Time'] || ''}`)}
+                        {detail('Outbound', `${fmtUKDate(f['Outbound Date'])} ${f['Outbound Time'] || ''}`.trim())}
                         {f['Outbound Flight'] && detail('Flight', f['Outbound Flight'])}
-                        {isReturn && detail('Return', `${f['Return Date'] || ''} ${f['Return Time'] || ''}`)}
+                        {isReturn && detail('Return', `${fmtUKDate(f['Return Date'])} ${f['Return Time'] || ''}`.trim())}
                         {detail('Pickup', f['Home Address'])}
                         {detail('Pax / Bags', `${f['Passengers'] || 0} pax · ${f['Luggage'] || 0} bags`)}
                         {f['Notes'] && detail('Notes', f['Notes'])}
@@ -792,7 +804,7 @@ function AdminApp() {
                                                 <tr key={b.id} style={{ borderBottom: '1px solid var(--line)', background: i % 2 === 0 ? 'white' : '#fafafa' }}>
                                                     <td style={{ padding: '8px', fontWeight: 600 }}>{b.fields['Booking Ref']}</td>
                                                     <td style={{ padding: '8px' }}>{b.fields['Customer Name']}</td>
-                                                    <td style={{ padding: '8px' }}>{b.fields['Outbound Date']} {b.fields['Outbound Time']}</td>
+                                                    <td style={{ padding: '8px' }}>{fmtUKDate(b.fields['Outbound Date'])} {b.fields['Outbound Time'] || ''}</td>
                                                     <td style={{ padding: '8px' }}>
                                                         <span style={{ fontSize: '11px', padding: '2px 6px', borderRadius: '4px', background: b.fields['Status'] === 'Accepted' ? '#dcfce7' : '#fef3c7', color: b.fields['Status'] === 'Accepted' ? '#166534' : '#92400e', fontWeight: 600 }}>{b.fields['Status']}</span>
                                                     </td>

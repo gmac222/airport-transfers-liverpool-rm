@@ -267,6 +267,15 @@ module.exports = async (req, res) => {
                 return '+44' + cleaned;
             };
 
+            // Helper: ISO -> DD/MM/YYYY for SMS bodies
+            const fmtUKDate = (raw) => {
+                if (!raw) return '—';
+                const s = String(raw);
+                const ymd = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+                if (ymd) return `${ymd[3]}/${ymd[2]}/${ymd[1]}`;
+                return s;
+            };
+
             // Helper: send SMS (non-blocking)
             const sendSms = async (to, body) => {
                 try {
@@ -287,7 +296,7 @@ module.exports = async (req, res) => {
 
                 // 3a. SMS to the NEW driver
                 if (newDriverPhone) {
-                    const driverMsg = `RM TRANSFERS – New Job Assigned\n\nRef: ${rec['Booking Ref'] || '—'}\nCustomer: ${rec['Customer Name'] || '—'}\nPickup: ${rec['Home Address'] || '—'}\nAirport: ${rec['Airport'] || '—'}\nDate: ${rec['Outbound Date'] || '—'} at ${rec['Outbound Time'] || '—'}\nPax: ${rec['Passengers'] || '—'} | Bags: ${rec['Luggage'] || '—'}\n\nView your jobs: https://airporttaxitransfersliverpool.co.uk/driver-portal.html`;
+                    const driverMsg = `RM TRANSFERS – New Job Assigned\n\nRef: ${rec['Booking Ref'] || '—'}\nCustomer: ${rec['Customer Name'] || '—'}\nPickup: ${rec['Home Address'] || '—'}\nAirport: ${rec['Airport'] || '—'}\nDate: ${fmtUKDate(rec['Outbound Date'])} at ${rec['Outbound Time'] || '—'}\nPax: ${rec['Passengers'] || '—'} | Bags: ${rec['Luggage'] || '—'}\n\nView your jobs: https://airporttaxitransfersliverpool.co.uk/driver-portal.html`;
                     sendSms(newDriverPhone, driverMsg);
                 }
 
@@ -297,7 +306,7 @@ module.exports = async (req, res) => {
                 if (oldDriverName && oldDriverName !== newDriverName) {
                     const customerPhone = formatPhone(rec['Phone'] || rec['Customer Phone'] || '');
                     if (customerPhone) {
-                        const custMsg = `RM TRANSFERS – Driver Update\n\nHi ${rec['Customer Name'] || 'there'},\n\nApologies, the driver for your upcoming transfer has been changed.\n\nYour new driver is: ${newDriverName}\nDriver contact: ${fields['Driver Phone'] || '—'}\n\nBooking Ref: ${rec['Booking Ref'] || '—'}\nDate: ${rec['Outbound Date'] || '—'} at ${rec['Outbound Time'] || '—'}\nPickup: ${rec['Home Address'] || '—'}\n\nWe apologise for any inconvenience.\n\nNeed to speak to us? Call 07746 899644.\n\nRM Transfers`;
+                        const custMsg = `RM TRANSFERS – Driver Update\n\nHi ${rec['Customer Name'] || 'there'},\n\nApologies, the driver for your upcoming transfer has been changed.\n\nYour new driver is: ${newDriverName}\nDriver contact: ${fields['Driver Phone'] || '—'}\n\nBooking Ref: ${rec['Booking Ref'] || '—'}\nDate: ${fmtUKDate(rec['Outbound Date'])} at ${rec['Outbound Time'] || '—'}\nPickup: ${rec['Home Address'] || '—'}\n\nWe apologise for any inconvenience.\n\nNeed to speak to us? Call 07746 899644.\n\nRM Transfers`;
                         sendSms(customerPhone, custMsg);
                         console.log(`Customer notified of driver change: ${oldDriverName} → ${newDriverName}`);
                     }
@@ -310,7 +319,7 @@ module.exports = async (req, res) => {
 
                 // 4a. SMS to the NEW return driver
                 if (retPhone) {
-                    const retMsg = `RM TRANSFERS – Return Leg Assigned\n\nRef: ${rec['Booking Ref'] || '—'}\nCustomer: ${rec['Customer Name'] || '—'}\nPickup: ${rec['Airport'] || '—'} Airport\nDrop-off: ${rec['Home Address'] || '—'}\nReturn Date: ${rec['Return Date'] || '—'} at ${rec['Return Time'] || '—'}\nPax: ${rec['Passengers'] || '—'} | Bags: ${rec['Luggage'] || '—'}\n\nView your jobs: https://airporttaxitransfersliverpool.co.uk/driver-portal.html`;
+                    const retMsg = `RM TRANSFERS – Return Leg Assigned\n\nRef: ${rec['Booking Ref'] || '—'}\nCustomer: ${rec['Customer Name'] || '—'}\nPickup: ${rec['Airport'] || '—'} Airport\nDrop-off: ${rec['Home Address'] || '—'}\nReturn Date: ${fmtUKDate(rec['Return Date'])} at ${rec['Return Time'] || '—'}\nPax: ${rec['Passengers'] || '—'} | Bags: ${rec['Luggage'] || '—'}\n\nView your jobs: https://airporttaxitransfersliverpool.co.uk/driver-portal.html`;
                     sendSms(retPhone, retMsg);
                 }
 
@@ -320,7 +329,7 @@ module.exports = async (req, res) => {
                 if (oldRetDriver && oldRetDriver !== newRetDriver) {
                     const customerPhone = formatPhone(rec['Phone'] || rec['Customer Phone'] || '');
                     if (customerPhone) {
-                        const custRetMsg = `RM TRANSFERS – Return Driver Update\n\nHi ${rec['Customer Name'] || 'there'},\n\nApologies, the driver for your return transfer has been changed.\n\nYour new return driver is: ${newRetDriver}\nDriver contact: ${fields['Return Driver Phone'] || '—'}\n\nBooking Ref: ${rec['Booking Ref'] || '—'}\nReturn Date: ${rec['Return Date'] || '—'} at ${rec['Return Time'] || '—'}\n\nWe apologise for any inconvenience.\n\nNeed to speak to us? Call 07746 899644.\n\nRM Transfers`;
+                        const custRetMsg = `RM TRANSFERS – Return Driver Update\n\nHi ${rec['Customer Name'] || 'there'},\n\nApologies, the driver for your return transfer has been changed.\n\nYour new return driver is: ${newRetDriver}\nDriver contact: ${fields['Return Driver Phone'] || '—'}\n\nBooking Ref: ${rec['Booking Ref'] || '—'}\nReturn Date: ${fmtUKDate(rec['Return Date'])} at ${rec['Return Time'] || '—'}\n\nWe apologise for any inconvenience.\n\nNeed to speak to us? Call 07746 899644.\n\nRM Transfers`;
                         sendSms(customerPhone, custRetMsg);
                         console.log(`Customer notified of return driver change: ${oldRetDriver} → ${newRetDriver}`);
                     }

@@ -2,6 +2,15 @@ const { useState, useEffect, useMemo } = React;
 
 // Quick currency formatter
 const fmt = (n) => '£' + Number(n || 0).toLocaleString('en-GB', { maximumFractionDigits: 2 });
+const fmtUKDate = (raw) => {
+    if (!raw) return '—';
+    const s = String(raw);
+    const ymd = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (ymd) return `${ymd[3]}/${ymd[2]}/${ymd[1]}`;
+    const d = new Date(s);
+    if (isNaN(d.getTime())) return s;
+    return d.toLocaleDateString('en-GB');
+};
 // Read a numeric field that might be a string
 const num = (raw) => {
     if (typeof raw === 'number') return raw;
@@ -486,7 +495,7 @@ function SuperAdmin() {
                                         <tr key={b.id}>
                                             <td style={{ ...cell, color: 'var(--amber)', fontWeight: 600 }}>{f['Booking Ref']}</td>
                                             <td style={cell}>{f['Customer Name'] || '—'}</td>
-                                            <td style={cell}>{f['Outbound Date'] || '—'}</td>
+                                            <td style={cell}>{fmtUKDate(f['Outbound Date'])}</td>
                                             <td style={cell}>{f['Operator'] || '—'}</td>
                                             <td style={cell}>{f['Status'] || 'Pending'}</td>
                                             <td style={rightCell}>{cp ? fmt(cp) : '—'}</td>
