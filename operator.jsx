@@ -30,7 +30,6 @@ function AdminApp() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [assigningId, setAssigningId] = useState(null);
-    const [acknowledgingId, setAcknowledgingId] = useState(null);
     const [driversList, setDriversList] = useState([{ name: "Select a driver...", phone: "" }, { name: "Custom Driver", phone: "" }]);
 
     const [editingJob, setEditingJob] = useState(null);
@@ -50,7 +49,6 @@ function AdminApp() {
     const [driverPhones, setDriverPhones] = useState({});
     const [returnDriverNames, setReturnDriverNames] = useState({});
     const [returnDriverPhones, setReturnDriverPhones] = useState({});
-    const [paymentLinks, setPaymentLinks] = useState({});
     const [prices, setPrices] = useState({});
     const [selectedDriver, setSelectedDriver] = useState(null);
 
@@ -301,10 +299,6 @@ function AdminApp() {
         setReturnDriverPhones(prev => ({ ...prev, [id]: phone }));
     };
 
-    const handlePaymentLinkChange = (id, link) => {
-        setPaymentLinks(prev => ({ ...prev, [id]: link }));
-    };
-
     const handlePriceChange = (id, price) => {
         setPrices(prev => ({ ...prev, [id]: price }));
     };
@@ -362,29 +356,22 @@ function AdminApp() {
     };
 
     // STEP 2: customer has accepted the quote (status === 'Awaiting Payment').
-    // Operator now allocates a driver and sends the payment link.
+    // Operator allocates a driver to the booking. Payment-link work has
+    // been moved to the admin portal — operators only assign drivers here.
     const handleAssignDriver = (id) => {
         const driverName = driverNames[id];
         const driverPhone = driverPhones[id];
-        // Payment link now comes from the booking (set on the admin portal).
-        // Local field is only used as an override if the operator wants to
-        // tweak it before sending.
-        const localPaymentLink = paymentLinks[id];
         const booking = bookings.find(b => b.id === id);
-        const persistedPaymentLink = booking && booking.fields['Payment Link'];
-        const paymentLink = (localPaymentLink && localPaymentLink.trim()) || persistedPaymentLink || '';
 
         if (!driverName || driverName.trim() === '') return alert('Please enter a driver name');
         if (!driverPhone || driverPhone.trim() === '') return alert('Please enter a driver phone number');
-        if (!paymentLink || !String(paymentLink).trim()) return alert('No payment link on this booking. Add it on the admin portal first.');
 
         setAssigningId(id);
 
         const isReturn = booking && booking.fields['Trip Type'] === 'return';
         const assignFields = {
             'Driver Name': driverName.trim(),
-            'Driver Phone': driverPhone.trim(),
-            'Payment Link': String(paymentLink).trim()
+            'Driver Phone': driverPhone.trim()
         };
         if (isReturn) {
             const retName = returnDriverNames[id];
@@ -403,72 +390,10 @@ function AdminApp() {
         .then(res => res.json())
         .then(data => {
             if (data.error) throw new Error(data.error);
-
-            const record = bookings.find(b => b.id === id);
-            if (record) {
-                fetch('/api/sms', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'send-payment-link',
-                        fields: {
-                            'Booking Ref': record.fields['Booking Ref'],
-                            'Customer Name': record.fields['Customer Name'],
-                            'Customer Phone': record.fields['Customer Phone'],
-                            'Payment Link': String(paymentLink).trim(),
-                            'Customer Price': record.fields['Customer Price'] || record.fields['Total Price'] || 0,
-                            'Total Price': record.fields['Total Price'] || record.fields['Customer Price'] || 0
-                        }
-                    })
-                }).then(async res => {
-                    const smsData = await res.json();
-                    if (smsData.error) alert('Error sending payment link SMS: ' + smsData.error);
-                }).catch(err => console.error('Error triggering sms:', err));
-            }
-
             fetchBookings();
         })
         .catch(err => alert('Error assigning driver: ' + err.message))
         .finally(() => setAssigningId(null));
-    };
-
-    const handleAcknowledgePayment = (id) => {
-        setAcknowledgingId(id);
-
-        fetch('/api/booking', {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                id: id,
-                fields: {
-                    'Status': 'Accepted'
-                }
-            })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.error) throw new Error(data.error);
-            
-            const record = bookings.find(b => b.id === id);
-            if (record) {
-                fetch('/api/sms', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'send-confirmation',
-                        fields: record.fields
-                    })
-                }).then(async res => {
-                    const smsData = await res.json();
-                    if (smsData.error) alert('Error sending confirmation SMS: ' + smsData.error);
-                }).catch(err => console.error('Error triggering sms:', err));
-            }
-
-            // Refresh list
-            fetchBookings();
-        })
-        .catch(err => alert('Error acknowledging payment: ' + err.message))
-        .finally(() => setAcknowledgingId(null));
     };
 
     const handleDeleteJob = (id) => {
@@ -580,7 +505,6 @@ function AdminApp() {
         if (action === 'send-review-invite') confirmText = "Send Review Invite SMS to Customer?";
         if (action === 'send-confirmation') confirmText = "Resend driver details (name + phone) to customer?";
         if (action === 'send-price-quote') confirmText = "Resend price quote SMS to customer?";
-        if (action === 'send-payment-link') confirmText = "Resend payment link SMS to customer?";
 
         if (!window.confirm(confirmText)) return;
         
@@ -1270,7 +1194,7 @@ function AdminApp() {
                                             <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--navy-ink)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                                 {fields['Driver Name']
                                                     ? '💳 Awaiting Payment'
-                                                    : `🚗 Step 2 — Allocate Driver & Payment Link${fields['Trip Type'] === 'return' ? ' (Outbound)' : ''}`}
+                                                    : `🚗 Step 2 — Allocate Driver${fields['Trip Type'] === 'return' ? ' (Outbound)' : ''}`}
                                             </div>
 
                                             {!fields['Driver Name'] && (
@@ -1335,27 +1259,12 @@ function AdminApp() {
                                                         </>
                                                     )}
 
-                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                        <div style={{ fontSize: '12px', color: 'var(--muted)' }}>
-                                                            {fields['Payment Link']
-                                                                ? <>Payment link from admin: <a href={fields['Payment Link']?.startsWith('http') ? fields['Payment Link'] : `https://${fields['Payment Link']}`} target="_blank" rel="noreferrer" style={{ color: 'var(--navy)' }}>{fields['Payment Link']}</a>. Override below if needed.</>
-                                                                : <>No payment link on this booking yet — paste one below or add it on the admin portal.</>
-                                                            }
-                                                        </div>
-                                                        <input
-                                                            type="url"
-                                                            placeholder={fields['Payment Link'] ? 'Override Payment Link (optional)' : 'Paste Payment Link…'}
-                                                            value={paymentLinks[id] || ''}
-                                                            onChange={e => handlePaymentLinkChange(id, e.target.value)}
-                                                            style={{ flex: '2 1 200px' }}
-                                                        />
-                                                    </div>
                                                     <button
                                                         onClick={() => handleAssignDriver(id)}
                                                         disabled={assigningId === id}
                                                         style={{ padding: '12px', width: '100%' }}
                                                     >
-                                                        {assigningId === id ? '...' : 'Allocate Driver & Send Payment Link'}
+                                                        {assigningId === id ? '...' : 'Allocate Driver'}
                                                     </button>
                                                 </>
                                             )}
@@ -1366,17 +1275,8 @@ function AdminApp() {
                                                     {fields['Trip Type'] === 'return' && (
                                                         <span style={{fontSize: '14px', color: '#7c3aed'}}>Return Driver: {fields['Return Driver Name'] || fields['Driver Name']} {fields['Return Driver Phone'] ? `(${fields['Return Driver Phone']})` : fields['Driver Phone'] ? `(${fields['Driver Phone']})` : ''}</span>
                                                     )}
-                                                    {fields['Payment Link'] && <span style={{fontSize: '14px', color: 'var(--muted)'}}>Payment Link: <a href={fields['Payment Link']?.startsWith('http') ? fields['Payment Link'] : `https://${fields['Payment Link']}`} target="_blank" rel="noreferrer" style={{color: 'var(--navy)'}}>{fields['Payment Link']}</a></span>}
-                                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                                                        <button
-                                                            onClick={() => handleDirectSMS(record, 'send-payment-link')}
-                                                            style={{ flex: 1, padding: '8px', background: 'white', border: '1px solid var(--amber)', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', color: 'var(--amber-deep)', fontSize: '13px' }}
-                                                        >
-                                                            Resend Payment Link SMS
-                                                        </button>
-                                                    </div>
                                                     <div style={{ padding: '10px', background: '#f3f4f6', borderRadius: '6px', fontSize: '12px', color: 'var(--muted)', textAlign: 'center', marginTop: '4px' }}>
-                                                        Payment is acknowledged by the super admin from the admin portal once the customer pays.
+                                                        Payment link &amp; payment confirmation are handled by the admin portal.
                                                     </div>
                                                 </div>
                                             )}
@@ -1402,7 +1302,6 @@ function AdminApp() {
                                     ) : (
                                         <div className="job-actions" style={{background: 'var(--cream)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--line)', display: 'flex', flexDirection: 'column', gap: '8px'}}>
                                             <span style={{fontSize: '14px', fontWeight: 600}}>Driver: {fields['Driver Name']} {fields['Driver Phone'] ? `(${fields['Driver Phone']})` : ''}</span>
-                                            {fields['Payment Link'] && <span style={{fontSize: '14px', color: 'var(--muted)'}}>Payment Link: <a href={fields['Payment Link']?.startsWith('http') ? fields['Payment Link'] : `https://${fields['Payment Link']}`} target="_blank" rel="noreferrer" style={{color: 'var(--navy)'}}>{fields['Payment Link']}</a></span>}
                                             <div style={{ display: 'flex', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
                                                 <button onClick={() => handleDirectSMS(record, 'send-confirmation')} style={{ flex: 1, padding: '8px 4px', background: 'white', border: '1px solid #10b981', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', color: '#047857', fontWeight: 'bold' }}>
                                                     Resend Driver Details to Customer
