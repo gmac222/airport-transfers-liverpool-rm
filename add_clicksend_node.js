@@ -32,7 +32,7 @@ https.get(`https://gmac222.app.n8n.cloud/api/v1/workflows/${WORKFLOW_ID}`, optio
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { \"messages\": [ { \"to\": \"+447398233859\", \"body\": \"New Booking Received! Ref: \" + $json.fields['Booking Ref'] + \"\\nAdmin: https://airporttaxitransfersliverpool.co.uk/admin.html?ref=\" + $json.fields['Booking Ref'] }, { \"to\": \"+447746899644\", \"body\": \"New Booking Received! Ref: \" + $json.fields['Booking Ref'] + \"\\nAdmin: https://airporttaxitransfersliverpool.co.uk/admin.html?ref=\" + $json.fields['Booking Ref'] } ] } }}",
+        "jsonBody": "={{ { \"messages\": [ { \"to\": \"+447398233859\", \"body\": \"New Booking Received! Ref: \" + $json.fields['Booking Ref'] + \"\\nAdmin: https://airporttaxitransfersliverpool.co.uk/operator.html?ref=\" + $json.fields['Booking Ref'] }, { \"to\": \"+447746899644\", \"body\": \"New Booking Received! Ref: \" + $json.fields['Booking Ref'] + \"\\nAdmin: https://airporttaxitransfersliverpool.co.uk/operator.html?ref=\" + $json.fields['Booking Ref'] } ] } }}",
         "options": {}
       },
       "id": "clicksend-operator-node",

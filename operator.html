@@ -296,30 +296,122 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
         .loading { text-align: center; padding: 40px; color: var(--muted); }
 
-        @media (max-width: 600px) {
+        /* Prominent price-entry block used on the Pending stage */
+        .price-entry {
+            background: linear-gradient(135deg, rgba(230,178,75,0.12), rgba(230,178,75,0.04));
+            border: 2px solid var(--amber);
+            border-radius: 14px;
+            padding: 16px;
+            margin-top: 8px;
+            box-shadow: 0 4px 14px -4px rgba(230,178,75,0.35);
+        }
+        .price-entry-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--amber-deep);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 8px;
+        }
+        .price-input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .price-input-wrap::before {
+            content: '£';
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--amber-deep);
+            pointer-events: none;
+        }
+        .price-input-wrap input {
+            width: 100%;
+            padding: 14px 14px 14px 40px;
+            border: 1.5px solid var(--amber);
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--navy-ink);
+            background: #fff;
+            outline: none;
+        }
+        .price-input-wrap input:focus {
+            border-color: var(--amber-deep);
+            box-shadow: 0 0 0 4px rgba(230,178,75,0.2);
+        }
+        .price-send-btn {
+            margin-top: 10px;
+            width: 100%;
+            background: var(--amber);
+            border: none;
+            border-radius: 10px;
+            padding: 14px;
+            font-weight: 700;
+            color: var(--navy-ink);
+            cursor: pointer;
+            font-size: 15px;
+            font-family: inherit;
+        }
+        .price-send-btn:disabled { opacity: 0.6; cursor: wait; }
+
+        @media (max-width: 768px) {
+            .wrap { padding: 14px 10px; }
+            .header { padding: 14px; flex-wrap: wrap; gap: 10px; }
+            .header h1 { font-size: 17px; }
+            .job-card { padding: 14px; border-radius: 10px; }
             .job-details {
                 grid-template-columns: 1fr;
-            }
-            .job-header {
-                flex-direction: column !important;
-                align-items: flex-start !important;
                 gap: 8px;
+                margin-bottom: 14px;
+                font-size: 13px;
             }
-            .header {
-                flex-direction: column !important;
-                align-items: flex-start !important;
-                gap: 12px;
+            .detail strong { font-size: 14px; }
+            .job-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+                margin-bottom: 12px;
+                padding-bottom: 12px;
             }
-            .job-actions > div {
-                flex-direction: column !important;
+            .job-ref { font-size: 16px; }
+            .job-actions { flex-direction: column; gap: 10px; }
+            .job-actions > div { flex-direction: column !important; align-items: stretch !important; }
+            .job-actions input,
+            .job-actions select {
+                width: 100% !important;
+                min-width: 0 !important;
+                flex: 1 1 auto !important;
+                font-size: 16px; /* prevents iOS zoom on focus */
             }
             .job-actions button {
                 width: 100%;
-                padding: 12px;
+                padding: 14px;
+                font-size: 15px;
             }
-            form {
-                flex-direction: column !important;
+            form { flex-direction: column !important; }
+            form input, form select { font-size: 16px !important; }
+
+            /* Price entry should dominate the viewport on mobile */
+            .price-entry { padding: 14px; }
+            .price-input-wrap input { font-size: 28px; padding: 16px 14px 16px 44px; }
+            .price-input-wrap::before { font-size: 28px; }
+            .price-send-btn { padding: 16px; font-size: 16px; }
+
+            /* Filter chip row scrolls horizontally instead of wrapping into a tall stack */
+            .filter-control {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                padding-bottom: 4px;
             }
+            .filter-btn { white-space: nowrap; }
         }
 
     </style>

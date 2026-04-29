@@ -103,6 +103,26 @@ function AdminApp() {
         }
     }, [isLoggedIn]);
 
+    // Deep-link from new-booking SMS (?ref=ATL-XXXX). Once bookings have
+    // loaded, scroll the matching card into view and briefly highlight it.
+    useEffect(() => {
+        if (!isLoggedIn || loading || !bookings.length) return;
+        const ref = new URLSearchParams(window.location.search).get('ref');
+        if (!ref) return;
+        const match = bookings.find(b => (b.fields['Booking Ref'] || '').toLowerCase() === ref.toLowerCase());
+        if (!match) return;
+        // Wait a tick for the filtered list to render
+        setTimeout(() => {
+            const el = document.getElementById('job-' + match.id);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                el.style.transition = 'box-shadow 0.4s ease';
+                el.style.boxShadow = '0 0 0 3px var(--amber)';
+                setTimeout(() => { el.style.boxShadow = ''; }, 2500);
+            }
+        }, 200);
+    }, [isLoggedIn, loading, bookings]);
+
     // Calendar Effect
     useEffect(() => {
         if (viewMode === 'calendar' && !loading) {
@@ -1066,7 +1086,7 @@ function AdminApp() {
                             const isCompleted = status === 'Completed';
                             
                             return (
-                                <div key={id} className="job-card" style={{opacity: isPending ? 1 : 0.6}}>
+                                <div key={id} id={`job-${id}`} className="job-card" style={{opacity: isPending || isAwaitingConfirmation || isAwaitingPayment ? 1 : 0.6}}>
                                     <div className="job-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                             <div className="job-ref">{fields['Booking Ref']}</div>
@@ -1181,30 +1201,31 @@ function AdminApp() {
 
                                     {isPending ? (
                                         <div className="job-actions" style={{ flexDirection: 'column', gap: '10px' }}>
-                                            <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--navy-ink)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                                💷 Step 1 — Quote Customer
-                                            </div>
-                                            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
-                                                <span style={{ fontSize: '14px', fontWeight: 600 }}>Total price (£):</span>
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    step="0.01"
-                                                    placeholder="e.g. 130"
-                                                    value={prices[id] !== undefined ? prices[id] : (fields['Total Price'] || '')}
-                                                    onChange={e => handlePriceChange(id, e.target.value)}
-                                                    style={{ flex: '1 1 120px', padding: '10px', borderRadius: '6px', border: '1px solid var(--line)' }}
-                                                />
-                                            </div>
-                                            <button
-                                                onClick={() => handleSendQuote(id)}
-                                                disabled={assigningId === id}
-                                                style={{ padding: '12px', width: '100%' }}
-                                            >
-                                                {assigningId === id ? '...' : 'Send Quote (Accept / Decline) to Customer'}
-                                            </button>
-                                            <div style={{ fontSize: '12px', color: 'var(--muted)' }}>
-                                                Customer gets an SMS with the price and links to accept or decline. You'll only need to allocate a driver after they accept.
+                                            <div className="price-entry">
+                                                <span className="price-entry-label">Step 1 — Quote the customer</span>
+                                                <div className="price-input-wrap">
+                                                    <input
+                                                        type="number"
+                                                        inputMode="decimal"
+                                                        min="0"
+                                                        step="1"
+                                                        placeholder="0"
+                                                        value={prices[id] !== undefined ? prices[id] : (fields['Total Price'] || '')}
+                                                        onChange={e => handlePriceChange(id, e.target.value)}
+                                                        aria-label="Total price in pounds"
+                                                    />
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleSendQuote(id)}
+                                                    disabled={assigningId === id}
+                                                    className="price-send-btn"
+                                                >
+                                                    {assigningId === id ? 'Sending…' : 'Send Quote to Customer'}
+                                                </button>
+                                                <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '8px', lineHeight: 1.4 }}>
+                                                    Customer gets an SMS with the price and a link to accept or decline. Allocate a driver only once they accept.
+                                                </div>
                                             </div>
                                         </div>
                                     ) : isAwaitingConfirmation ? (

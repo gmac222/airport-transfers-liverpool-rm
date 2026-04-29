@@ -2,6 +2,16 @@
 <html lang="en-GB">
 
 <head>
+<script>
+// If an SMS deep-link sent us here with ?ref=..., the booking lives on the
+// dispatch dashboard, not the admin panel. Redirect immediately.
+(function(){
+    try {
+        var ref = new URLSearchParams(window.location.search).get('ref');
+        if (ref) { window.location.replace('/operator.html?ref=' + encodeURIComponent(ref)); }
+    } catch (e) { /* fall through to admin.html */ }
+})();
+</script>
 <!-- Google Tag Manager -->
 <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
