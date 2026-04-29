@@ -25,6 +25,7 @@ function FocusedJobCard({
     handleReassignDriver, handleReassignReturnDriver, handleReassignSingle,
     handleSendQuote, sendingQuote,
     isSuper, handleAcknowledgePayment, acknowledgingId,
+    openEditModal, handleDeleteJob, handleClearOperatorEditFlag,
     onClose, onLogout
 }) {
     if (loading) {
@@ -85,14 +86,27 @@ function FocusedJobCard({
             </div>
 
             <div style={{ maxWidth: '560px', margin: '16px auto', padding: '0 12px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                {/* Status pill */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                {/* Status row */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                     <span style={{
                         fontSize: '12px', padding: '4px 10px', borderRadius: '999px', fontWeight: 700,
                         background: status === 'Accepted' ? '#dcfce7' : status === 'Declined' ? '#fee2e2' : '#fef3c7',
                         color: status === 'Accepted' ? '#166534' : status === 'Declined' ? '#b91c1c' : '#92400e'
                     }}>{status}</span>
                     <a href={`tel:${f['Customer Phone']}`} style={{ fontSize: '13px', color: 'var(--navy)', textDecoration: 'none', fontWeight: 600 }}>📞 Call customer</a>
+                </div>
+
+                {f['Edited By Operator'] && (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', padding: '10px 12px', background: '#fee2e2', border: '1px solid #fca5a5', borderRadius: '10px', color: '#991b1b' }}>
+                        <span style={{ fontSize: '13px', fontWeight: 700 }}>🚩 The operator edited this booking — please review.</span>
+                        <button onClick={() => handleClearOperatorEditFlag(booking)} style={{ background: 'transparent', border: '1px solid #b91c1c', color: '#b91c1c', borderRadius: '6px', padding: '4px 10px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Mark reviewed</button>
+                    </div>
+                )}
+
+                {/* Edit / Delete actions */}
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <button onClick={() => openEditModal(booking)} style={{ flex: 1, padding: '10px', background: 'white', color: 'var(--amber-deep)', border: '1px solid var(--amber)', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Edit Booking</button>
+                    <button onClick={() => handleDeleteJob(booking)} style={{ flex: 1, padding: '10px', background: 'white', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Delete</button>
                 </div>
 
                 {/* Pricing — the headline action */}
@@ -315,6 +329,69 @@ function AdminApp() {
     const [costPriceVal, setCostPriceVal] = useState('');
     const [opPriceVal, setOpPriceVal] = useState('');
     const [isSavingPrice, setIsSavingPrice] = useState(false);
+
+    // Full-booking edit modal
+    const [editingJob, setEditingJob] = useState(null); // booking id | null
+    const [editForm, setEditForm] = useState({});
+    const [isSavingEdit, setIsSavingEdit] = useState(false);
+
+    const openEditModal = (record) => {
+        setEditingJob(record.id);
+        setEditForm({ ...record.fields });
+    };
+    const closeEditModal = () => {
+        setEditingJob(null);
+        setEditForm({});
+    };
+    const handleSaveEdit = (e) => {
+        e.preventDefault();
+        if (!editingJob) return;
+        setIsSavingEdit(true);
+        // Admin edits override the 'Edited By Operator' flag — admin has
+        // implicitly seen and signed off on the change.
+        const fields = { ...editForm, 'Edited By Operator': false };
+        fetch('/api/booking', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: editingJob, fields })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) throw new Error(data.error);
+            closeEditModal();
+            fetchBookings();
+        })
+        .catch(err => alert('Error saving booking: ' + err.message))
+        .finally(() => setIsSavingEdit(false));
+    };
+
+    const handleDeleteJob = (record) => {
+        const ref = record.fields['Booking Ref'] || record.id;
+        const customer = record.fields['Customer Name'] || 'this customer';
+        if (!window.confirm(`Permanently delete booking ${ref} (${customer})? This cannot be undone.`)) return;
+        fetch('/api/booking', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: record.id })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) throw new Error(data.error);
+            fetchBookings();
+        })
+        .catch(err => alert('Error deleting booking: ' + err.message));
+    };
+
+    const handleClearOperatorEditFlag = (record) => {
+        fetch('/api/booking', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: record.id, fields: { 'Edited By Operator': false } })
+        })
+        .then(r => r.json())
+        .then(data => { if (!data.error) fetchBookings(); })
+        .catch(err => alert('Error clearing flag: ' + err.message));
+    };
 
     // Inline price drafts (per booking id) — what the user has typed in the
     // always-visible price boxes but hasn't yet committed. Empty string means
@@ -785,6 +862,9 @@ function AdminApp() {
                 isSuper={isSuper}
                 handleAcknowledgePayment={handleAcknowledgePayment}
                 acknowledgingId={acknowledgingId}
+                openEditModal={openEditModal}
+                handleDeleteJob={handleDeleteJob}
+                handleClearOperatorEditFlag={handleClearOperatorEditFlag}
                 onClose={() => {
                     setFocusRef('');
                     // Drop the ref from the URL without a reload
@@ -998,15 +1078,23 @@ function AdminApp() {
                                             const canSend = !sentAlready && cpRaw != null && Number(cpRaw) > 0 && priceSavingId !== b.id;
                                             return (
                                                 <div key={b.id} style={{ border: '1px solid var(--line)', borderRadius: '12px', padding: '16px', background: 'white' }}>
-                                                    {/* Top row: ref + customer + status + open in dispatch */}
+                                                    {/* Top row: ref + customer + status + flag + actions */}
                                                     <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '10px', marginBottom: '14px', paddingBottom: '12px', borderBottom: '1px solid var(--line)' }}>
                                                         <div style={{ display: 'flex', alignItems: 'baseline', gap: '14px', flexWrap: 'wrap' }}>
                                                             <strong style={{ fontSize: '16px', fontFamily: 'Lexend' }}>{f['Booking Ref']}</strong>
                                                             <span style={{ color: 'var(--navy-ink)' }}>{f['Customer Name']}</span>
                                                             <span style={{ color: 'var(--muted)', fontSize: '13px' }}>{fmtUKDate(f['Outbound Date'])} {f['Outbound Time'] || ''}</span>
+                                                            {f['Edited By Operator'] && (
+                                                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '4px 10px', borderRadius: '999px', fontWeight: 700, background: '#fee2e2', color: '#b91c1c', border: '1px solid #fca5a5' }}>
+                                                                    🚩 Edited by operator
+                                                                    <button onClick={() => handleClearOperatorEditFlag(b)} title="Mark reviewed" style={{ background: 'transparent', border: 'none', color: '#b91c1c', fontWeight: 700, cursor: 'pointer', padding: 0, fontSize: '11px', textDecoration: 'underline' }}>mark reviewed</button>
+                                                                </span>
+                                                            )}
                                                         </div>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                                                             <span style={{ fontSize: '12px', padding: '4px 10px', borderRadius: '999px', fontWeight: 700, background: status === 'Accepted' ? '#dcfce7' : status === 'Declined' ? '#fee2e2' : '#fef3c7', color: status === 'Accepted' ? '#166534' : status === 'Declined' ? '#b91c1c' : '#92400e' }}>{status}</span>
+                                                            <button onClick={() => openEditModal(b)} style={{ background: 'transparent', color: 'var(--amber-deep)', border: '1px solid var(--amber)', borderRadius: '6px', padding: '5px 10px', fontSize: '12px', cursor: 'pointer', fontWeight: 700, fontFamily: 'inherit' }}>Edit</button>
+                                                            <button onClick={() => handleDeleteJob(b)} style={{ background: 'transparent', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: '6px', padding: '5px 10px', fontSize: '12px', cursor: 'pointer', fontWeight: 700, fontFamily: 'inherit' }}>Delete</button>
                                                             <a href={`/operator.html?ref=${encodeURIComponent(f['Booking Ref'])}`} style={{ fontSize: '12px', color: 'var(--navy-ink)', background: 'rgba(230, 178, 75, 0.18)', border: '1px solid var(--amber)', textDecoration: 'none', fontWeight: 700, padding: '6px 10px', borderRadius: '6px', whiteSpace: 'nowrap' }}>📤 Dispatch to Operator →</a>
                                                         </div>
                                                     </div>
@@ -1088,6 +1176,117 @@ function AdminApp() {
                     </div>
                 )}
             </div>
+
+            {editingJob && (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px' }}>
+                    <div style={{ background: 'white', borderRadius: '14px', width: '100%', maxWidth: '640px', maxHeight: '92vh', overflowY: 'auto', padding: '24px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                            <h2 style={{ margin: 0, fontFamily: 'Lexend', fontSize: '20px' }}>Edit Booking</h2>
+                            <button onClick={closeEditModal} style={{ background: 'transparent', border: 'none', fontSize: '22px', cursor: 'pointer', color: 'var(--muted)' }}>×</button>
+                        </div>
+                        <form onSubmit={handleSaveEdit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                <div style={{ flex: '1 1 200px' }}>
+                                    <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)' }}>Customer Name</label>
+                                    <input type="text" value={editForm['Customer Name'] || ''} onChange={e => setEditForm({ ...editForm, 'Customer Name': e.target.value })} required style={{ width: '100%', padding: '10px', border: '1px solid var(--line)', borderRadius: '6px', fontFamily: 'inherit' }} />
+                                </div>
+                                <div style={{ flex: '1 1 180px' }}>
+                                    <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)' }}>Phone</label>
+                                    <input type="tel" value={editForm['Customer Phone'] || ''} onChange={e => setEditForm({ ...editForm, 'Customer Phone': e.target.value })} required style={{ width: '100%', padding: '10px', border: '1px solid var(--line)', borderRadius: '6px', fontFamily: 'inherit' }} />
+                                </div>
+                                <div style={{ flex: '1 1 220px' }}>
+                                    <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)' }}>Email</label>
+                                    <input type="email" value={editForm['Customer Email'] || ''} onChange={e => setEditForm({ ...editForm, 'Customer Email': e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid var(--line)', borderRadius: '6px', fontFamily: 'inherit' }} />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)' }}>Pickup Address</label>
+                                <input type="text" value={editForm['Home Address'] || ''} onChange={e => setEditForm({ ...editForm, 'Home Address': e.target.value })} required style={{ width: '100%', padding: '10px', border: '1px solid var(--line)', borderRadius: '6px', fontFamily: 'inherit' }} />
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                <div style={{ flex: '1 1 160px' }}>
+                                    <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)' }}>Trip Type</label>
+                                    <select value={editForm['Trip Type'] || 'oneway'} onChange={e => setEditForm({ ...editForm, 'Trip Type': e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid var(--line)', borderRadius: '6px', fontFamily: 'inherit' }}>
+                                        <option value="oneway">One Way</option>
+                                        <option value="return">Return</option>
+                                    </select>
+                                </div>
+                                <div style={{ flex: '1 1 160px' }}>
+                                    <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)' }}>One-way Direction</label>
+                                    <select value={editForm['Oneway Direction'] || 'to'} onChange={e => setEditForm({ ...editForm, 'Oneway Direction': e.target.value })} disabled={(editForm['Trip Type'] || 'oneway') === 'return'} style={{ width: '100%', padding: '10px', border: '1px solid var(--line)', borderRadius: '6px', fontFamily: 'inherit' }}>
+                                        <option value="to">To Airport</option>
+                                        <option value="from">From Airport</option>
+                                    </select>
+                                </div>
+                                <div style={{ flex: '1 1 160px' }}>
+                                    <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)' }}>Airport</label>
+                                    <select value={editForm['Airport'] || 'LJLA'} onChange={e => setEditForm({ ...editForm, 'Airport': e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid var(--line)', borderRadius: '6px', fontFamily: 'inherit' }}>
+                                        <option value="LJLA">Liverpool</option>
+                                        <option value="MAN">Manchester</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                <div style={{ flex: '1 1 140px' }}>
+                                    <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)' }}>Outbound Date</label>
+                                    <input type="date" value={editForm['Outbound Date'] || ''} onChange={e => setEditForm({ ...editForm, 'Outbound Date': e.target.value })} required style={{ width: '100%', padding: '10px', border: '1px solid var(--line)', borderRadius: '6px', fontFamily: 'inherit' }} />
+                                </div>
+                                <div style={{ flex: '1 1 120px' }}>
+                                    <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)' }}>Outbound Time</label>
+                                    <input type="time" value={editForm['Outbound Time'] || ''} onChange={e => setEditForm({ ...editForm, 'Outbound Time': e.target.value })} required style={{ width: '100%', padding: '10px', border: '1px solid var(--line)', borderRadius: '6px', fontFamily: 'inherit' }} />
+                                </div>
+                                <div style={{ flex: '1 1 140px' }}>
+                                    <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)' }}>Outbound Flight</label>
+                                    <input type="text" value={editForm['Outbound Flight'] || ''} onChange={e => setEditForm({ ...editForm, 'Outbound Flight': e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid var(--line)', borderRadius: '6px', fontFamily: 'inherit' }} />
+                                </div>
+                            </div>
+
+                            {(editForm['Trip Type'] || 'oneway') === 'return' && (
+                                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                    <div style={{ flex: '1 1 140px' }}>
+                                        <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)' }}>Return Date</label>
+                                        <input type="date" value={editForm['Return Date'] || ''} onChange={e => setEditForm({ ...editForm, 'Return Date': e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid var(--line)', borderRadius: '6px', fontFamily: 'inherit' }} />
+                                    </div>
+                                    <div style={{ flex: '1 1 120px' }}>
+                                        <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)' }}>Return Time</label>
+                                        <input type="time" value={editForm['Return Time'] || ''} onChange={e => setEditForm({ ...editForm, 'Return Time': e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid var(--line)', borderRadius: '6px', fontFamily: 'inherit' }} />
+                                    </div>
+                                    <div style={{ flex: '1 1 140px' }}>
+                                        <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)' }}>Return Flight</label>
+                                        <input type="text" value={editForm['Return Flight'] || ''} onChange={e => setEditForm({ ...editForm, 'Return Flight': e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid var(--line)', borderRadius: '6px', fontFamily: 'inherit' }} />
+                                    </div>
+                                </div>
+                            )}
+
+                            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                <div style={{ flex: '1 1 100px' }}>
+                                    <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)' }}>Passengers</label>
+                                    <input type="number" min="1" value={editForm['Passengers'] || 1} onChange={e => setEditForm({ ...editForm, 'Passengers': parseInt(e.target.value, 10) || 1 })} style={{ width: '100%', padding: '10px', border: '1px solid var(--line)', borderRadius: '6px', fontFamily: 'inherit' }} />
+                                </div>
+                                <div style={{ flex: '1 1 100px' }}>
+                                    <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)' }}>Bags</label>
+                                    <input type="number" min="0" value={editForm['Luggage'] || 0} onChange={e => setEditForm({ ...editForm, 'Luggage': parseInt(e.target.value, 10) || 0 })} style={{ width: '100%', padding: '10px', border: '1px solid var(--line)', borderRadius: '6px', fontFamily: 'inherit' }} />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)' }}>Notes</label>
+                                <textarea value={editForm['Notes'] || ''} onChange={e => setEditForm({ ...editForm, 'Notes': e.target.value })} rows="3" style={{ width: '100%', padding: '10px', border: '1px solid var(--line)', borderRadius: '6px', fontFamily: 'inherit', resize: 'vertical' }} />
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '8px' }}>
+                                <button type="button" onClick={closeEditModal} style={{ padding: '10px 16px', background: 'white', color: 'var(--ink)', border: '1px solid var(--line)', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
+                                <button type="submit" disabled={isSavingEdit} style={{ padding: '10px 18px', background: 'var(--navy)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: isSavingEdit ? 'wait' : 'pointer', fontFamily: 'inherit' }}>
+                                    {isSavingEdit ? 'Saving…' : 'Save Changes'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

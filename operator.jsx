@@ -405,22 +405,6 @@ function AdminApp() {
         .finally(() => setAssigningId(null));
     };
 
-    const handleDeleteJob = (id) => {
-        if (!window.confirm("Are you sure you want to permanently delete this booking?")) return;
-        
-        fetch('/api/booking', {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: id })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.error) throw new Error(data.error);
-            fetchBookings();
-        })
-        .catch(err => alert('Error deleting booking: ' + err.message));
-    };
-
     const openCreateModal = () => {
         setEditingJob('new');
         setEditForm({
@@ -473,11 +457,12 @@ function AdminApp() {
             .catch(err => alert('Error creating booking: ' + err.message))
             .finally(() => setIsSavingEdit(false));
         } else {
-            // Update
+            // Update — flag the booking so admin sees the operator touched it.
+            const fieldsWithFlag = { ...editForm, 'Edited By Operator': true };
             fetch('/api/booking', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: editingJob, fields: editForm })
+                body: JSON.stringify({ id: editingJob, fields: fieldsWithFlag })
             })
             .then(res => res.json())
             .then(data => {
@@ -1050,17 +1035,11 @@ function AdminApp() {
                                             </div>
                                         </div>
                                         <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button 
+                                            <button
                                                 onClick={() => openEditModal(record)}
                                                 style={{ background: 'transparent', color: 'var(--amber)', border: '1px solid var(--amber)', borderRadius: '4px', padding: '4px 8px', fontSize: '12px', cursor: 'pointer', fontWeight: 'bold' }}
                                             >
                                                 Edit
-                                            </button>
-                                            <button 
-                                                onClick={() => handleDeleteJob(id)}
-                                                style={{ background: 'transparent', color: '#e53e3e', border: '1px solid #e53e3e', borderRadius: '4px', padding: '4px 8px', fontSize: '12px', cursor: 'pointer', fontWeight: 'bold' }}
-                                            >
-                                                Delete
                                             </button>
                                         </div>
                                     </div>
