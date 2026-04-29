@@ -409,6 +409,41 @@ function AdminApp() {
         window.location.href = `/operator.html?ref=${encodeURIComponent(f['Booking Ref'])}`;
     };
 
+    const archiveBooking = async (record) => {
+        const ref = record.fields['Booking Ref'] || record.id;
+        if (!window.confirm(`Move ${ref} to the Archive? It'll disappear from active jobs and from operator portals.`)) return;
+        try {
+            const res = await fetch('/api/booking', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: record.id, fields: { 'Status': 'Archived' } })
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            fetchBookings();
+        } catch (err) {
+            alert('Could not archive booking: ' + err.message);
+        }
+    };
+
+    const unarchiveBooking = async (record) => {
+        const ref = record.fields['Booking Ref'] || record.id;
+        if (!window.confirm(`Restore ${ref} to active jobs?`)) return;
+        try {
+            // Drop them back to Pending — admin can re-route from there.
+            const res = await fetch('/api/booking', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: record.id, fields: { 'Status': 'Pending', 'Dispatched To Operator': false } })
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            fetchBookings();
+        } catch (err) {
+            alert('Could not restore booking: ' + err.message);
+        }
+    };
+
     const handleClearOperatorEditFlag = (record) => {
         fetch('/api/booking', {
             method: 'PATCH',
@@ -819,7 +854,9 @@ function AdminApp() {
 
     // ─── Main admin panel ─────────────────────────────────────────
     const opNames = operators.map(o => o.name);
-    const activeBookings = bookings.filter(b => !['Archived','Cancelled'].includes(b.fields['Status']));
+    const ARCHIVE_STATUSES = ['Archived', 'Completed', 'Cancelled', 'Declined'];
+    const activeBookings = bookings.filter(b => !ARCHIVE_STATUSES.includes(b.fields['Status']));
+    const archivedBookings = bookings.filter(b => ARCHIVE_STATUSES.includes(b.fields['Status']));
     const unassignedCount = activeBookings.filter(b => !b.fields['Operator']).length;
     const isSuper = (typeof localStorage !== 'undefined') && localStorage.getItem('adminIsSuper') === 'true';
 
@@ -944,9 +981,12 @@ function AdminApp() {
 
             <div className="wrap">
                 {/* Tab controls */}
-                <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
                     <button onClick={() => setView('jobs')} style={{ padding: '10px 20px', borderRadius: '8px', border: view === 'jobs' ? '2px solid var(--navy)' : '1px solid var(--line)', background: view === 'jobs' ? 'var(--navy)' : 'white', color: view === 'jobs' ? 'white' : 'var(--ink)', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px' }}>
                         Job Assignments {unassignedCount > 0 && <span style={{ background: '#e53e3e', color: 'white', borderRadius: '10px', padding: '1px 8px', fontSize: '12px', marginLeft: '6px' }}>{unassignedCount}</span>}
+                    </button>
+                    <button onClick={() => setView('archive')} style={{ padding: '10px 20px', borderRadius: '8px', border: view === 'archive' ? '2px solid var(--navy)' : '1px solid var(--line)', background: view === 'archive' ? 'var(--navy)' : 'white', color: view === 'archive' ? 'white' : 'var(--ink)', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px' }}>
+                        Archive ({archivedBookings.length})
                     </button>
                     <button onClick={() => setView('operators')} style={{ padding: '10px 20px', borderRadius: '8px', border: view === 'operators' ? '2px solid var(--navy)' : '1px solid var(--line)', background: view === 'operators' ? 'var(--navy)' : 'white', color: view === 'operators' ? 'white' : 'var(--ink)', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px' }}>
                         Manage Operators ({operators.length})
@@ -1118,6 +1158,7 @@ function AdminApp() {
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                                                             <span style={{ fontSize: '12px', padding: '4px 10px', borderRadius: '999px', fontWeight: 700, background: status === 'Accepted' ? '#dcfce7' : status === 'Declined' ? '#fee2e2' : '#fef3c7', color: status === 'Accepted' ? '#166534' : status === 'Declined' ? '#b91c1c' : '#92400e' }}>{status}</span>
                                                             <button onClick={() => openEditModal(b)} style={{ background: 'transparent', color: 'var(--amber-deep)', border: '1px solid var(--amber)', borderRadius: '6px', padding: '5px 10px', fontSize: '12px', cursor: 'pointer', fontWeight: 700, fontFamily: 'inherit' }}>Edit</button>
+                                                            <button onClick={() => archiveBooking(b)} title="Move to archive" style={{ background: 'transparent', color: '#475569', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '5px 10px', fontSize: '12px', cursor: 'pointer', fontWeight: 700, fontFamily: 'inherit' }}>Archive</button>
                                                             <button onClick={() => handleDeleteJob(b)} style={{ background: 'transparent', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: '6px', padding: '5px 10px', fontSize: '12px', cursor: 'pointer', fontWeight: 700, fontFamily: 'inherit' }}>Delete</button>
                                                             <button onClick={() => dispatchToOperator(b)} style={{ fontSize: '12px', color: 'var(--navy-ink)', background: f['Dispatched To Operator'] ? '#dcfce7' : 'rgba(230, 178, 75, 0.18)', border: f['Dispatched To Operator'] ? '1px solid #16a34a' : '1px solid var(--amber)', cursor: 'pointer', fontWeight: 700, padding: '6px 10px', borderRadius: '6px', whiteSpace: 'nowrap', fontFamily: 'inherit' }}>
                                                                 {f['Dispatched To Operator'] ? '✓ Dispatched — Open' : '📤 Dispatch to Operator'}
@@ -1199,6 +1240,88 @@ function AdminApp() {
                                 );
                             })()}
                         </div>
+                    </div>
+                )}
+
+                {view === 'archive' && (
+                    <div className="card" style={{ overflow: 'hidden' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
+                            <h2 style={{ fontFamily: 'Lexend', fontSize: '18px', margin: 0 }}>Archived Bookings ({archivedBookings.length})</h2>
+                            <input
+                                type="search"
+                                value={jobsSearch}
+                                onChange={e => setJobsSearch(e.target.value)}
+                                placeholder="Search ref, customer, phone, driver, operator…"
+                                style={{ flex: '0 1 320px', padding: '8px 12px', border: '1px solid var(--line)', borderRadius: '6px', fontFamily: 'inherit', fontSize: '13px' }}
+                            />
+                        </div>
+                        {(() => {
+                            const filtered = archivedBookings
+                                .filter(b => {
+                                    const q = jobsSearch.trim().toLowerCase();
+                                    if (!q) return true;
+                                    const f = b.fields;
+                                    return [
+                                        f['Booking Ref'], f['Customer Name'], f['Customer Phone'],
+                                        f['Driver Name'], f['Operator'], f['Status']
+                                    ].some(v => v && String(v).toLowerCase().includes(q));
+                                })
+                                .sort((a, b) => {
+                                    const da = new Date(a.fields['Outbound Date'] || a.fields['Submitted At'] || 0).getTime();
+                                    const db = new Date(b.fields['Outbound Date'] || b.fields['Submitted At'] || 0).getTime();
+                                    return db - da; // most-recent trip first
+                                });
+                            if (filtered.length === 0) {
+                                return <div style={{ padding: '30px', textAlign: 'center', color: 'var(--muted)' }}>{jobsSearch.trim() ? `No archived bookings match "${jobsSearch}".` : 'No archived bookings yet — completed jobs will appear here.'}</div>;
+                            }
+                            const statusBg = (s) => s === 'Completed' ? '#dcfce7' : s === 'Archived' ? '#e2e8f0' : s === 'Declined' ? '#fee2e2' : '#fef3c7';
+                            const statusFg = (s) => s === 'Completed' ? '#166534' : s === 'Archived' ? '#475569' : s === 'Declined' ? '#b91c1c' : '#92400e';
+                            return (
+                                <div style={{ overflowX: 'auto' }}>
+                                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', minWidth: '720px' }}>
+                                        <thead>
+                                            <tr style={{ borderBottom: '2px solid var(--line)', textAlign: 'left' }}>
+                                                <th style={{ padding: '8px' }}>Ref</th>
+                                                <th style={{ padding: '8px' }}>Customer</th>
+                                                <th style={{ padding: '8px' }}>Date</th>
+                                                <th style={{ padding: '8px' }}>Operator</th>
+                                                <th style={{ padding: '8px' }}>Driver</th>
+                                                <th style={{ padding: '8px' }}>Status</th>
+                                                <th style={{ padding: '8px', textAlign: 'right' }}>Customer £</th>
+                                                <th style={{ padding: '8px', textAlign: 'right' }}>Profit</th>
+                                                <th style={{ padding: '8px' }}></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {filtered.map((b, i) => {
+                                                const f = b.fields;
+                                                const cp = Number(f['Customer Price'] || f['Total Price'] || 0);
+                                                const op = Number(f['Operator Price'] || 0);
+                                                const profit = cp - op;
+                                                const profitColor = profit > 0 ? '#15803d' : profit < 0 ? '#b91c1c' : '#6b7280';
+                                                return (
+                                                    <tr key={b.id} style={{ borderBottom: '1px solid var(--line)', background: i % 2 === 0 ? 'white' : '#fafafa' }}>
+                                                        <td style={{ padding: '8px', fontWeight: 600, color: 'var(--amber-deep)' }}>{f['Booking Ref']}</td>
+                                                        <td style={{ padding: '8px' }}>{f['Customer Name'] || '—'}</td>
+                                                        <td style={{ padding: '8px' }}>{fmtUKDate(f['Outbound Date'])} {f['Outbound Time'] || ''}</td>
+                                                        <td style={{ padding: '8px' }}>{f['Operator'] || <span style={{color:'#9ca3af'}}>—</span>}</td>
+                                                        <td style={{ padding: '8px' }}>{f['Driver Name'] || <span style={{color:'#9ca3af'}}>—</span>}</td>
+                                                        <td style={{ padding: '8px' }}>
+                                                            <span style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '999px', background: statusBg(f['Status']), color: statusFg(f['Status']), fontWeight: 600 }}>{f['Status'] || '—'}</span>
+                                                        </td>
+                                                        <td style={{ padding: '8px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{cp ? `£${cp.toFixed(2)}` : '—'}</td>
+                                                        <td style={{ padding: '8px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: profitColor, fontWeight: 700 }}>{(cp || op) ? `£${profit.toFixed(2)}` : '—'}</td>
+                                                        <td style={{ padding: '8px' }}>
+                                                            <button onClick={() => unarchiveBooking(b)} title="Restore this booking to active" style={{ background: 'transparent', color: 'var(--navy)', border: '1px solid var(--line)', borderRadius: '6px', padding: '4px 10px', fontSize: '12px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>Restore</button>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            );
+                        })()}
                     </div>
                 )}
             </div>
