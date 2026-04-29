@@ -12,6 +12,24 @@ const fmtUKDate = (raw) => {
 };
 
 function AdminApp() {
+    // If admin is opening this portal with ?as=<operator>, treat the previous
+    // session as stale and force a fresh SSO. Without this, an admin who
+    // just visited RM Transfers's portal will see RM Transfers's jobs for a
+    // moment when they then click into Graham Operator's, because the
+    // localStorage from the previous session leaks through during the SSO
+    // round-trip.
+    const _ssoTarget = (() => {
+        try { return new URLSearchParams(window.location.search).get('as') || ''; }
+        catch (e) { return ''; }
+    })();
+    const _ssoIsAdmin = (typeof localStorage !== 'undefined') && localStorage.getItem('adminIsSuper') === 'true';
+    if (_ssoTarget && _ssoIsAdmin) {
+        // Wipe operator session synchronously before render so the filter
+        // can't briefly show the previous operator's jobs.
+        localStorage.removeItem('operatorLoggedIn');
+        localStorage.removeItem('operatorName');
+    }
+
     const [isLoggedIn, setIsLoggedIn] = useState(localStorage.getItem('operatorLoggedIn') === 'true');
     const [operatorName, setOperatorName] = useState(localStorage.getItem('operatorName') || '');
     const [username, setUsername] = useState(() => {
@@ -76,30 +94,17 @@ function AdminApp() {
 
     // Admin SSO: if ?as=<operatorUsername> is present AND the user is a
     // logged-in super admin, swap us into that operator's view without a
-    // password. Operator's localStorage state is overwritten so the booking
-    // filter narrows correctly.
+    // password. The synchronous wipe at the top of AdminApp ensures we
+    // never render with the previous operator's name.
     useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const asUser = params.get('as');
-        if (!asUser) return;
+        if (!_ssoTarget) return;
         const adminUser = localStorage.getItem('adminName');
-        const isSuper = localStorage.getItem('adminIsSuper') === 'true';
-        if (!adminUser || !isSuper) return;
-
-        const currentOperator = localStorage.getItem('operatorName') || '';
-        // If we're already logged in as some other operator (or a stale one),
-        // log out first so we don't show their data while the SSO call runs.
-        if (currentOperator && currentOperator.toLowerCase() !== asUser.toLowerCase()) {
-            localStorage.removeItem('operatorLoggedIn');
-            localStorage.removeItem('operatorName');
-            setIsLoggedIn(false);
-            setOperatorName('');
-        }
+        if (!adminUser || !_ssoIsAdmin) return;
 
         fetch('/api/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-Admin-SSO': adminUser },
-            body: JSON.stringify({ username: asUser, password: '__sso__', portal: 'operator' })
+            body: JSON.stringify({ username: _ssoTarget, password: '__sso__', portal: 'operator' })
         })
         .then(r => r.json())
         .then(data => {
@@ -108,10 +113,9 @@ function AdminApp() {
                 return;
             }
             localStorage.setItem('operatorLoggedIn', 'true');
-            localStorage.setItem('operatorName', data.operatorName || asUser);
-            setOperatorName(data.operatorName || asUser);
+            localStorage.setItem('operatorName', data.operatorName || _ssoTarget);
+            setOperatorName(data.operatorName || _ssoTarget);
             setIsLoggedIn(true);
-            // Drop ?as= from the URL so a refresh doesn't re-SSO.
             try {
                 const u = new URL(window.location.href);
                 u.searchParams.delete('as');
