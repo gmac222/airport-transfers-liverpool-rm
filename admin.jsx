@@ -416,7 +416,7 @@ function AdminApp() {
                         </div>
 
                         {/* Jobs table */}
-                        <div className="card" style={{ overflow: 'auto' }}>
+                        <div className="card">
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
                                 <h2 style={{ fontFamily: 'Lexend', fontSize: '18px', margin: 0 }}>Active Bookings ({activeBookings.length})</h2>
                                 <input
@@ -430,7 +430,8 @@ function AdminApp() {
                             {loading ? (
                                 <div className="loading">Loading...</div>
                             ) : (
-                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', minWidth: '700px' }}>
+                                <div className="table-scroll">
+                                <table style={{ width: 'max-content', minWidth: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                                     <thead>
                                         <tr style={{ borderBottom: '2px solid var(--line)', textAlign: 'left' }}>
                                             <th style={{ padding: '8px' }}>Ref</th>
@@ -592,6 +593,7 @@ function AdminApp() {
                                         )}
                                     </tbody>
                                 </table>
+                                </div>
                             )}
                         </div>
                     </div>

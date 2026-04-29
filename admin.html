@@ -87,6 +87,18 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
         .loading { text-align: center; padding: 40px; color: var(--muted); }
 
+        /* Make tables scroll horizontally inside their card on small screens
+           rather than pushing the page wider than the viewport. */
+        body { overflow-x: hidden; }
+        .wrap { width: 100%; box-sizing: border-box; }
+        .card { max-width: 100%; box-sizing: border-box; }
+        .table-scroll {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 0 -8px; /* let the table breathe to the card edge on mobile */
+            padding: 0 8px;
+        }
+
         /* Always-visible price inputs in the jobs table — must be unmissable */
         .price-cell {
             display: flex;
@@ -143,12 +155,20 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         .profit-pill.zero { background: #f3f4f6; color: #6b7280; }
         .profit-pill.negative { background: #fee2e2; color: #b91c1c; }
 
-        @media (max-width: 600px) {
+        @media (max-width: 768px) {
             .header {
                 flex-direction: column !important;
                 align-items: flex-start !important;
                 gap: 12px;
+                padding: 14px 16px;
             }
+            .wrap { padding: 16px 12px; }
+            .card { padding: 14px; border-radius: 10px; }
+            /* Stop iOS Safari zooming on input focus */
+            input, select, textarea { font-size: 16px !important; }
+            /* Price cell stays compact on mobile */
+            .price-cell { min-width: 80px; padding: 4px 6px; }
+            .price-cell input { font-size: 16px; }
         }
     </style>
 </head>
