@@ -837,7 +837,7 @@ function AdminApp() {
                                 <div className="loading">Loading...</div>
                             ) : (
                                 <div className="table-scroll">
-                                <table style={{ width: 'max-content', minWidth: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                                     <thead>
                                         <tr style={{ borderBottom: '2px solid var(--line)', textAlign: 'left' }}>
                                             <th style={{ padding: '8px' }}>Ref</th>
@@ -848,12 +848,9 @@ function AdminApp() {
                                             <th style={{ padding: '8px', minWidth: '110px', color: 'var(--amber-deep)', fontWeight: 700 }}>Operator £</th>
                                             <th style={{ padding: '8px', minWidth: '80px' }}>Profit</th>
                                             <th style={{ padding: '8px', minWidth: '180px', color: 'var(--amber-deep)', fontWeight: 700 }}>Payment Link</th>
-                                            <th style={{ padding: '8px' }}>Outbound Driver</th>
-                                            <th style={{ padding: '8px' }}>Reassign Driver</th>
-                                            <th style={{ padding: '8px' }}>Return Driver</th>
-                                            <th style={{ padding: '8px' }}>Reassign Return</th>
-                                            <th style={{ padding: '8px' }}>Assigned To</th>
-                                            <th style={{ padding: '8px' }}>Reassign Operator</th>
+                                            <th style={{ padding: '8px', minWidth: '140px' }}>Driver</th>
+                                            <th style={{ padding: '8px', minWidth: '140px' }}>Return Driver</th>
+                                            <th style={{ padding: '8px', minWidth: '140px' }}>Operator</th>
                                             <th style={{ padding: '8px', minWidth: '120px' }}>Quote</th>
                                         </tr>
                                     </thead>
@@ -997,32 +994,24 @@ function AdminApp() {
                                                             </React.Fragment>
                                                         );
                                                     })()}
-                                                    <td style={{ padding: '8px' }}>{b.fields['Driver Name'] || <span style={{color:'#9ca3af'}}>–</span>}</td>
                                                     <td style={{ padding: '8px' }}>
-                                                        <select value={b.fields['Driver Name'] || ''} onChange={e => handleReassignDriver(b.id, e.target.value)} style={{ padding: '4px 8px', border: '1px solid var(--line)', borderRadius: '4px', fontSize: '12px', fontFamily: 'inherit' }}>
+                                                        <select value={b.fields['Driver Name'] || ''} onChange={e => handleReassignDriver(b.id, e.target.value)} style={{ width: '100%', padding: '6px 8px', border: '1px solid var(--line)', borderRadius: '6px', fontSize: '13px', fontFamily: 'inherit', fontWeight: b.fields['Driver Name'] ? 600 : 400 }}>
                                                             <option value="">No driver</option>
                                                             {driversList.map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
                                                         </select>
                                                     </td>
-                                                    <td style={{ padding: '8px', color: b.fields['Trip Type'] === 'return' ? '#7c3aed' : '#9ca3af' }}>
-                                                        {b.fields['Trip Type'] === 'return' 
-                                                            ? (b.fields['Return Driver Name'] || b.fields['Driver Name'] || <span style={{color:'#9ca3af'}}>–</span>)
-                                                            : <span style={{color:'#d1d5db'}}>N/A</span>
-                                                        }
-                                                    </td>
                                                     <td style={{ padding: '8px' }}>
                                                         {b.fields['Trip Type'] === 'return' ? (
-                                                            <select value={b.fields['Return Driver Name'] || ''} onChange={e => handleReassignReturnDriver(b.id, e.target.value)} style={{ padding: '4px 8px', border: '1px solid #c4b5fd', borderRadius: '4px', fontSize: '12px', fontFamily: 'inherit', background: '#faf5ff' }}>
+                                                            <select value={b.fields['Return Driver Name'] || ''} onChange={e => handleReassignReturnDriver(b.id, e.target.value)} style={{ width: '100%', padding: '6px 8px', border: '1px solid #c4b5fd', borderRadius: '6px', fontSize: '13px', fontFamily: 'inherit', background: '#faf5ff' }}>
                                                                 <option value="">Same as outbound</option>
                                                                 {driversList.map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
                                                             </select>
                                                         ) : (
-                                                            <span style={{color:'#d1d5db', fontSize: '11px'}}>N/A</span>
+                                                            <span style={{color:'#d1d5db', fontSize: '12px'}}>N/A</span>
                                                         )}
                                                     </td>
-                                                    <td style={{ padding: '8px', fontWeight: currentOp ? 600 : 400, color: currentOp ? 'var(--navy-ink)' : '#e53e3e' }}>{currentOp || 'Unassigned'}</td>
                                                     <td style={{ padding: '8px' }}>
-                                                        <select value={currentOp} onChange={e => handleReassignSingle(b.id, e.target.value)} style={{ padding: '4px 8px', border: '1px solid var(--line)', borderRadius: '4px', fontSize: '12px', fontFamily: 'inherit' }}>
+                                                        <select value={currentOp} onChange={e => handleReassignSingle(b.id, e.target.value)} style={{ width: '100%', padding: '6px 8px', border: '1px solid var(--line)', borderRadius: '6px', fontSize: '13px', fontFamily: 'inherit', fontWeight: currentOp ? 600 : 400, color: currentOp ? 'var(--navy-ink)' : '#e53e3e' }}>
                                                             <option value="">Unassigned</option>
                                                             {operators.map(op => <option key={op.id} value={op.name}>{op.name}</option>)}
                                                         </select>
@@ -1058,14 +1047,14 @@ function AdminApp() {
                                             );
                                         })}
                                         {activeBookings.length === 0 && (
-                                            <tr><td colSpan="15" style={{ padding: '30px', textAlign: 'center', color: 'var(--muted)' }}>No active bookings.</td></tr>
+                                            <tr><td colSpan="12" style={{ padding: '30px', textAlign: 'center', color: 'var(--muted)' }}>No active bookings.</td></tr>
                                         )}
                                         {activeBookings.length > 0 && jobsSearch.trim() && activeBookings.filter(b => {
                                             const q = jobsSearch.trim().toLowerCase();
                                             const f = b.fields;
                                             return [f['Booking Ref'], f['Customer Name'], f['Customer Phone'], f['Driver Name'], f['Return Driver Name'], f['Operator'], f['Customer Email'], f['Home Address'], f['Status']].some(v => v && String(v).toLowerCase().includes(q));
                                         }).length === 0 && (
-                                            <tr><td colSpan="15" style={{ padding: '30px', textAlign: 'center', color: 'var(--muted)' }}>No bookings match "{jobsSearch}".</td></tr>
+                                            <tr><td colSpan="12" style={{ padding: '30px', textAlign: 'center', color: 'var(--muted)' }}>No bookings match "{jobsSearch}".</td></tr>
                                         )}
                                     </tbody>
                                 </table>
