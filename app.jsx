@@ -126,7 +126,7 @@ function Hero({ headline }) {
 
         <div className="hero-cta" style={{ flexDirection: "column", alignItems: "center", gap: "10px" }}>
           <a href="#book" className="btn btn-primary" style={{ padding: "16px 32px", fontSize: "16px", width: "100%", maxWidth: "520px", justifyContent: "center" }}>
-            Book Now <Icon name="arrow" size={16} />
+            Get My Fixed Price <Icon name="arrow" size={16} />
           </a>
         </div>
 
