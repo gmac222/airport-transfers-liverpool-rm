@@ -466,12 +466,24 @@ function AdminApp() {
         const trimmed = (rawValue ?? '').toString().trim();
         const parsed = trimmed === '' ? null : parseFloat(trimmed);
         if (parsed !== null && !Number.isFinite(parsed)) return; // ignore garbage
+
+        // Build the patch. When the user enters a Customer Price and the
+        // Operator Price is still empty, default Operator Price to the same
+        // figure (the admin can then change it). This keeps Profit at £0
+        // until they explicitly mark the operator down.
+        const patchFields = { [field]: parsed };
+        if (field === 'Customer Price' && parsed != null) {
+            const booking = bookings.find(x => x.id === bookingId);
+            const existingOp = booking && booking.fields['Operator Price'];
+            if (existingOp == null) patchFields['Operator Price'] = parsed;
+        }
+
         setPriceSavingId(bookingId);
         try {
             const res = await fetch('/api/booking', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: bookingId, fields: { [field]: parsed } })
+                body: JSON.stringify({ id: bookingId, fields: patchFields })
             });
             const data = await res.json();
             if (data.error) throw new Error(data.error);
@@ -720,6 +732,49 @@ function AdminApp() {
     const activeBookings = bookings.filter(b => !['Archived','Cancelled'].includes(b.fields['Status']));
     const unassignedCount = activeBookings.filter(b => !b.fields['Operator']).length;
     const isSuper = (typeof localStorage !== 'undefined') && localStorage.getItem('adminIsSuper') === 'true';
+
+    // Apply our current single-operator / single-driver defaults to any
+    // freshly-arrived booking that hasn't had them set yet. This runs once
+    // per render of activeBookings and silently PATCHes Airtable. The admin
+    // can change either dropdown afterwards.
+    const DEFAULT_OPERATOR = 'RM Transfers';
+    const DEFAULT_DRIVER = 'Roy Medlam';
+    const defaultsAppliedRef = React.useRef(new Set());
+    useEffect(() => {
+        if (!isLoggedIn || loading || activeBookings.length === 0) return;
+        const defaultDriverPhone = (driversList.find(d => d.name === DEFAULT_DRIVER) || {}).phone || '';
+        for (const b of activeBookings) {
+            if (defaultsAppliedRef.current.has(b.id)) continue;
+            const f = b.fields;
+            const status = f['Status'] || 'Pending';
+            // Only seed defaults on freshly-arrived bookings — anything past
+            // Pending has been touched by an admin/operator already, so don't
+            // second-guess them.
+            if (status !== 'Pending') {
+                defaultsAppliedRef.current.add(b.id);
+                continue;
+            }
+            const patch = {};
+            if (!f['Operator']) patch['Operator'] = DEFAULT_OPERATOR;
+            if (!f['Driver Name']) {
+                patch['Driver Name'] = DEFAULT_DRIVER;
+                if (defaultDriverPhone && !f['Driver Phone']) patch['Driver Phone'] = defaultDriverPhone;
+            }
+            if (Object.keys(patch).length === 0) {
+                defaultsAppliedRef.current.add(b.id);
+                continue;
+            }
+            defaultsAppliedRef.current.add(b.id); // mark first so we don't loop
+            fetch('/api/booking', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: b.id, fields: patch })
+            })
+            .then(r => r.json())
+            .then(d => { if (!d.error) fetchBookings(); })
+            .catch(err => console.error('Default seed failed for', b.id, err));
+        }
+    }, [isLoggedIn, loading, activeBookings, driversList]);
 
     // ─── SMS deep-link: single-job card view ───────────────────────
     if (focusRef) {
