@@ -182,7 +182,7 @@ function FixedPricePromise() {
   const items = [
     { title: "Fixed prices, always", body: "Friday 5pm, Christmas morning, bank holiday — your quoted price won't change. No surge pricing." },
     { title: "No extras for flight delays", body: "We track your flight. If you're late, we wait. You don't pay a penny more." },
-    { title: "No hidden fees", body: "The price you're quoted includes parking, tolls, meet & greet and VAT. That's the lot." },
+    { title: "No hidden fees", body: "The price you're quoted includes parking, tolls and VAT. That's the lot." },
     { title: "Cancel free up to 24 hrs", body: "Plans change. We get it. No cancellation fee outside 24 hours of pickup." }
   ];
   return (
@@ -888,7 +888,7 @@ function BookingForm() {
       <div className="form-summary">
         <div>
           <div className="lbl">{tripType === "return" ? "Return · both legs" : "One way"} · {airport === "LJLA" ? "Liverpool John Lennon" : "Manchester"}</div>
-          <div className="sub-text">Includes meet & greet, tolls, waiting time</div>
+          <div className="sub-text">Includes tolls and waiting time</div>
         </div>
       </div>
 
@@ -1229,7 +1229,7 @@ function StickyBar({ enabled }) {
     <div className={"sticky-bar" + (show ? " show" : "")}>
       <div className="sb-text">
         <b>LJLA from £55 · MAN from £75</b>
-        <span>Both legs · meet & greet · fixed price</span>
+        <span>Both legs · fixed price</span>
       </div>
       <a href="#book" className="btn btn-primary">Book Now</a>
     </div>
@@ -1292,7 +1292,6 @@ function App() {
       <FixedPricePromise />
       <YourVehicle />
       <AppPromo />
-      <MeetAndGreet />
       <FAQ />
       <Reviews />
       <BookSection />
