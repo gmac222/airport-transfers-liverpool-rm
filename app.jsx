@@ -878,8 +878,11 @@ function BookingForm() {
 
       <div className="field">
         <label>Anything we should know? <span style={{ color: "var(--muted)", fontWeight: 400 }}>(optional)</span></label>
-        <textarea placeholder="Child seat, oversized luggage, gate code, mobility needs…"
+        <textarea placeholder="Extra pickup stops (e.g. collecting friends/family on the way — please include addresses), child seat, oversized luggage, gate code, mobility needs…"
           value={form.notes} onChange={e => upd("notes", e.target.value)} />
+        <div className="field-hint" style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '6px', lineHeight: 1.45 }}>
+          Please mention any additional pickup or drop-off stops (e.g. collecting other passengers en route). Multi-stop journeys can affect the final price — we'll confirm the quoted fare with you before payment.
+        </div>
       </div>
 
       <div className="form-summary">
