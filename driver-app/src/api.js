@@ -29,3 +29,10 @@ export function driverAction(ref, action, extra = {}) {
     body: JSON.stringify({ ref, action, ...extra })
   });
 }
+
+export function sendSms(action, fields) {
+  return request('/api/sms', {
+    method: 'POST',
+    body: JSON.stringify({ action, fields })
+  });
+}

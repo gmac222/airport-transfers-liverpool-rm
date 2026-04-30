@@ -253,6 +253,25 @@ export default async function handler(req, res) {
         });
     }
 
+    // Return-leg pickup location — driver / operator types where they
+    // will meet the customer (terminal, short-stay car park, specific
+    // pickup zone, etc.) and we send it through. Used INSTEAD of
+    // 'driver-on-way' for return legs from the airport, where the
+    // location isn't predictable.
+    if (action === 'return-pickup-location') {
+        if (!formattedCustomerPhone) return res.status(400).json({ error: 'Missing customer phone' });
+        const location = (fields['Pickup Location'] || '').toString().trim();
+        if (!location) return res.status(400).json({ error: 'Missing pickup location' });
+        const driverName = fields['Driver Name'] || 'your driver';
+        const driverPhone = fields['Driver Phone'] || fields['Return Driver Phone'] || '';
+        const contactLine = driverPhone ? `\n\nYou can contact ${driverName} directly on ${driverPhone}.` : '';
+        messages.push({
+            to: formattedCustomerPhone,
+            from: 'RMTransfers',
+            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nFor your RM Transfers return pickup (${fields['Booking Ref']}), please meet ${driverName} at:\n\n${location}${contactLine}${SUPPORT_LINE}`
+        });
+    }
+
     if (action === 'send-review-invite') {
         if (!formattedCustomerPhone) return res.status(400).json({ error: 'Missing customer phone' });
         messages.push({

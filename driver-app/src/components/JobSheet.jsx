@@ -1,22 +1,28 @@
 import { useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
-import { driverAction } from '../api.js';
+import { driverAction, sendSms } from '../api.js';
 import { formatDateLong } from '../utils/dates.js';
 
 const ACTION_LABELS = {
   'on-the-way': '🚗 On the way',
   'arrived': '📍 Arrived',
   'complete-job': '✓ Complete',
-  'close-job': '📦 Archive + review'
+  'close-job': '📦 Archive + review',
+  'return-pickup-location': '📍 Send pickup location'
 };
 
-function actionsForStatus(status) {
-  // Mirrors what driver-action.html exposes today.
+function actionsForStatus(status, isReturn) {
+  // Mirrors what driver-action.html exposes today. For return-leg
+  // bookings the customer doesn't know exactly where the driver will
+  // park at the airport, so we replace 'on-the-way' with an explicit
+  // 'send pickup location' action.
   switch (status) {
     case 'Pending':
     case 'Accepted':
-      return ['on-the-way', 'arrived', 'complete-job'];
+      return isReturn
+        ? ['return-pickup-location', 'arrived', 'complete-job']
+        : ['on-the-way', 'arrived', 'complete-job'];
     case 'Completed':
       return ['close-job'];
     default:
@@ -36,6 +42,30 @@ export default function JobSheet({ booking, onClose, onAfterAction }) {
   };
 
   const act = async (action) => {
+    if (action === 'return-pickup-location') {
+      const location = window.prompt(
+        "Where will you meet the customer for the return pickup?\n\nExamples:\n• Terminal 1 Arrivals, near WHSmith\n• Short Stay Car Park, Level 2, Bay 14\n• Pickup Zone A, outside main entrance",
+        ''
+      );
+      if (location === null) return;
+      const trimmed = location.trim();
+      if (!trimmed) {
+        setError('Please enter a pickup location.');
+        return;
+      }
+      setBusy(action);
+      setError('');
+      haptic();
+      try {
+        await sendSms('return-pickup-location', { ...f, 'Pickup Location': trimmed });
+        onAfterAction();
+      } catch (err) {
+        setError(err.message || 'Action failed');
+        setBusy('');
+      }
+      return;
+    }
+
     setBusy(action);
     setError('');
     haptic();
@@ -51,7 +81,7 @@ export default function JobSheet({ booking, onClose, onAfterAction }) {
   const phone = (f['Customer Phone'] || '').replace(/\s+/g, '');
   const status = f['Status'] || 'Pending';
   const mapsQuery = encodeURIComponent(f['Home Address'] || '');
-  const actions = actionsForStatus(status);
+  const actions = actionsForStatus(status, f['Trip Type'] === 'return');
 
   const rows = [
     ['Customer', f['Customer Name']],

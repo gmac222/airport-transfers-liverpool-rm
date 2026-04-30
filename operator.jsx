@@ -655,6 +655,40 @@ function AdminApp() {
         .catch(err => alert('Error sending SMS: ' + err.message));
     };
 
+    // Return-leg pickup location: prompt for where the driver will meet
+    // the customer (terminal, car park, pickup zone) and send that text.
+    // Used instead of 'driver-on-way' for return-leg pickups from the
+    // airport, where the location isn't predictable.
+    const handleSendReturnPickupLocation = (record) => {
+        const f = record.fields || {};
+        const location = window.prompt(
+            "Where will the driver meet the customer for the return pickup?\n\nExamples:\n• Terminal 1 Arrivals, near WHSmith\n• Short Stay Car Park, Level 2, Bay 14\n• Pickup Zone A, outside main entrance",
+            ''
+        );
+        if (location === null) return;
+        const trimmed = location.trim();
+        if (!trimmed) {
+            alert('Please enter a pickup location.');
+            return;
+        }
+        if (!window.confirm(`Send this pickup location to ${f['Customer Name'] || 'the customer'}?\n\n"${trimmed}"`)) return;
+
+        fetch('/api/sms', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'return-pickup-location',
+                fields: { ...f, 'Pickup Location': trimmed }
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) throw new Error(data.error);
+            alert('Pickup location sent to customer.');
+        })
+        .catch(err => alert('Error sending SMS: ' + err.message));
+    };
+
     const handleCloseJob = (record) => {
         if (!window.confirm("Are you sure you want to close this job and send the review invite?")) return;
         
@@ -1692,6 +1726,11 @@ function AdminApp() {
                                                 <button onClick={() => handleDirectSMS(record, 'driver-on-way')} style={{ flex: '1 1 130px', minWidth: 0, padding: '10px 8px', background: 'white', border: '1px solid #10b981', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', color: '#10b981', fontWeight: 'bold' }}>
                                                     Backup: Send 'On Way'
                                                 </button>
+                                                {record.fields['Trip Type'] === 'return' && (
+                                                    <button onClick={() => handleSendReturnPickupLocation(record)} style={{ flex: '1 1 130px', minWidth: 0, padding: '10px 8px', background: 'white', border: '1px solid #7c3aed', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', color: '#7c3aed', fontWeight: 'bold' }}>
+                                                        🔄 Send Return Pickup Location
+                                                    </button>
+                                                )}
                                                 <button onClick={() => handleDirectSMS(record, 'driver-arrived')} style={{ flex: '1 1 130px', minWidth: 0, padding: '10px 8px', background: 'white', border: '1px solid #10b981', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', color: '#10b981', fontWeight: 'bold' }}>
                                                     Backup: Send 'Arrived'
                                                 </button>

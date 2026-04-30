@@ -318,27 +318,12 @@ module.exports = async (req, res) => {
                     console.warn(`Driver SMS skipped — could not format phone for ${fields['Driver Name']}: ${fields['Driver Phone']}`);
                 }
 
-                // 3b. SMS to CUSTOMER if driver was CHANGED (not first assignment)
-                const oldDriverName = oldRecord['Driver Name'] || '';
-                const newDriverName = fields['Driver Name'] || '';
-                const isAlreadyPaid = (oldRecord['Status'] || rec['Status']) === 'Accepted';
-                if (oldDriverName && oldDriverName !== newDriverName) {
-                    const customerPhone = formatPhone(rec['Phone'] || rec['Customer Phone'] || '');
-                    if (customerPhone) {
-                        const custMsg = `RM TRANSFERS - Driver Update\n\nHi ${rec['Customer Name'] || 'there'},\n\nApologies, the driver for your upcoming transfer has been changed.\n\nYour new driver is: ${newDriverName}\nDriver contact: ${fields['Driver Phone'] || '-'}\n\nBooking Ref: ${rec['Booking Ref'] || '-'}\nDate: ${fmtUKDate(rec['Outbound Date'])} at ${rec['Outbound Time'] || '-'}\nPickup: ${rec['Home Address'] || '-'}\n\nWe apologise for any inconvenience.\n\nNeed to speak to us? Call 07746 899644.\n\nRM Transfers`;
-                        await sendSms(customerPhone, custMsg);
-                        console.log(`Customer notified of driver change: ${oldDriverName} -> ${newDriverName}`);
-                    }
-                } else if (!oldDriverName && newDriverName && isAlreadyPaid) {
-                    // First-time driver assignment AFTER admin acknowledged
-                    // payment — customer's been waiting for these details.
-                    const customerPhone = formatPhone(rec['Phone'] || rec['Customer Phone'] || '');
-                    if (customerPhone) {
-                        const custMsg = `RM TRANSFERS - Driver Allocated\n\nHi ${rec['Customer Name'] || 'there'},\n\nGood news, your driver has been allocated.\n\nDriver: ${newDriverName}\nContact: ${fields['Driver Phone'] || '-'}\n\nBooking Ref: ${rec['Booking Ref'] || '-'}\nDate: ${fmtUKDate(rec['Outbound Date'])} at ${rec['Outbound Time'] || '-'}\nPickup: ${rec['Home Address'] || '-'}\n\nNeed to speak to us? Call 07746 899644.\n\nRM Transfers`;
-                        await sendSms(customerPhone, custMsg);
-                        console.log(`Customer notified of first-time driver allocation post-payment: ${newDriverName}`);
-                    }
-                }
+                // Customer is intentionally NOT notified about driver
+                // assignments or changes — they don't need to know who the
+                // driver is until pickup. Driver contact details only
+                // appear in customer-facing comms via the "on the way" /
+                // "outside" / "pickup location" buttons the driver or
+                // operator presses on the day.
             } else if (fields['Driver Name'] !== undefined) {
                 // Operator picked a driver but the PATCH carried no phone
                 // — this happens when the operator picks via the quick
@@ -453,17 +438,10 @@ module.exports = async (req, res) => {
                     sendSms(retPhone, retMsg);
                 }
 
-                // 4b. SMS to CUSTOMER if return driver was CHANGED
-                const oldRetDriver = oldRecord['Return Driver Name'] || '';
-                const newRetDriver = fields['Return Driver Name'] || '';
-                if (oldRetDriver && oldRetDriver !== newRetDriver) {
-                    const customerPhone = formatPhone(rec['Phone'] || rec['Customer Phone'] || '');
-                    if (customerPhone) {
-                        const custRetMsg = `RM TRANSFERS – Return Driver Update\n\nHi ${rec['Customer Name'] || 'there'},\n\nApologies, the driver for your return transfer has been changed.\n\nYour new return driver is: ${newRetDriver}\nDriver contact: ${fields['Return Driver Phone'] || '—'}\n\nBooking Ref: ${rec['Booking Ref'] || '—'}\nReturn Date: ${fmtUKDate(rec['Return Date'])} at ${rec['Return Time'] || '—'}\n\nWe apologise for any inconvenience.\n\nNeed to speak to us? Call 07746 899644.\n\nRM Transfers`;
-                        sendSms(customerPhone, custRetMsg);
-                        console.log(`Customer notified of return driver change: ${oldRetDriver} → ${newRetDriver}`);
-                    }
-                }
+                // Customer is intentionally NOT notified about return-leg
+                // driver assignments or changes. Pickup-location comms for
+                // the return leg are handled via the explicit "Send pickup
+                // location" button in the driver / operator portals.
             }
 
             return res.status(200).json({ success: true, record: data });

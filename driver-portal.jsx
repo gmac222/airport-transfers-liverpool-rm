@@ -86,6 +86,44 @@ function DriverPortal() {
         }
     };
 
+    // Return-leg pickup location: prompt the driver for where they'll
+    // meet the customer (terminal, car park, specific zone) and send
+    // that text to the customer. Used instead of 'I'm on the way' for
+    // return-leg pickups where the location isn't predictable.
+    const sendReturnPickupLocation = async (booking) => {
+        const f = booking.fields || {};
+        const ref = f['Booking Ref'];
+        if (!ref) return;
+        const location = window.prompt(
+            "Where will you meet the customer for the return pickup?\n\nExamples:\n• Terminal 1 Arrivals, near WHSmith\n• Short Stay Car Park, Level 2, Bay 14\n• Pickup Zone A, outside main entrance",
+            ''
+        );
+        if (location === null) return;
+        const trimmed = location.trim();
+        if (!trimmed) {
+            alert('Please enter a pickup location.');
+            return;
+        }
+        if (!window.confirm(`Send this pickup location to ${f['Customer Name'] || 'the customer'}?\n\n"${trimmed}"`)) return;
+        setBusy(ref, 'return-pickup-location');
+        try {
+            const res = await fetch('/api/sms', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'return-pickup-location',
+                    fields: { ...f, 'Pickup Location': trimmed }
+                })
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+        } catch (err) {
+            alert('Could not send: ' + err.message);
+        } finally {
+            clearBusy(ref);
+        }
+    };
+
     // Fetch bookings
     const fetchBookings = () => {
         fetch('/api/booking?action=list&view=driver', { method: 'POST' })
@@ -439,13 +477,23 @@ function DriverPortal() {
                                         <span className={`job-status ${statusClass}`}>{status}</span>
                                         {status === 'Accepted' && (
                                             <div onClick={e => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '6px' }}>
-                                                <button
-                                                    onClick={() => sendDriverAction(f['Booking Ref'], 'on-the-way')}
-                                                    disabled={!!actionBusy[f['Booking Ref']]}
-                                                    className="btn-action btn-gold"
-                                                    style={{ fontSize: '12px', padding: '8px 10px', justifyContent: 'center', cursor: actionBusy[f['Booking Ref']] ? 'wait' : 'pointer' }}>
-                                                    {isBusy(f['Booking Ref'], 'on-the-way') ? 'Sending…' : "🚗 I'm On The Way"}
-                                                </button>
+                                                {f['Trip Type'] === 'return' ? (
+                                                    <button
+                                                        onClick={() => sendReturnPickupLocation(b)}
+                                                        disabled={!!actionBusy[f['Booking Ref']]}
+                                                        className="btn-action btn-gold"
+                                                        style={{ fontSize: '12px', padding: '8px 10px', justifyContent: 'center', cursor: actionBusy[f['Booking Ref']] ? 'wait' : 'pointer' }}>
+                                                        {isBusy(f['Booking Ref'], 'return-pickup-location') ? 'Sending…' : '📍 Send Pickup Location'}
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => sendDriverAction(f['Booking Ref'], 'on-the-way')}
+                                                        disabled={!!actionBusy[f['Booking Ref']]}
+                                                        className="btn-action btn-gold"
+                                                        style={{ fontSize: '12px', padding: '8px 10px', justifyContent: 'center', cursor: actionBusy[f['Booking Ref']] ? 'wait' : 'pointer' }}>
+                                                        {isBusy(f['Booking Ref'], 'on-the-way') ? 'Sending…' : "🚗 I'm On The Way"}
+                                                    </button>
+                                                )}
                                                 <button
                                                     onClick={() => sendDriverAction(f['Booking Ref'], 'arrived')}
                                                     disabled={!!actionBusy[f['Booking Ref']]}
@@ -512,15 +560,26 @@ function DriverPortal() {
                             )}
                             {selectedJob.fields['Status'] === 'Accepted' && (() => {
                                 const ref = selectedJob.fields['Booking Ref'];
+                                const isReturn = selectedJob.fields['Trip Type'] === 'return';
                                 return (
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <button
-                                            onClick={() => sendDriverAction(ref, 'on-the-way')}
-                                            disabled={!!actionBusy[ref]}
-                                            className="btn-action btn-gold"
-                                            style={{ justifyContent: 'center', cursor: actionBusy[ref] ? 'wait' : 'pointer' }}>
-                                            {isBusy(ref, 'on-the-way') ? 'Sending…' : "🚗 I'm On The Way"}
-                                        </button>
+                                        {isReturn ? (
+                                            <button
+                                                onClick={() => sendReturnPickupLocation(selectedJob)}
+                                                disabled={!!actionBusy[ref]}
+                                                className="btn-action btn-gold"
+                                                style={{ justifyContent: 'center', cursor: actionBusy[ref] ? 'wait' : 'pointer' }}>
+                                                {isBusy(ref, 'return-pickup-location') ? 'Sending…' : '📍 Send Pickup Location'}
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={() => sendDriverAction(ref, 'on-the-way')}
+                                                disabled={!!actionBusy[ref]}
+                                                className="btn-action btn-gold"
+                                                style={{ justifyContent: 'center', cursor: actionBusy[ref] ? 'wait' : 'pointer' }}>
+                                                {isBusy(ref, 'on-the-way') ? 'Sending…' : "🚗 I'm On The Way"}
+                                            </button>
+                                        )}
                                         <button
                                             onClick={() => sendDriverAction(ref, 'arrived')}
                                             disabled={!!actionBusy[ref]}
