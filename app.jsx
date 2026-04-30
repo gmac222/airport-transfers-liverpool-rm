@@ -113,7 +113,7 @@ function Hero({ headline }) {
               <div className="route">Liverpool John Lennon</div>
               <div className="airport">LJLA</div>
             </div>
-            <div className="amt">From £65<small>each way</small></div>
+            <div className="amt">From £55<small>each way</small></div>
           </div>
           <div className="price-card hero-price-card">
             <div>
@@ -233,7 +233,7 @@ function YourVehicle() {
             </li>
             <li>
               <div className="ic"><Icon name="pound" size={20} /></div>
-              <div><b>Clear pricing based on vehicle size</b><span>Prices start at £65 to LJLA or £75 to Manchester. Split it between your group and it's cheaper than the bus.</span></div>
+              <div><b>Clear pricing based on vehicle size</b><span>Prices start at £55 to LJLA or £75 to Manchester. Split it between your group and it's cheaper than the bus.</span></div>
             </li>
           </ul>
           <a href="#book" className="btn btn-primary" style={{ marginTop: '24px' }}>Book Your Transfer <Icon name="arrow" size={16} /></a>
@@ -1225,7 +1225,7 @@ function StickyBar({ enabled }) {
   return (
     <div className={"sticky-bar" + (show ? " show" : "")}>
       <div className="sb-text">
-        <b>LJLA from £65 · MAN from £75</b>
+        <b>LJLA from £55 · MAN from £75</b>
         <span>Both legs · meet & greet · fixed price</span>
       </div>
       <a href="#book" className="btn btn-primary">Book Now</a>
