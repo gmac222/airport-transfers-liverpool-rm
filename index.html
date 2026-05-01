@@ -21,8 +21,28 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     </script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <meta name="description" content="Your holiday starts here. Airport Transfers Liverpool offers premium, fixed-price private transfers to Liverpool John Lennon and Manchester Airport. Door-to-terminal." />
     <title>Airport Transfers Liverpool — Fixed-price airport transfers. Door to terminal.</title>
+    <meta name="description" content="Your holiday starts here. Airport Transfers Liverpool offers premium, fixed-price private transfers to Liverpool John Lennon and Manchester Airport. Door-to-terminal." />
+    <meta name="author" content="RM Transfers" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <link rel="canonical" href="https://airporttaxitransfersliverpool.co.uk/" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Airport Transfers Liverpool" />
+    <meta property="og:locale" content="en_GB" />
+    <meta property="og:url" content="https://airporttaxitransfersliverpool.co.uk/" />
+    <meta property="og:title" content="Airport Transfers Liverpool — Fixed-price airport transfers. Door to terminal." />
+    <meta property="og:description" content="Premium, fixed-price private airport transfers to Liverpool John Lennon and Manchester Airport. Door to terminal, both ways. No surge pricing, no hidden fees." />
+    <meta property="og:image" content="https://airporttaxitransfersliverpool.co.uk/assets/airport-transfers-fleet.jpg" />
+    <meta property="og:image:alt" content="RM Transfers premium airport-transfer fleet vehicle" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Airport Transfers Liverpool — Fixed-price airport transfers" />
+    <meta name="twitter:description" content="Premium, fixed-price private transfers to Liverpool John Lennon and Manchester Airport. Door to terminal, both ways." />
+    <meta name="twitter:image" content="https://airporttaxitransfersliverpool.co.uk/assets/airport-transfers-fleet.jpg" />
+
     <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg" />
     <link rel="alternate icon" type="image/png" href="./assets/logo.png" />
     <link rel="apple-touch-icon" href="./assets/logo.png" />
@@ -2086,30 +2106,85 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "LocalBusiness",
-      "name": "RM Transfers",
-      "alternateName": "Airport Transfers Liverpool",
-      "url": "https://airporttaxitransfersliverpool.co.uk/",
-      "telephone": "+441514533607",
-      "address": {
-        "@type": "PostalAddress",
-        "streetAddress": "42 Jamaica Street",
-        "addressLocality": "Liverpool",
-        "postalCode": "L1 0AF",
-        "addressCountry": "UK"
-      },
-      "areaServed": {
-        "@type": "City",
-        "name": "Liverpool"
-      },
-      "serviceArea": [
+      "@graph": [
         {
-          "@type": "City",
-          "name": "Liverpool"
+          "@type": "Organization",
+          "@id": "https://airporttaxitransfersliverpool.co.uk/#organization",
+          "name": "RM Transfers",
+          "alternateName": "Airport Transfers Liverpool",
+          "url": "https://airporttaxitransfersliverpool.co.uk/",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://airporttaxitransfersliverpool.co.uk/assets/logo.png",
+            "width": 512,
+            "height": 512
+          },
+          "image": "https://airporttaxitransfersliverpool.co.uk/assets/airport-transfers-fleet.jpg",
+          "telephone": "+441514533607",
+          "email": "info@airporttaxitransfersliverpool.co.uk",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "42 Jamaica Street",
+            "addressLocality": "Liverpool",
+            "postalCode": "L1 0AF",
+            "addressCountry": "GB"
+          },
+          "founder": {
+            "@type": "Person",
+            "name": "Roy Medlam"
+          },
+          "foundingDate": "2011",
+          "sameAs": [
+            "https://uk.trustpilot.com/review/rmtransfers.co.uk"
+          ]
         },
         {
-          "@type": "City",
-          "name": "Manchester"
+          "@type": "WebSite",
+          "@id": "https://airporttaxitransfersliverpool.co.uk/#website",
+          "url": "https://airporttaxitransfersliverpool.co.uk/",
+          "name": "Airport Transfers Liverpool",
+          "description": "Fixed-price private airport transfers to Liverpool John Lennon and Manchester Airport.",
+          "publisher": { "@id": "https://airporttaxitransfersliverpool.co.uk/#organization" },
+          "inLanguage": "en-GB"
+        },
+        {
+          "@type": "LocalBusiness",
+          "@id": "https://airporttaxitransfersliverpool.co.uk/#localbusiness",
+          "name": "RM Transfers",
+          "alternateName": "Airport Transfers Liverpool",
+          "url": "https://airporttaxitransfersliverpool.co.uk/",
+          "telephone": "+441514533607",
+          "email": "info@airporttaxitransfersliverpool.co.uk",
+          "image": "https://airporttaxitransfersliverpool.co.uk/assets/airport-transfers-fleet.jpg",
+          "priceRange": "££",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "42 Jamaica Street",
+            "addressLocality": "Liverpool",
+            "postalCode": "L1 0AF",
+            "addressCountry": "GB"
+          },
+          "areaServed": [
+            { "@type": "City", "name": "Liverpool" },
+            { "@type": "City", "name": "Manchester" },
+            { "@type": "AdministrativeArea", "name": "Merseyside" },
+            { "@type": "AdministrativeArea", "name": "Wirral" }
+          ],
+          "serviceArea": [
+            { "@type": "City", "name": "Liverpool" },
+            { "@type": "City", "name": "Manchester" }
+          ],
+          "parentOrganization": { "@id": "https://airporttaxitransfersliverpool.co.uk/#organization" }
+        },
+        {
+          "@type": "WebPage",
+          "@id": "https://airporttaxitransfersliverpool.co.uk/#webpage",
+          "url": "https://airporttaxitransfersliverpool.co.uk/",
+          "name": "Airport Transfers Liverpool — Fixed-price airport transfers. Door to terminal.",
+          "description": "Premium, fixed-price private transfers to Liverpool John Lennon and Manchester Airport. Door to terminal, both ways.",
+          "isPartOf": { "@id": "https://airporttaxitransfersliverpool.co.uk/#website" },
+          "about": { "@id": "https://airporttaxitransfersliverpool.co.uk/#localbusiness" },
+          "inLanguage": "en-GB"
         }
       ]
     }
