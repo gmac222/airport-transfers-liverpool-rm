@@ -6,6 +6,15 @@ Disallow: /superadmin.html
 Disallow: /portal.html
 Disallow: /driver-action.html
 Disallow: /api/
+Disallow: /app.jsx
+Disallow: /tweaks-panel.jsx
+Disallow: /admin.jsx
+Disallow: /operator.jsx
+Disallow: /portal.jsx
+Disallow: /driver-portal.jsx
+Disallow: /stats.jsx
+Disallow: /superadmin.jsx
+Disallow: /design-canvas.jsx
 
 Allow: /
 Sitemap: https://airporttaxitransfersliverpool.co.uk/sitemap.xml
