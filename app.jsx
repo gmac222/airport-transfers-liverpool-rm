@@ -875,7 +875,6 @@ function BookingForm() {
         'Airport': airport === "LJLA" ? "Liverpool John Lennon" : "Manchester",
         'Passengers': pax,
         'Luggage': largeBags,
-        'Vehicle Type': VEHICLE_SHORT[vehicle],
         'Customer Price': quote ? quote.total : 0,
         'Notes': form.notes.trim() || '',
         'Status': 'Pending',
