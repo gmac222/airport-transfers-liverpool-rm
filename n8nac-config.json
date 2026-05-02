@@ -1,19 +1,30 @@
 {
   "version": 2,
-  "activeInstanceId": "instance-66938cd2",
+  "activeInstanceId": "instance-4b705777",
   "instances": [
     {
-      "id": "instance-66938cd2",
-      "name": "gmac222.app.n8n.cloud",
-      "host": "https://gmac222.app.n8n.cloud/workflow/E0sHFHX850tQffIk?projectId=trBQBbx05zTHquzM&uiContext=workflow_list",
+      "id": "instance-4b705777",
+      "name": "gmac222.app.n8n.cloud · Graham",
+      "host": "https://gmac222.app.n8n.cloud",
       "syncFolder": "workflows",
+      "projectId": "trBQBbx05zTHquzM",
+      "projectName": "Personal",
+      "instanceIdentifier": "gmac222_cloud_graham_",
+      "workflowDir": "workflows/gmac222_cloud_graham_/personal",
       "verification": {
-        "status": "failed",
-        "lastCheckedAt": "2026-04-28T12:07:05.916Z",
-        "lastError": "Unable to resolve the authenticated n8n user."
+        "status": "verified",
+        "normalizedHost": "https://gmac222.app.n8n.cloud",
+        "userId": "3afabf35-e268-4ee5-b408-bfb9cd612d82",
+        "userName": "Graham",
+        "userEmail": "graham.m.222@gmail.com",
+        "lastCheckedAt": "2026-05-02T15:32:47.076Z"
       }
     }
   ],
-  "host": "https://gmac222.app.n8n.cloud/workflow/E0sHFHX850tQffIk?projectId=trBQBbx05zTHquzM&uiContext=workflow_list",
-  "syncFolder": "workflows"
+  "host": "https://gmac222.app.n8n.cloud",
+  "syncFolder": "workflows",
+  "projectId": "trBQBbx05zTHquzM",
+  "projectName": "Personal",
+  "instanceIdentifier": "gmac222_cloud_graham_",
+  "workflowDir": "workflows/gmac222_cloud_graham_/personal"
 }

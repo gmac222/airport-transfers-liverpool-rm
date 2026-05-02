@@ -103,7 +103,24 @@ export default async function handler(req, res) {
         console.error('[stripe-webhook] Airtable update failed:', err.message);
     }
 
-    // --- 2. Send customer acknowledgement SMS ---
+    // Build the complete fields object for SMS / email — merge Airtable record
+    // with the payment data from Stripe so templates have everything they need.
+    const smsFields = {
+        ...bookingFields,
+        'Booking Ref': ref,
+        'Quoted Price': amountPaid,
+        'Customer Price': amountPaid,
+        'Total Price': amountPaid,
+        'Payment Status': 'Paid',
+    };
+    // Fallback to Stripe data if Airtable didn't have it
+    if (!smsFields['Customer Name']) smsFields['Customer Name'] = customerName;
+    if (!smsFields['Customer Phone']) smsFields['Customer Phone'] = customerPhone;
+    if (!smsFields['Customer Email']) smsFields['Customer Email'] = customerEmail;
+    if (!smsFields['Vehicle Type']) smsFields['Vehicle Type'] = vehicleType;
+    if (!smsFields['Trip Type']) smsFields['Trip Type'] = tripType;
+
+    // --- 2. Send customer confirmation SMS + email ---
     try {
         const smsBaseUrl = getBaseUrl(req);
         await fetch(`${smsBaseUrl}/api/sms`, {
@@ -111,16 +128,10 @@ export default async function handler(req, res) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 action: 'send-booking-received',
-                fields: {
-                    'Booking Ref': ref,
-                    'Customer Name': bookingFields['Customer Name'] || customerName,
-                    'Customer Phone': bookingFields['Customer Phone'] || customerPhone,
-                    'Quoted Price': amountPaid,
-                    'Vehicle Type': vehicleType,
-                }
+                fields: smsFields
             })
         });
-        console.log(`[stripe-webhook] Customer SMS sent for ${ref}`);
+        console.log(`[stripe-webhook] Customer SMS + email sent for ${ref}`);
     } catch (err) {
         console.error('[stripe-webhook] Customer SMS failed:', err.message);
     }
@@ -133,18 +144,7 @@ export default async function handler(req, res) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 action: 'new-booking-operator-alert',
-                fields: {
-                    'Booking Ref': ref,
-                    'Customer Name': bookingFields['Customer Name'] || customerName,
-                    'Customer Phone': bookingFields['Customer Phone'] || customerPhone,
-                    'Home Address': bookingFields['Home Address'] || '',
-                    'Airport Name': bookingFields['Airport Name'] || bookingFields['Airport'] || '',
-                    'Trip Type': bookingFields['Trip Type'] || tripType,
-                    'Passengers': bookingFields['Passengers'] || '',
-                    'Luggage': bookingFields['Luggage'] || '',
-                    'Vehicle Type': bookingFields['Vehicle Type'] || vehicleType,
-                    'Quoted Price': amountPaid,
-                }
+                fields: smsFields
             })
         });
         console.log(`[stripe-webhook] Admin SMS sent for ${ref}`);

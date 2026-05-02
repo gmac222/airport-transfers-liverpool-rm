@@ -284,20 +284,39 @@ export default async function handler(req, res) {
         }
     }
 
-    // Instant customer acknowledgement — fired by the booking form straight
-    // after the n8n webhook succeeds. Lets the customer know we received
-    // their request and are preparing their quote / booking. The admin
-    // will send the payment link manually from the dashboard as usual.
+    // Post-payment customer confirmation — fired by the Stripe webhook
+    // after checkout.session.completed. Contains full trip details so
+    // the customer has everything in one text.
     if (action === 'send-booking-received') {
         if (!formattedCustomerPhone) return res.status(400).json({ error: 'Missing customer phone' });
         const firstName = (fields['Customer Name'] || 'Customer').split(' ')[0];
+        const priceLine = fields['Quoted Price'] ? `\nTotal paid: £${fields['Quoted Price']}` : '';
         const vehicleLine = fields['Vehicle Type'] ? `\nVehicle: ${fields['Vehicle Type']}` : '';
-        const priceLine = fields['Quoted Price'] ? ` for £${fields['Quoted Price']}` : '';
+
+        const isReturn = fields['Trip Type'] === 'return';
+        const isFromAirport = fields['Oneway Direction'] === 'from';
+        const pickupLabel = isReturn
+            ? fields['Home Address']
+            : (isFromAirport ? `${fields['Airport Name'] || fields['Airport'] || 'Airport'}` : fields['Home Address']);
+        const dropoffLabel = isReturn
+            ? `${fields['Airport Name'] || fields['Airport'] || 'Airport'} (return)`
+            : (isFromAirport ? fields['Home Address'] : `${fields['Airport Name'] || fields['Airport'] || 'Airport'}`);
+
+        let tripBlock = `Pickup: ${pickupLabel || '—'}\nDrop-off: ${dropoffLabel || '—'}\nOutbound: ${fmtUKDate(fields['Outbound Date'])} at ${fields['Outbound Time'] || '—'}`;
+        if (isReturn && fields['Return Date']) {
+            tripBlock += `\nReturn: ${fmtUKDate(fields['Return Date'])} at ${fields['Return Time'] || '—'}`;
+        }
+        if (fields['Outbound Flight']) tripBlock += `\nFlight: ${fields['Outbound Flight']}`;
+        if (fields['Return Flight']) tripBlock += `\nReturn flight: ${fields['Return Flight']}`;
+        if (fields['Passengers'] || fields['Luggage']) tripBlock += `\nPassengers/Bags: ${fields['Passengers'] || '?'} / ${fields['Luggage'] || '?'}`;
+
         messages.push({
             to: formattedCustomerPhone,
             from: 'RMTransfers',
-            body: `Hi ${firstName},\n\nThanks for choosing RM Transfers! Your booking (${fields['Booking Ref']})${priceLine} has been confirmed.\n\nWe're now preparing everything and will text you with your driver's details before your trip.\n\nView your booking: https://airporttaxitransfersliverpool.co.uk/portal.html?ref=${fields['Booking Ref']}${SUPPORT_LINE}\n\n(Please do not reply to this text)`
+            body: `Hi ${firstName},\n\nPayment received — your RM Transfers booking (${fields['Booking Ref']}) is fully confirmed! ✅\n\n${tripBlock}${vehicleLine}${priceLine}\n\nWe'll text you with your driver's details before your trip.\n\nView your booking: https://airporttaxitransfersliverpool.co.uk/portal.html?ref=${fields['Booking Ref']}\n\nWe've also emailed your full confirmation.${SUPPORT_LINE}\n\n(Please do not reply to this text)`
         });
+
+        await sendConfirmationEmail();
     }
 
     if (action === 'new-booking-operator-alert') {
