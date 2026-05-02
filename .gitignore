@@ -8,3 +8,6 @@ create_return_reminder_workflow.js
 
 .vercel
 .env*.local
+node_modules
+
+.env*.local

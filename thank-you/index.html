@@ -363,15 +363,25 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             const ref = params.get('ref');
             const price = params.get('price');
             const type = params.get('type');
+            const paid = params.get('paid') === 'true';
             
+            // Update heading based on payment status
+            if (paid) {
+                document.querySelector('h1').textContent = 'Payment received — thank you!';
+                document.getElementById('dynamic-text').innerHTML = type === 'return'
+                    ? "Your payment has been confirmed and we're now preparing your transfer for both legs. We'll text you shortly with your driver's details."
+                    : "Your payment has been confirmed and we're now preparing your transfer. We'll text you shortly with your driver's details.";
+            }
+
             if (ref && price) {
                 document.getElementById('booking-details').style.display = 'inline-block';
                 document.getElementById('ref-val').textContent = ref;
-                document.getElementById('price-val').textContent = '£' + price + ' fixed ' + (type === 'return' ? 'return' : 'one-way');
-                
-                if (type === 'return') {
-                    document.getElementById('dynamic-text').innerHTML = "We've just sent you a confirmation text. One of our team will review your booking and send you a secure payment link shortly for both legs.";
-                }
+                const priceLabel = paid ? '£' + price + ' paid' : '£' + price + ' fixed';
+                document.getElementById('price-val').textContent = priceLabel + ' ' + (type === 'return' ? 'return' : 'one-way');
+            } else if (ref) {
+                document.getElementById('booking-details').style.display = 'inline-block';
+                document.getElementById('ref-val').textContent = ref;
+                document.getElementById('price-val').parentElement.style.display = 'none';
             }
         });
     </script>

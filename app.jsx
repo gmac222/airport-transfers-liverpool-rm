@@ -15,12 +15,46 @@ const HEADLINES = {
 
 /* ══════════ PRICING ENGINE ══════════ */
 const FIXED_FARES = {
-  LJLA: { car: 55, mpv: 65, '8seat': 78 },
-  MAN:  { car: 75, mpv: 88, '8seat': 100 },
+  LJLA:        { car: 55, mpv: 65, '8seat': 78 },
+  MAN:         { car: 75, mpv: 88, '8seat': 100 },
+  LJLA_WIRRAL: { car: 65, mpv: 75, '8seat': 88 },
+  MAN_WIRRAL:  { car: 75, mpv: 88, '8seat': 100 },
 };
 const DOUBLE_TIME_DATES = ['12-24','12-25','12-26','12-31','01-01'];
 const VEHICLE_SHORT = { car: 'Car', mpv: 'MPV', '8seat': '8 Seater' };
 const VEHICLE_RANK  = { car: 0, mpv: 1, '8seat': 2 };
+
+/* ── SERVICE AREA: 10-mile radius around Knowsley ── */
+const KNOWSLEY = { lat: 53.4547, lon: -2.8330 };
+const SERVICE_RADIUS_MI = 10.0;
+
+function haversine(lat1, lon1, lat2, lon2) {
+  const R = 3958.8; // Earth radius in miles
+  const toRad = d => d * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function isInServiceArea(lat, lon) {
+  if (lat == null || lon == null) return true; // no coords yet = don't block
+  return haversine(KNOWSLEY.lat, KNOWSLEY.lon, lat, lon) <= SERVICE_RADIUS_MI;
+}
+
+/* Wirral postcodes start CH41–CH66 (Merseyside side) */
+const WIRRAL_CH = /^CH(4[1-9]|[5-6][0-9])\b/i;
+
+function isWirralAddress(addressObj, postcode) {
+  if (postcode && WIRRAL_CH.test(postcode.replace(/\s/g, ''))) return true;
+  if (!addressObj) return false;
+  const fields = [addressObj.county, addressObj.borough, addressObj.state_district, addressObj.city_district].filter(Boolean);
+  return fields.some(f => /wirral/i.test(f));
+}
+
+function getFareKey(airport, wirral) {
+  return wirral ? airport + '_WIRRAL' : airport;
+}
 
 /* Vehicle limits: max large suitcases & cabin bags per type */
 const VEHICLE_LIMITS = {
@@ -65,8 +99,8 @@ function getHolidayMult(dateStr, bankHols) {
   return 1;
 }
 
-function buildQuote({ airport, vehicle, tripType, dates, bankHols }) {
-  const fixed = FIXED_FARES[airport];
+function buildQuote({ airport, fareKey, vehicle, tripType, dates, bankHols }) {
+  const fixed = FIXED_FARES[fareKey || airport];
   if (!fixed) return null;
   const base = fixed[vehicle];
   if (base == null) return null;
@@ -153,7 +187,7 @@ function Nav() {
           <a href="#reviews">Reviews</a>
         </div>
         <div className="nav-cta">
-          <a href="#book" className="btn btn-primary btn-sm">Book Now</a>
+          <a href="#book" className="btn btn-primary btn-sm">Quick Quote</a>
         </div>
       </div>
     </nav>
@@ -251,7 +285,7 @@ function Hero({ headline }) {
 
         <div className="hero-cta" style={{ flexDirection: "column", alignItems: "center", gap: "10px" }}>
           <a href="#book" className="btn btn-primary" style={{ padding: "16px 32px", fontSize: "16px", width: "100%", maxWidth: "520px", justifyContent: "center" }}>
-            Get My Fixed Price <Icon name="arrow" size={16} />
+            Quick Quote & Book Online <Icon name="arrow" size={16} />
           </a>
         </div>
 
@@ -619,6 +653,8 @@ function BookingForm() {
   const [submitError, setSubmitError] = useState(null);
   const [bookingRef, setBookingRef] = useState("");
   const [errors, setErrors] = useState({});
+  const [addressCoords, setAddressCoords] = useState(null); // { lat, lon }
+  const [addressData, setAddressData] = useState(null);     // Nominatim address obj
 
   const autoVehicle = getAutoVehicle(pax, largeBags, cabinBags, specials);
   const vehicle = vehicleOverride && VEHICLE_RANK[vehicleOverride] >= VEHICLE_RANK[autoVehicle] ? vehicleOverride : autoVehicle;
@@ -646,10 +682,42 @@ function BookingForm() {
   const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
   const skipSearchRef = useRef(false);
 
+  /* ── Derived: Wirral, service area, short notice ── */
+  const wirral = useMemo(() => {
+    if (!addressData) return false;
+    return isWirralAddress(addressData, addressData.postcode);
+  }, [addressData]);
+
+  const inArea = useMemo(() => {
+    if (!addressCoords) return true; // no selection yet = allow
+    return isInServiceArea(addressCoords.lat, addressCoords.lon);
+  }, [addressCoords]);
+
+  const shortNotice = useMemo(() => {
+    const now = Date.now();
+    const minMs = 24 * 60 * 60 * 1000;
+    if (tripType === 'return') {
+      if (form.outDate && form.outTime) {
+        const dt = new Date(`${form.outDate}T${form.outTime}`).getTime();
+        if (dt - now < minMs) return true;
+      }
+    } else {
+      if (form.legDate && form.legTime) {
+        const dt = new Date(`${form.legDate}T${form.legTime}`).getTime();
+        if (dt - now < minMs) return true;
+      }
+    }
+    return false;
+  }, [tripType, form.outDate, form.outTime, form.legDate, form.legTime]);
+
+  const fareKey = getFareKey(airport, wirral);
+  const showCallToBook = (addressCoords && !inArea) || shortNotice;
+
   const quote = useMemo(() => {
+    if (showCallToBook) return null; // no quote when call-to-book is active
     const dates = tripType === 'return' ? { outDate: form.outDate, retDate: form.retDate } : { legDate: form.legDate };
-    return buildQuote({ airport, vehicle, tripType, dates, bankHols });
-  }, [airport, vehicle, tripType, form.outDate, form.retDate, form.legDate, bankHols]);
+    return buildQuote({ airport, fareKey, vehicle, tripType, dates, bankHols });
+  }, [airport, fareKey, vehicle, tripType, form.outDate, form.retDate, form.legDate, bankHols, showCallToBook]);
 
   useEffect(() => {
     if (!form.address || form.address.length < 3) {
@@ -718,24 +786,12 @@ function BookingForm() {
 
   async function submit(e) {
     e.preventDefault();
+    if (showCallToBook) return; // safety guard
     console.log("[booking] submit fired");
     const errs = {};
     if (!form.name.trim()) errs.name = "We need a name to greet you with";
     if (!form.phone.trim()) errs.phone = "So we can text you the driver's details";
     if (!form.address.trim()) errs.address = "Home address please — where we pick up & drop off";
-
-    const minNoticeMs = 12 * 60 * 60 * 1000;
-    const now = new Date();
-
-    const validateDate = (dateStr, timeStr, dateField, timeField) => {
-      if (dateStr && timeStr) {
-        const tripDate = new Date(`${dateStr}T${timeStr}`);
-        if (tripDate.getTime() - now.getTime() < minNoticeMs) {
-          errs[dateField] = "Minimum 12 hours notice required";
-          errs[timeField] = "Call 0151 453 3607 for last-minute jobs";
-        }
-      }
-    };
 
     if (tripType === "return") {
       if (!form.outDate) errs.outDate = "Outbound date";
@@ -743,15 +799,10 @@ function BookingForm() {
       if (!form.retDate) errs.retDate = "Return date";
       if (!form.retTime) errs.retTime = "Landing time";
       if (!form.retFlight.trim()) errs.retFlight = "So we can track your return flight";
-      
-      validateDate(form.outDate, form.outTime, "outDate", "outTime");
-      validateDate(form.retDate, form.retTime, "retDate", "retTime");
     } else {
       if (!form.legDate) errs.legDate = "Pick a date";
       if (!form.legTime) errs.legTime = "Pick a time";
       if (onewayDir === "from" && !form.legFlight.trim()) errs.legFlight = "So we can track it";
-
-      validateDate(form.legDate, form.legTime, "legDate", "legTime");
     }
 
     if (Object.keys(errs).length) {
@@ -814,24 +865,42 @@ function BookingForm() {
       console.log("[booking] webhook response", res.status);
       if (!res.ok) throw new Error("Webhook responded " + res.status);
 
-      // Fire customer "we're preparing your booking" SMS (non-blocking so
-      // the redirect isn't delayed). Admin alert is still sent by n8n.
-      fetch("/api/sms", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "send-booking-received",
-          fields: {
-            "Booking Ref": ref,
-            "Customer Name": form.name.trim(),
-            "Customer Phone": form.phone.trim(),
-            "Quoted Price": quote ? quote.total.toFixed(2) : null,
-            "Vehicle Type": vehicle ? VEHICLE_SHORT[vehicle] : null
-          }
-        })
-      }).catch(err => console.warn("[booking] customer ack SMS failed (non-blocking):", err));
+      // If we have a quote, redirect to Stripe Checkout for immediate payment.
+      // Admin alert SMS still fires from n8n. No customer ack SMS needed
+      // since they're paying right now.
+      if (quote && quote.total > 0) {
+        console.log("[booking] creating Stripe Checkout session...");
+        const tripSummary = tripType === "return"
+          ? `Return · ${airport === "LJLA" ? "Liverpool John Lennon" : "Manchester"} · ${VEHICLE_SHORT[vehicle]}`
+          : `One-way ${onewayDir === "to" ? "→" : "←"} ${airport === "LJLA" ? "Liverpool John Lennon" : "Manchester"} · ${VEHICLE_SHORT[vehicle]}`;
+        
+        const checkoutRes = await fetch("/api/create-checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ref,
+            amount: quote.total,
+            customerName: form.name.trim(),
+            customerEmail: form.email.trim() || null,
+            customerPhone: form.phone.trim(),
+            tripSummary,
+            vehicleType: VEHICLE_SHORT[vehicle],
+            tripType,
+          })
+        });
 
-      window.location.href = `/thank-you/?ref=${ref}&type=${tripType}`;
+        if (!checkoutRes.ok) {
+          const errData = await checkoutRes.json().catch(() => ({}));
+          throw new Error(errData.error || "Checkout session failed");
+        }
+
+        const { url } = await checkoutRes.json();
+        console.log("[booking] redirecting to Stripe Checkout:", url);
+        window.location.href = url;
+      } else {
+        // Fallback: no quote (shouldn't happen normally) — go to thank-you
+        window.location.href = `/thank-you/?ref=${ref}&type=${tripType}`;
+      }
     } catch (err) {
       console.error("[booking] submit error", err);
       setSubmitError("We couldn't send that just now. Please call 0151 453 3607 or try again.");
@@ -859,7 +928,7 @@ function BookingForm() {
   return (
     <form className="book-form" onSubmit={submit} noValidate>
       <h3>Book your transfer</h3>
-      <p className="form-sub">Get your fixed price instantly — pay securely after.</p>
+      <p className="form-sub">Get your fixed price instantly — book and pay online.</p>
 
       <div className="field">
         <label>Trip type</label>
@@ -889,6 +958,8 @@ function BookingForm() {
           value={form.address} 
           onChange={e => {
             upd("address", e.target.value);
+            setAddressCoords(null);
+            setAddressData(null);
             setShowAddressSuggestions(true);
           }}
           onFocus={() => setShowAddressSuggestions(true)}
@@ -912,6 +983,8 @@ function BookingForm() {
                 onMouseDown={() => {
                   skipSearchRef.current = true;
                   upd("address", formatted);
+                  setAddressCoords({ lat: parseFloat(s.lat), lon: parseFloat(s.lon) });
+                  setAddressData(s.address || null);
                   setShowAddressSuggestions(false);
                 }}
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "var(--cream)"}
@@ -1077,63 +1150,94 @@ function BookingForm() {
         </div>
       </div>
 
-      <QuotePanel quote={quote} />
-
-      <div className="row2">
-        <div className={"field" + (errors.name ? " error" : "")}>
-          <label>Your name <span className="req">*</span></label>
-          <input type="text" placeholder="First and last" value={form.name} onChange={e => upd("name", e.target.value)} />
-          {errors.name && <div className="err-msg">{errors.name}</div>}
+      {showCallToBook ? (
+        <div className="call-to-book" style={{
+          margin: '24px 0', padding: '28px 24px', borderRadius: '14px',
+          background: 'linear-gradient(135deg, #0E2747 0%, #1a3a5c 100%)',
+          textAlign: 'center', color: '#fff'
+        }}>
+          <div style={{ fontSize: 32, marginBottom: 8 }}><Icon name="phone" size={32} color="#E5A54B" /></div>
+          <h4 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 700, color: '#fff' }}>Call to Book</h4>
+          <p style={{ margin: '0 0 18px', fontSize: 14, color: 'rgba(255,255,255,0.8)', lineHeight: 1.6 }}>
+            {!inArea && addressCoords
+              ? 'Your pickup is outside our instant-quote service area.'
+              : 'Bookings within 24 hours require a quick call for availability.'}
+            <br />Please call us directly — we'll get you sorted.
+          </p>
+          <a href="tel:01514533607" style={{
+            display: 'inline-flex', alignItems: 'center', gap: 10,
+            padding: '14px 32px', borderRadius: '10px',
+            background: '#E5A54B', color: '#0E2747', fontWeight: 700,
+            fontSize: 17, textDecoration: 'none', transition: 'transform 0.2s'
+          }}
+          onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.04)'}
+          onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+          ><Icon name="phone" size={18} color="#0E2747" /> 0151 453 3607</a>
+          <div style={{ marginTop: 14, fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>
+            Lines open 7 days · 6am – 10pm
+          </div>
         </div>
-        <div className={"field" + (errors.phone ? " error" : "")}>
-          <label>Mobile <span className="req">*</span></label>
-          <input type="tel" placeholder="07..." value={form.phone} onChange={e => upd("phone", e.target.value)} />
-          {errors.phone && <div className="err-msg">{errors.phone}</div>}
-        </div>
-      </div>
+      ) : (
+        <>
+          <QuotePanel quote={quote} />
 
-      <div className="field">
-        <label>Email <span style={{ color: "var(--muted)", fontWeight: 400 }}>(optional)</span></label>
-        <input type="email" placeholder="for written confirmation" value={form.email} onChange={e => upd("email", e.target.value)} />
-      </div>
+          <div className="row2">
+            <div className={"field" + (errors.name ? " error" : "")}>
+              <label>Your name <span className="req">*</span></label>
+              <input type="text" placeholder="First and last" value={form.name} onChange={e => upd("name", e.target.value)} />
+              {errors.name && <div className="err-msg">{errors.name}</div>}
+            </div>
+            <div className={"field" + (errors.phone ? " error" : "")}>
+              <label>Mobile <span className="req">*</span></label>
+              <input type="tel" placeholder="07..." value={form.phone} onChange={e => upd("phone", e.target.value)} />
+              {errors.phone && <div className="err-msg">{errors.phone}</div>}
+            </div>
+          </div>
 
-      <div className="field">
-        <label>Anything we should know? <span style={{ color: "var(--muted)", fontWeight: 400 }}>(optional)</span></label>
-        <textarea placeholder="Extra pickup stops (e.g. collecting friends/family on the way — please include addresses), child seat, oversized luggage, gate code, mobility needs…"
-          value={form.notes} onChange={e => upd("notes", e.target.value)} />
-        <div className="field-hint" style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '6px', lineHeight: 1.45 }}>
-          Please mention any additional pickup or drop-off stops (e.g. collecting other passengers en route). Multi-stop journeys can affect the final price — we'll confirm the quoted fare with you before payment.
-        </div>
-      </div>
+          <div className="field">
+            <label>Email <span style={{ color: "var(--muted)", fontWeight: 400 }}>(optional)</span></label>
+            <input type="email" placeholder="for written confirmation" value={form.email} onChange={e => upd("email", e.target.value)} />
+          </div>
 
-      <div className="form-summary">
-        <div>
-          <div className="lbl">{tripType === "return" ? "Return · both legs" : "One way"} · {airport === "LJLA" ? "Liverpool John Lennon" : "Manchester"}</div>
-          <div className="sub-text">Includes tolls and waiting time</div>
-        </div>
-        {quote && <div className="total">£{quote.total.toFixed(2)}</div>}
-      </div>
+          <div className="field">
+            <label>Anything we should know? <span style={{ color: "var(--muted)", fontWeight: 400 }}>(optional)</span></label>
+            <textarea placeholder="Extra pickup stops (e.g. collecting friends/family on the way — please include addresses), child seat, oversized luggage, gate code, mobility needs…"
+              value={form.notes} onChange={e => upd("notes", e.target.value)} />
+            <div className="field-hint" style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '6px', lineHeight: 1.45 }}>
+              Please mention any additional pickup or drop-off stops (e.g. collecting other passengers en route). Multi-stop journeys can affect the final price — we'll confirm the quoted fare with you before payment.
+            </div>
+          </div>
 
-      <button type="submit" className="form-submit" disabled={submitting}>
-        {submitting ? (
-          <span>Sending…</span>
-        ) : (
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
-            {quote ? `Book Now — £${quote.total.toFixed(2)}` : 'Get My Fixed Price'} <Icon name="arrow" size={16} />
-          </span>
-        )}
-      </button>
-      {submitError && (
-        <div style={{ marginTop: 12, padding: "12px 14px", background: "#fdecec", border: "1px solid #f5c2c2", color: "#8a2020", borderRadius: 10, fontSize: 13.5 }}>
-          {submitError}
-        </div>
+          <div className="form-summary">
+            <div>
+              <div className="lbl">{tripType === "return" ? "Return · both legs" : "One way"} · {airport === "LJLA" ? "Liverpool John Lennon" : "Manchester"}</div>
+              <div className="sub-text">Includes tolls and waiting time</div>
+            </div>
+            {quote && <div className="total">£{quote.total.toFixed(2)}</div>}
+          </div>
+
+          <button type="submit" className="form-submit" disabled={submitting}>
+            {submitting ? (
+              <span>Sending…</span>
+            ) : (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
+                {quote ? `Book & Pay — £${quote.total.toFixed(2)}` : 'Quick Quote & Book Online'} <Icon name="arrow" size={16} />
+              </span>
+            )}
+          </button>
+          {submitError && (
+            <div style={{ marginTop: 12, padding: "12px 14px", background: "#fdecec", border: "1px solid #f5c2c2", color: "#8a2020", borderRadius: 10, fontSize: 13.5 }}>
+              {submitError}
+            </div>
+          )}
+          <div className="form-foot" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <span><b style={{ color: "var(--navy-ink)" }}>Secure payment via Stripe.</b></span>
+            <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", color: "var(--muted)" }}>
+              <Icon name="shield" size={14} /> 100% Secure. No obligation. Your data is strictly protected.
+            </span>
+          </div>
+        </>
       )}
-      <div className="form-foot" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-        <span><b style={{ color: "var(--navy-ink)" }}>Text confirmation shortly after.</b></span>
-        <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", color: "var(--muted)" }}>
-          <Icon name="shield" size={14} /> 100% Secure. No obligation. Your data is strictly protected.
-        </span>
-      </div>
     </form>
   );
 }
