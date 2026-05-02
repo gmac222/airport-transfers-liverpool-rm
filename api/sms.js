@@ -113,40 +113,7 @@ export default async function handler(req, res) {
         }
     };
 
-    // Step 1 of customer flow: just the price + accept/decline link.
-    // Sent when operator quotes the booking. No payment link, no driver yet.
-    if (action === 'send-price-quote') {
-        if (!formattedCustomerPhone) return res.status(400).json({ error: 'Missing customer phone' });
-        messages.push({
-            to: formattedCustomerPhone,
-            from: 'RMTransfers',
-            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nGood news — we can cover your RM Transfers booking (${fields['Booking Ref']}) for £${fields['Customer Price'] ?? fields['Total Price']}.\n\nPlease go to https://airporttaxitransfersliverpool.co.uk/portal.html?ref=${fields['Booking Ref']} to accept this price or decline if it doesn't suit.${SUPPORT_LINE}\n\n(Please do not reply to this text)`
-        });
-    }
 
-    // Customer accepted the quote but hasn't paid 24+ hours later — gentle
-    // nudge asking whether they still want to proceed. Fires from the
-    // /api/cron-nudge-unpaid daily cron and from the admin failsafe button.
-    if (action === 'send-payment-nudge') {
-        if (!formattedCustomerPhone) return res.status(400).json({ error: 'Missing customer phone' });
-        const price = fields['Customer Price'] ?? fields['Total Price'];
-        const priceLine = price ? ` (£${price})` : '';
-        messages.push({
-            to: formattedCustomerPhone,
-            from: 'RMTransfers',
-            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nWe haven't received payment for your RM Transfers booking (${fields['Booking Ref']})${priceLine} yet. Would you still like to go ahead?\n\nPay now or let us know via your portal: https://airporttaxitransfersliverpool.co.uk/portal.html?ref=${fields['Booking Ref']}\n\nIf you no longer need the transfer, please reply by tapping Decline so we can release the slot.${SUPPORT_LINE}\n\n(Please do not reply to this text)`
-        });
-    }
-
-    // Step 2 of customer flow: payment link, sent after the customer accepts the quote.
-    if (action === 'send-payment-link') {
-        if (!formattedCustomerPhone) return res.status(400).json({ error: 'Missing customer phone' });
-        messages.push({
-            to: formattedCustomerPhone,
-            from: 'RMTransfers',
-            body: `Hi ${fields['Customer Name']?.split(' ')[0] || 'Customer'},\n\nThanks for accepting your quote for RM Transfers booking (${fields['Booking Ref']}).\n\nPlease complete payment of £${fields['Customer Price'] ?? fields['Total Price']} here: https://airporttaxitransfersliverpool.co.uk/portal.html?ref=${fields['Booking Ref']}\n\nOnce payment clears we'll allocate a driver and send you their details.${SUPPORT_LINE}\n\n(Please do not reply to this text)`
-        });
-    }
 
     // Sent when admin acknowledges payment. We deliberately DO NOT include
     // the driver's details here — those go out in the 24-hour reminder so
