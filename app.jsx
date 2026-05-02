@@ -147,7 +147,6 @@ function Hero({ headline }) {
         className="hero-video-bg"
         autoPlay
         muted
-        defaultMuted
         loop
         playsInline
         preload="auto"
