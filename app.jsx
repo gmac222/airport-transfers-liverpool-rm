@@ -878,6 +878,7 @@ function BookingForm() {
         'Customer Price': quote ? quote.total : 0,
         'Notes': form.notes.trim() || '',
         'Status': 'Pending',
+        'Submitted At': new Date().toISOString(),
       };
       if (tripType === "oneway") {
         airtableFields['Oneway Direction'] = onewayDir;
