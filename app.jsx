@@ -611,7 +611,7 @@ function FAQ() {
     { q: "What if I'm not ready when you arrive at home?", a: "Fine. We build a few minutes' grace into every pickup, and we'd rather be early than late. Just tell us what time you want to leave the house and we'll plan back from that." },
     { q: "Are your drivers licensed and insured?", a: "Yes — every driver is fully licensed by the local council for private hire, DBS checked, and the business carries full public liability and hire & reward insurance. Happy to show you the paperwork before booking if you'd like." },
     { q: "Will my luggage fit?", a: "We allocate vehicles based on your passenger count and luggage needs — ranging from standard cars to spacious 8-seat minibuses. We make sure there's plenty of room for everyone and everything." },
-    { q: "How do I pay?", a: "Payment is taken securely online via a payment link in your customer portal once your driver is assigned. You don't need a card to reserve your booking." },
+    { q: "How do I pay?", a: "Once you've received your quote, you'll pay securely online via Stripe Checkout — right there on the website. Your booking is confirmed instantly once payment is complete." },
     { q: "How far ahead do I need to book?", a: "Ideally 24 hours for guaranteed availability. We often take same-day bookings when a driver's free — call 0151 453 3607 and we'll tell you straight." }
   ];
   return (
@@ -914,8 +914,8 @@ function BookingForm() {
       <div className="book-form">
         <div className="book-success">
           <div className="check"><Icon name="check" size={32} /></div>
-          <h3>Booking request received!</h3>
-          <p>We've just sent you a confirmation text. One of our team will review your booking and send you a secure payment link shortly{tripType === "return" ? " for both legs" : ""}.</p>
+          <h3>Booking confirmed!</h3>
+          <p>Your payment is being processed and we're now preparing your transfer{tripType === "return" ? " for both legs" : ""}. We'll text you shortly with your driver's details.</p>
           <div className="ref" id="book-ref" tabIndex={-1}>Ref: {bookingRef} · {tripType === "return" ? "return" : "one-way"}</div>
           <div style={{ marginTop: 24, fontSize: 13, color: "var(--muted)" }}>
             Need to change something? Call us on 0151 453 3607.
@@ -1519,9 +1519,9 @@ function BookSection() {
     <section id="book" className="book-section">
       <div className="wrap book-centered" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <div className="book-lead" style={{ textAlign: 'center', maxWidth: '640px', marginBottom: '48px' }}>
-          <span className="section-kicker" style={{ color: "var(--amber)", justifyContent: 'center' }}>Book now</span>
-          <h2 className="h2"><em>Let's begin.</em></h2>
-          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '18px' }}>Fill the form and we'll text back with your driver's name and the fixed price — no card needed to reserve.</p>
+          <span className="section-kicker" style={{ color: "var(--amber)", justifyContent: 'center' }}>Quick quote</span>
+          <h2 className="h2"><em>Let's get you booked.</em></h2>
+          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '18px' }}>Get your fixed price instantly — book and pay securely online in under 60 seconds.</p>
         </div>
         <div style={{ width: '100%', maxWidth: '500px' }}>
           <BookingForm />
@@ -1557,7 +1557,7 @@ function StickyBar({ enabled }) {
         <b>LJLA from £55 · MAN from £75</b>
         <span>Both legs · fixed price</span>
       </div>
-      <a href="#book" className="btn btn-primary">Book Now</a>
+      <a href="#book" className="btn btn-primary">Quick Quote</a>
     </div>
   );
 }

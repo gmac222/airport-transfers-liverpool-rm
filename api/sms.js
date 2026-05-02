@@ -329,7 +329,7 @@ export default async function handler(req, res) {
         messages.push({
             to: formattedCustomerPhone,
             from: 'RMTransfers',
-            body: `Hi ${firstName},\n\nThanks for choosing RM Transfers! We've received your booking request (${fields['Booking Ref']})${priceLine}.\n\nWe're now preparing everything and one of our team will send you a secure payment link shortly.\n\nIn the meantime, you can view your booking here: https://airporttaxitransfersliverpool.co.uk/portal.html?ref=${fields['Booking Ref']}${SUPPORT_LINE}\n\n(Please do not reply to this text)`
+            body: `Hi ${firstName},\n\nThanks for choosing RM Transfers! Your booking (${fields['Booking Ref']})${priceLine} has been confirmed.\n\nWe're now preparing everything and will text you with your driver's details before your trip.\n\nView your booking: https://airporttaxitransfersliverpool.co.uk/portal.html?ref=${fields['Booking Ref']}${SUPPORT_LINE}\n\n(Please do not reply to this text)`
         });
     }
 
