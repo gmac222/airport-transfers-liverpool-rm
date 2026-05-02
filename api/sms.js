@@ -356,12 +356,34 @@ export default async function handler(req, res) {
             body: JSON.stringify({ messages })
         });
 
+        const body = await smsRes.text();
         if (!smsRes.ok) {
-            console.error("ClickSend error:", await smsRes.text());
+            console.error(`[sms] ClickSend HTTP ${smsRes.status} for action='${action}':`, body);
             return res.status(500).json({ error: 'Failed to send SMS' });
         }
 
-        return res.status(200).json({ success: true, message: 'SMS sent successfully' });
+        // ClickSend can return HTTP 200 with per-message failures (bad number,
+        // blocked, no credit). Inspect each result so partial failures show
+        // up in the logs instead of silently disappearing.
+        let parsed = null;
+        try { parsed = JSON.parse(body); } catch { /* ignore */ }
+        const results = parsed?.data?.messages || [];
+        const failures = results.filter(m => m.status && m.status !== 'SUCCESS');
+        const successes = results.filter(m => m.status === 'SUCCESS');
+        console.log(`[sms] action='${action}' queued=${messages.length} success=${successes.length} fail=${failures.length}`);
+        if (failures.length) {
+            for (const m of failures) {
+                console.error(`[sms] FAILED to=${m.to} status=${m.status} code=${m.error_code || '-'} text=${m.error_text || '-'}`);
+            }
+            return res.status(207).json({
+                success: successes.length > 0,
+                partial: true,
+                results,
+                error: failures.map(m => `${m.to}: ${m.status}`).join('; ')
+            });
+        }
+
+        return res.status(200).json({ success: true, message: 'SMS sent successfully', count: successes.length });
     } catch (error) {
         console.error("Server error:", error);
         return res.status(500).json({ error: 'Internal server error' });
