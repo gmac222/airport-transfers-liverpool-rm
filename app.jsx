@@ -116,6 +116,32 @@ function Hero({ headline }) {
 
     tryPlay();
 
+    // Stall recovery: some Chrome installs (especially with hardware
+    // acceleration) decode a few frames then stall. If the playhead
+    // hasn't advanced for ~750ms, force a load() + play() — the cheap
+    // re-arm fixes most decoder hiccups.
+    let lastTime = v.currentTime;
+    let lastTick = performance.now();
+    const stallCheck = setInterval(() => {
+      if (v.paused || v.ended) return;
+      if (v.currentTime !== lastTime) {
+        lastTime = v.currentTime;
+        lastTick = performance.now();
+        return;
+      }
+      if (performance.now() - lastTick > 750) {
+        try { v.load(); } catch {}
+        tryPlay();
+        lastTick = performance.now();
+      }
+    }, 500);
+
+    const onError = () => { try { v.load(); } catch {} tryPlay(); };
+    v.addEventListener('error', onError);
+    v.addEventListener('stalled', onError);
+    v.addEventListener('suspend', tryPlay);
+    v.addEventListener('pause', () => { if (!v.ended) tryPlay(); });
+
     const onFirstInteraction = () => {
       tryPlay();
       window.removeEventListener('pointerdown', onFirstInteraction);
@@ -132,6 +158,10 @@ function Hero({ headline }) {
     document.addEventListener('visibilitychange', onVisible);
 
     return () => {
+      clearInterval(stallCheck);
+      v.removeEventListener('error', onError);
+      v.removeEventListener('stalled', onError);
+      v.removeEventListener('suspend', tryPlay);
       window.removeEventListener('pointerdown', onFirstInteraction);
       window.removeEventListener('keydown', onFirstInteraction);
       window.removeEventListener('touchstart', onFirstInteraction);
