@@ -218,7 +218,7 @@ function Hero({ headline }) {
         preload="auto"
         style={{ background: '#0E2747' }}
       >
-        <source src="./assets/hero-bg.mp4" type="video/mp4" />
+        <source src="./assets/hero-bg-compressed-no-sound.mp4" type="video/mp4" />
       </video>
       <div className="hero-video-overlay"></div>
 
