@@ -1417,9 +1417,14 @@ function AdminApp() {
                         {filteredBookings.map(record => {
                             const { id, fields } = record;
                             const status = fields['Status'] || 'Pending';
-                            const isPending = status === 'Pending';
-                            const isAwaitingConfirmation = status === 'Awaiting Confirmation';
-                            const isAwaitingPayment = status === 'Awaiting Payment';
+                            // If the customer has already paid (direct Stripe checkout), treat
+                            // the booking as ready for driver allocation regardless of Status —
+                            // otherwise legacy "Pending" but Paid records get stuck on the
+                            // "Pending Quote" message.
+                            const isPaid = fields['Payment Status'] === 'Paid';
+                            const isPending = status === 'Pending' && !isPaid;
+                            const isAwaitingConfirmation = status === 'Awaiting Confirmation' && !isPaid;
+                            const isAwaitingPayment = status === 'Awaiting Payment' || (isPaid && (status === 'Pending' || status === 'Awaiting Confirmation'));
                             const isDeclined = status === 'Declined';
                             const isCompleted = status === 'Completed';
                             

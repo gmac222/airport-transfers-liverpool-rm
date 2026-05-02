@@ -99,6 +99,10 @@ module.exports = async (req, res) => {
             const view = (req.query.view || '').toString().toLowerCase();
             if (view === 'operator' || view === 'driver') {
                 const POST_PAYMENT = new Set(['Accepted', 'Completed', 'Archived']);
+                // A booking also counts as "paid" for visibility purposes if
+                // Stripe has marked Payment Status = Paid (direct checkout flow),
+                // even if admin hasn't yet acknowledged it.
+                const isPaidRecord = (f) => POST_PAYMENT.has(f['Status']) || f['Payment Status'] === 'Paid';
                 if (view === 'driver') {
                     // Drivers must not see a booking at all until it has
                     // been paid AND admin has dispatched it to the operator.
@@ -107,14 +111,14 @@ module.exports = async (req, res) => {
                     // me" case.)
                     bookings = bookings.filter(rec => {
                         const f = rec.fields || {};
-                        return POST_PAYMENT.has(f['Status']) && f['Dispatched To Operator'] === true;
+                        return isPaidRecord(f) && f['Dispatched To Operator'] === true;
                     });
                 } else {
                     // Operator: keep the booking visible (so they can plan)
                     // but redact customer PII until paid + dispatched.
                     bookings = bookings.map(rec => {
                         const f = rec.fields || {};
-                        const isPostPayment = POST_PAYMENT.has(f['Status']);
+                        const isPostPayment = isPaidRecord(f);
                         const isDispatched = f['Dispatched To Operator'] === true;
                         if (isPostPayment && isDispatched) return rec;
                         const redacted = { ...f };

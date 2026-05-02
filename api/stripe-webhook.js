@@ -94,6 +94,11 @@ export default async function handler(req, res) {
                         'Total Price': parseFloat(amountPaid),
                         'Payment Status': 'Paid',
                         'Stripe Session ID': session.id,
+                        // Customer paid directly via Stripe checkout — auto-advance
+                        // the booking so the operator can allocate a driver without
+                        // waiting for an admin to click "Acknowledge Payment".
+                        'Status': 'Accepted',
+                        'Dispatched To Operator': true,
                     }
                 })
             });
