@@ -638,15 +638,25 @@ function AdminApp() {
         const parsed = trimmed === '' ? null : parseFloat(trimmed);
         if (parsed !== null && !Number.isFinite(parsed)) return; // ignore garbage
 
-        // Build the patch. When the user enters a Customer Price and the
-        // Operator Price is still empty, default Operator Price to the same
-        // figure (the admin can then change it). This keeps Profit at £0
-        // until they explicitly mark the operator down.
+        // Build the patch. When the user changes Customer Price, mirror it
+        // into Operator Price so the operator pays the same by default and
+        // Profit stays at £0 until admin explicitly marks the operator
+        // down. We only mirror when Operator Price is empty OR was tracking
+        // the previous Customer Price — that way an admin's manual override
+        // (e.g. operator gets £40 vs customer £55) sticks even if they
+        // later edit the customer figure.
         const patchFields = { [field]: parsed };
         if (field === 'Customer Price' && parsed != null) {
             const booking = bookings.find(x => x.id === bookingId);
             const existingOp = booking && booking.fields['Operator Price'];
-            if (existingOp == null) patchFields['Operator Price'] = parsed;
+            const existingCp = booking && booking.fields['Customer Price'];
+            const num = (v) => (v == null || v === '' ? null : Number(v));
+            const opNum = num(existingOp);
+            const cpNum = num(existingCp);
+            const wasMirrored = opNum != null && cpNum != null && opNum === cpNum;
+            if (existingOp == null || wasMirrored) {
+                patchFields['Operator Price'] = parsed;
+            }
         }
 
         setPriceSavingId(bookingId);
