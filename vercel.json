@@ -5,6 +5,14 @@
     { "source": "/driver-app/assets/:path*", "destination": "/driver-app-build/assets/:path*" },
     { "source": "/driver-app/:path*", "destination": "/driver-app-build/index.html" }
   ],
+  "headers": [
+    {
+      "source": "/(.*).jsx",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+      ]
+    }
+  ],
   "crons": [
     { "path": "/api/cron-nudge-unpaid", "schedule": "0 9 * * *" }
   ]
