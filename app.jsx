@@ -81,16 +81,61 @@ function AuroraBackground({ children, showRadialGradient = true, className = "" 
 /* ---------- HERO ---------- */
 function Hero({ headline }) {
   const h = HEADLINES[headline] || HEADLINES.quiet;
+  const videoRef = useRef(null);
+
+  // Belt-and-braces autoplay. Chrome/Safari sometimes refuse to start a
+  // muted-autoplay video on first paint (Low Power Mode, prefers-reduced-
+  // motion, large files racing with React mount). Force a play() on
+  // mount, retry on the first user interaction, and swallow the promise
+  // rejection so a blocked autoplay doesn't show up as an unhandled
+  // promise error in the console / Clarity / Sentry.
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+
+    const tryPlay = () => {
+      const p = v.play();
+      if (p && typeof p.catch === 'function') p.catch(() => {});
+    };
+
+    tryPlay();
+
+    const onFirstInteraction = () => {
+      tryPlay();
+      window.removeEventListener('pointerdown', onFirstInteraction);
+      window.removeEventListener('keydown', onFirstInteraction);
+      window.removeEventListener('touchstart', onFirstInteraction);
+    };
+    window.addEventListener('pointerdown', onFirstInteraction, { once: true });
+    window.addEventListener('keydown', onFirstInteraction, { once: true });
+    window.addEventListener('touchstart', onFirstInteraction, { once: true });
+
+    // Some mobile browsers pause video when the tab is backgrounded and
+    // don't restart on return — kick it again on visibility change.
+    const onVisible = () => { if (!document.hidden) tryPlay(); };
+    document.addEventListener('visibilitychange', onVisible);
+
+    return () => {
+      window.removeEventListener('pointerdown', onFirstInteraction);
+      window.removeEventListener('keydown', onFirstInteraction);
+      window.removeEventListener('touchstart', onFirstInteraction);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, []);
+
   return (
     <header className="hero hero-video">
       {/* Video background */}
       <video
+        ref={videoRef}
         className="hero-video-bg"
         autoPlay
         muted
         loop
         playsInline
         preload="auto"
+        disablePictureInPicture
+        disableRemotePlayback
         style={{ background: '#0E2747' }}
       >
         <source src="./assets/hero-bg.mp4" type="video/mp4" />
