@@ -81,28 +81,60 @@ export default async function handler(req, res) {
             recordId = atData.records[0].id;
             bookingFields = atData.records[0].fields;
 
-            // Update Customer Price + Total Price with the amount paid
-            await fetch(`https://api.airtable.com/v0/${BASE_ID}/${encodeURIComponent(TABLE_NAME)}/${recordId}`, {
+            // Build the patch. We DO NOT overwrite Customer Price with the
+            // amount actually charged — a 100% promo would zero it out and
+            // lose the original quote. Keep the original Customer Price and
+            // store what Stripe actually collected in 'Amount Paid' instead.
+            const paidNum = parseFloat(amountPaid);
+            const fieldsToUpdate = {
+                'Payment Status': 'Paid',
+                'Stripe Session ID': session.id,
+                // Customer paid directly via Stripe checkout — auto-advance
+                // the booking so the operator can allocate a driver without
+                // waiting for an admin to click "Acknowledge Payment".
+                'Status': 'Accepted',
+                'Dispatched To Operator': true,
+                'Amount Paid': paidNum,
+            };
+            // Only set Customer Price / Total Price from the payment if
+            // they're missing — this protects the quoted price when a
+            // discount/promo was applied at checkout.
+            if (bookingFields['Customer Price'] == null) {
+                fieldsToUpdate['Customer Price'] = paidNum;
+            }
+            if (bookingFields['Total Price'] == null) {
+                fieldsToUpdate['Total Price'] = paidNum;
+            }
+
+            const patchRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${encodeURIComponent(TABLE_NAME)}/${recordId}`, {
                 method: 'PATCH',
                 headers: {
                     Authorization: `Bearer ${AIRTABLE_API_KEY}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    fields: {
-                        'Customer Price': parseFloat(amountPaid),
-                        'Total Price': parseFloat(amountPaid),
-                        'Payment Status': 'Paid',
-                        'Stripe Session ID': session.id,
-                        // Customer paid directly via Stripe checkout — auto-advance
-                        // the booking so the operator can allocate a driver without
-                        // waiting for an admin to click "Acknowledge Payment".
-                        'Status': 'Accepted',
-                        'Dispatched To Operator': true,
-                    }
-                })
+                body: JSON.stringify({ fields: fieldsToUpdate, typecast: true })
             });
-            console.log(`[stripe-webhook] Airtable updated: ${recordId} → £${amountPaid}`);
+            if (!patchRes.ok) {
+                // If Airtable rejects 'Amount Paid' (column doesn't exist yet),
+                // retry without it — the rest of the patch is more important
+                // than capturing the exact paid amount.
+                const errBody = await patchRes.text();
+                if (/Amount Paid/i.test(errBody)) {
+                    console.warn(`[stripe-webhook] 'Amount Paid' rejected by Airtable, retrying without it.`);
+                    delete fieldsToUpdate['Amount Paid'];
+                    await fetch(`https://api.airtable.com/v0/${BASE_ID}/${encodeURIComponent(TABLE_NAME)}/${recordId}`, {
+                        method: 'PATCH',
+                        headers: {
+                            Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ fields: fieldsToUpdate, typecast: true })
+                    });
+                } else {
+                    console.error(`[stripe-webhook] Airtable PATCH failed: ${patchRes.status} ${errBody}`);
+                }
+            }
+            console.log(`[stripe-webhook] Airtable updated: ${recordId} → paid £${amountPaid}`);
         }
     } catch (err) {
         console.error('[stripe-webhook] Airtable update failed:', err.message);
