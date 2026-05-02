@@ -13,6 +13,102 @@ const HEADLINES = {
   local: { main: "Door to airport,", accent: "we'll be there when you land.", tail: "" }
 };
 
+/* ══════════ PRICING ENGINE ══════════ */
+const FIXED_FARES = {
+  LJLA: { car: 55, mpv: 65, '8seat': 78 },
+  MAN:  { car: 75, mpv: 88, '8seat': 100 },
+};
+const DOUBLE_TIME_DATES = ['12-24','12-25','12-26','12-31','01-01'];
+const VEHICLE_SHORT = { car: 'Car', mpv: 'MPV', '8seat': '8 Seater' };
+const VEHICLE_RANK  = { car: 0, mpv: 1, '8seat': 2 };
+
+/* Vehicle limits: max large suitcases & cabin bags per type */
+const VEHICLE_LIMITS = {
+  car:   { pax: 3, large: 2, cabin: 2 },
+  mpv:   { pax: 5, large: 5, cabin: 5 },
+  '8seat': { pax: 8, large: 8, cabin: 8 },
+};
+
+/* Special items → equivalent large-suitcase count */
+const SPECIAL_EQUIV = { pushchair: 1, wheelchair: 2, golfBag: 2, bike: 3 };
+
+function specialToLarge(specials) {
+  return Object.entries(specials).reduce((sum, [k, v]) => sum + (SPECIAL_EQUIV[k] || 0) * v, 0);
+}
+
+function getAutoVehicle(pax, largeBags, cabinBags, specials) {
+  const totalLarge = largeBags + specialToLarge(specials || {});
+  // Pax-based floor
+  let v = pax > 5 ? '8seat' : pax > 3 ? 'mpv' : 'car';
+  // Luggage upgrade: if car, check fits
+  if (v === 'car') {
+    if (totalLarge > VEHICLE_LIMITS.car.large || cabinBags > VEHICLE_LIMITS.car.cabin) v = 'mpv';
+  }
+  // If MPV, check fits
+  if (v === 'mpv') {
+    if (totalLarge > VEHICLE_LIMITS.mpv.large || cabinBags > VEHICLE_LIMITS.mpv.cabin) v = '8seat';
+  }
+  return v;
+}
+
+function isDoubleTime(dateStr) {
+  if (!dateStr) return false;
+  const d = new Date(dateStr + 'T00:00:00');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return DOUBLE_TIME_DATES.includes(mm + '-' + dd);
+}
+function getHolidayMult(dateStr, bankHols) {
+  if (!dateStr) return 1;
+  if (isDoubleTime(dateStr)) return 2;
+  if (bankHols && bankHols.includes(dateStr)) return 1.5;
+  return 1;
+}
+
+function buildQuote({ airport, vehicle, tripType, dates, bankHols }) {
+  const fixed = FIXED_FARES[airport];
+  if (!fixed) return null;
+  const base = fixed[vehicle];
+  if (base == null) return null;
+  const legs = [];
+  if (tripType === 'return') {
+    const om = getHolidayMult(dates.outDate, bankHols);
+    const rm = getHolidayMult(dates.retDate, bankHols);
+    legs.push({ label: 'Outbound', base, mult: om, price: Math.ceil(base * om * 100) / 100 });
+    legs.push({ label: 'Return',   base, mult: rm, price: Math.ceil(base * rm * 100) / 100 });
+  } else {
+    const m = getHolidayMult(dates.legDate, bankHols);
+    legs.push({ label: 'One way', base, mult: m, price: Math.ceil(base * m * 100) / 100 });
+  }
+  const total = legs.reduce((s, l) => s + l.price, 0);
+  return { vehicle, vehicleLabel: VEHICLE_SHORT[vehicle], legs, total: Math.round(total * 100) / 100, fixedFare: true, hasHoliday: legs.some(l => l.mult > 1) };
+}
+
+/* ══════════ QUOTE PANEL ══════════ */
+function QuotePanel({ quote }) {
+  if (!quote) return null;
+  return (
+    <div className="quote-panel">
+      <div className="quote-hdr">
+        <div className="quote-vehicle-badge"><Icon name="shield" size={16} /><span>{quote.vehicleLabel}</span></div>
+        <span className="quote-fixed-tag">Fixed price</span>
+      </div>
+      <div className="quote-rows">
+        {quote.legs.map((leg, i) => (
+          <div className="quote-row" key={i}>
+            <span className="quote-leg-lbl">{leg.label}</span>
+            {leg.mult > 1 && <span className="quote-surcharge">{leg.mult === 2 ? 'Double time' : 'Bank hol.'} ×{leg.mult}</span>}
+            <span className="quote-leg-price">£{leg.price.toFixed(2)}</span>
+          </div>
+        ))}
+      </div>
+      <div className="quote-total-row"><span>Total</span><span className="quote-total">£{quote.total.toFixed(2)}</span></div>
+      <div className="quote-trust-line"><Icon name="check" size={14} /> Includes parking, tolls &amp; VAT — no hidden fees</div>
+      {quote.hasHoliday && <div className="quote-hol-note">Holiday rate applied. Standard pricing on regular days.</div>}
+    </div>
+  );
+}
+
 function Icon({ name, size = 20, color = "currentColor" }) {
   const props = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: color, strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round" };
   const paths = {
@@ -81,10 +177,32 @@ function AuroraBackground({ children, showRadialGradient = true, className = "" 
 /* ---------- HERO ---------- */
 function Hero({ headline }) {
   const h = HEADLINES[headline] || HEADLINES.quiet;
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    v.defaultMuted = true;
+    v.muted = true;
+    const tryPlay = () => { const p = v.play(); if (p && p.catch) p.catch(() => {}); };
+    tryPlay();
+    // Retry once the main thread is free again (a long-running
+    // extension content-script can starve the initial play()).
+    const onPageShow = () => tryPlay();
+    window.addEventListener('pageshow', onPageShow);
+    const onClick = () => tryPlay();
+    window.addEventListener('pointerdown', onClick, { once: true });
+    return () => {
+      window.removeEventListener('pageshow', onPageShow);
+      window.removeEventListener('pointerdown', onClick);
+    };
+  }, []);
+
   return (
     <header className="hero hero-video">
       {/* Video background */}
       <video
+        ref={videoRef}
         className="hero-video-bg"
         autoPlay
         muted
@@ -484,12 +602,27 @@ function BookingForm() {
   const [onewayDir, setOnewayDir] = useState("to"); // for oneway only
   const [airport, setAirport] = useState("LJLA");
   const [pax, setPax] = useState(2);
-  const [bags, setBags] = useState(2);
+  const [largeBags, setLargeBags] = useState(1);
+  const [cabinBags, setCabinBags] = useState(1);
+  const [specials, setSpecials] = useState({ pushchair: 0, wheelchair: 0, golfBag: 0, bike: 0 });
+  const [vehicleOverride, setVehicleOverride] = useState(null);
+  const [bankHols, setBankHols] = useState([]);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [bookingRef, setBookingRef] = useState("");
   const [errors, setErrors] = useState({});
+
+  const autoVehicle = getAutoVehicle(pax, largeBags, cabinBags, specials);
+  const vehicle = vehicleOverride && VEHICLE_RANK[vehicleOverride] >= VEHICLE_RANK[autoVehicle] ? vehicleOverride : autoVehicle;
+
+  useEffect(() => {
+    if (vehicleOverride && VEHICLE_RANK[vehicleOverride] < VEHICLE_RANK[getAutoVehicle(pax, largeBags, cabinBags, specials)]) setVehicleOverride(null);
+  }, [pax, largeBags, cabinBags, specials]);
+
+  useEffect(() => {
+    fetch('https://www.gov.uk/bank-holidays.json').then(r => r.json()).then(d => setBankHols((d['england-and-wales']?.events || []).map(e => e.date))).catch(() => {});
+  }, []);
   const [form, setForm] = useState({
     name: "", phone: "", email: "",
     address: "",
@@ -505,6 +638,11 @@ function BookingForm() {
   const [addressSuggestions, setAddressSuggestions] = useState([]);
   const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
   const skipSearchRef = useRef(false);
+
+  const quote = useMemo(() => {
+    const dates = tripType === 'return' ? { outDate: form.outDate, retDate: form.retDate } : { legDate: form.legDate };
+    return buildQuote({ airport, vehicle, tripType, dates, bankHols });
+  }, [airport, vehicle, tripType, form.outDate, form.retDate, form.legDate, bankHols]);
 
   useEffect(() => {
     if (!form.address || form.address.length < 3) {
@@ -626,7 +764,11 @@ function BookingForm() {
       airport,
       airportName: airport === "LJLA" ? "Liverpool John Lennon" : "Manchester",
       passengers: pax,
-      luggage: bags,
+      largeBags,
+      cabinBags,
+      specials,
+      vehicleType: vehicle,
+      vehicleLabel: VEHICLE_SHORT[vehicle],
       source: "website_v2",
       customer: {
         name: form.name.trim(),
@@ -634,6 +776,15 @@ function BookingForm() {
         email: form.email.trim() || null,
         address: form.address.trim()
       },
+      quote: quote ? {
+        vehicleType: quote.vehicle,
+        vehicleLabel: quote.vehicleLabel,
+        perLeg: quote.legs[0].base,
+        legs: quote.legs.map(l => ({ label: l.label, price: l.price, multiplier: l.mult })),
+        totalPrice: quote.total,
+        fixedFare: quote.fixedFare,
+        hasHolidaySurcharge: quote.hasHoliday,
+      } : null,
       outbound: tripType === "return"
         ? { date: form.outDate, time: form.outTime, flight: form.outFlight.trim() || null }
         : (onewayDir === "to" ? { date: form.legDate, time: form.legTime, flight: form.legFlight.trim() || null } : null),
@@ -834,29 +985,77 @@ function BookingForm() {
         </>
       )}
 
+      <div className="field">
+        <label>Passengers</label>
+        <div className="stepper">
+          <button type="button" onClick={() => setPax(p => Math.max(1, p - 1))} disabled={pax <= 1}>−</button>
+          <span className="val">{pax}</span>
+          <button type="button" onClick={() => setPax(p => Math.min(8, p + 1))} disabled={pax >= 8}>+</button>
+        </div>
+      </div>
+
       <div className="row2">
         <div className="field">
-          <label>Passengers</label>
+          <label>Large suitcases</label>
           <div className="stepper">
-            <button type="button" onClick={() => setPax(p => Math.max(1, p - 1))} disabled={pax <= 1}>−</button>
-            <span className="val">{pax}</span>
-            <button type="button" onClick={() => setPax(p => Math.min(8, p + 1))} disabled={pax >= 8}>+</button>
+            <button type="button" onClick={() => setLargeBags(b => Math.max(0, b - 1))} disabled={largeBags <= 0}>−</button>
+            <span className="val">{largeBags}</span>
+            <button type="button" onClick={() => setLargeBags(b => Math.min(10, b + 1))} disabled={largeBags >= 10}>+</button>
           </div>
         </div>
         <div className="field">
-          <label>Luggage</label>
+          <label>Cabin bags</label>
           <div className="stepper">
-            <button type="button" onClick={() => setBags(b => Math.max(0, b - 1))} disabled={bags <= 0}>−</button>
-            <span className="val">{bags}</span>
-            <button type="button" onClick={() => setBags(b => Math.min(8, b + 1))} disabled={bags >= 8}>+</button>
+            <button type="button" onClick={() => setCabinBags(b => Math.max(0, b - 1))} disabled={cabinBags <= 0}>−</button>
+            <span className="val">{cabinBags}</span>
+            <button type="button" onClick={() => setCabinBags(b => Math.min(10, b + 1))} disabled={cabinBags >= 10}>+</button>
           </div>
         </div>
       </div>
-      {pax > 3 && (
-        <div className="field" style={{ marginTop: -8 }}>
-          <div className="hint" style={{ color: "var(--amber-deep)", fontWeight: 500 }}>{pax > 5 ? "6-8 passengers — we'll allocate our spacious minibus." : "4-5 passengers — we'll allocate an MPV."}</div>
+
+      {/* Special items */}
+      <div className="field">
+        <label>Special items <span style={{ color: 'var(--muted)', fontWeight: 400 }}>(optional)</span></label>
+        <div className="special-items-grid">
+          {[['pushchair','Pushchair','= 1 suitcase'],['wheelchair','Wheelchair','= 2 suitcases'],['golfBag','Golf bag','= 2 suitcases'],['bike','Bike','= 3 suitcases']].map(([key, label, eq]) => (
+            <div className={`special-item${specials[key] > 0 ? ' active' : ''}`} key={key}>
+              <div className="special-item-info">
+                <span className="special-item-label">{label}</span>
+                <span className="special-item-eq">{eq}</span>
+              </div>
+              <div className="stepper stepper-sm">
+                <button type="button" onClick={() => setSpecials(s => ({...s, [key]: Math.max(0, s[key]-1)}))} disabled={specials[key] <= 0}>−</button>
+                <span className="val">{specials[key]}</span>
+                <button type="button" onClick={() => setSpecials(s => ({...s, [key]: Math.min(4, s[key]+1)}))}>+</button>
+              </div>
+            </div>
+          ))}
         </div>
-      )}
+      </div>
+
+      {/* Vehicle type */}
+      <div className="field">
+        <label>Vehicle type</label>
+        <div className="vehicle-select">
+          {['car', 'mpv', '8seat'].map(v => {
+            const tooSmall = VEHICLE_RANK[v] < VEHICLE_RANK[autoVehicle];
+            const active = v === vehicle;
+            return (
+              <button key={v} type="button"
+                className={`vehicle-opt${active ? ' active' : ''}${tooSmall ? ' disabled' : ''}`}
+                disabled={tooSmall}
+                onClick={() => setVehicleOverride(v === autoVehicle ? null : v)}
+              >
+                <span className="vehicle-opt-name">{VEHICLE_SHORT[v]}</span>
+                <span className="vehicle-opt-pax">{v === 'car' ? '1–3 pax' : v === 'mpv' ? '4–5 pax' : '6–8 pax'}</span>
+                {v === autoVehicle && <span className="vehicle-opt-rec">Recommended</span>}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <QuotePanel quote={quote} />
 
       <div className="row2">
         <div className={"field" + (errors.name ? " error" : "")}>
@@ -890,6 +1089,7 @@ function BookingForm() {
           <div className="lbl">{tripType === "return" ? "Return · both legs" : "One way"} · {airport === "LJLA" ? "Liverpool John Lennon" : "Manchester"}</div>
           <div className="sub-text">Includes tolls and waiting time</div>
         </div>
+        {quote && <div className="total">£{quote.total.toFixed(2)}</div>}
       </div>
 
       <button type="submit" className="form-submit" disabled={submitting}>
@@ -897,7 +1097,7 @@ function BookingForm() {
           <span>Sending…</span>
         ) : (
           <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
-            Get My Fixed Price <Icon name="arrow" size={16} />
+            {quote ? `Book Now — £${quote.total.toFixed(2)}` : 'Get My Fixed Price'} <Icon name="arrow" size={16} />
           </span>
         )}
       </button>
