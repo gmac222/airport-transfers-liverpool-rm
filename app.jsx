@@ -83,17 +83,33 @@ function Hero({ headline }) {
   const h = HEADLINES[headline] || HEADLINES.quiet;
   const videoRef = useRef(null);
 
-  // Belt-and-braces autoplay. Chrome/Safari sometimes refuse to start a
-  // muted-autoplay video on first paint (Low Power Mode, prefers-reduced-
-  // motion, large files racing with React mount). Force a play() on
-  // mount, retry on the first user interaction, and swallow the promise
-  // rejection so a blocked autoplay doesn't show up as an unhandled
-  // promise error in the console / Clarity / Sentry.
+  // React renders `muted` as a property, not as an HTML attribute. Some
+  // Chrome builds (especially with Energy Saver enabled) make their
+  // autoplay-allowed decision against the *attribute* before the
+  // property is applied — and reject autoplay on a "non-muted" video.
+  // Set it as a real attribute via a callback ref so it's there from
+  // the moment the element exists in the DOM.
+  const setVideoRef = (el) => {
+    videoRef.current = el;
+    if (el) {
+      el.muted = true;
+      el.defaultMuted = true;
+      el.setAttribute('muted', '');
+      el.setAttribute('autoplay', '');
+      el.setAttribute('playsinline', '');
+    }
+  };
+
+  // Belt-and-braces autoplay. Force a play() on mount, retry on the
+  // first user interaction, and swallow the promise rejection so a
+  // blocked autoplay doesn't show up as an unhandled rejection in the
+  // console / Clarity / Sentry.
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
 
     const tryPlay = () => {
+      v.muted = true;
       const p = v.play();
       if (p && typeof p.catch === 'function') p.catch(() => {});
     };
@@ -127,20 +143,20 @@ function Hero({ headline }) {
     <header className="hero hero-video">
       {/* Video background */}
       <video
-        ref={videoRef}
+        ref={setVideoRef}
         className="hero-video-bg"
         autoPlay
         muted
+        defaultMuted
         loop
         playsInline
         preload="auto"
         disablePictureInPicture
         disableRemotePlayback
         poster="./assets/airport-transfers-fleet.jpg"
+        src="./assets/hero-bg.mp4"
         style={{ background: '#0E2747' }}
-      >
-        <source src="./assets/hero-bg.mp4" type="video/mp4" />
-      </video>
+      />
       <div className="hero-video-overlay"></div>
 
       <div className="wrap hero-video-content">
