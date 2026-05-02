@@ -13,129 +13,6 @@ const HEADLINES = {
   local: { main: "Door to airport,", accent: "we'll be there when you land.", tail: "" }
 };
 
-/* ---------- PRICING ENGINE ---------- */
-const FIXED_FARES = {
-  LJLA: { car: 55, mpv: 65, '8seat': 78 },
-  MAN:  { car: 75, mpv: 88, '8seat': 100 },
-};
-const BASE_FARE_CAR = 45;
-const MILEAGE_BANDS = [
-  { from: 11, to: 30, rate: 1.25 },
-  { from: 31, to: 60, rate: 1.45 },
-  { from: 61, to: 100, rate: 1.65 },
-  { from: 101, to: 150, rate: 1.85 },
-  { from: 151, to: 9999, rate: 2.10 },
-];
-const VEHICLE_MULTIPLIERS = { car: 1.0, mpv: 1.18, '8seat': 1.35 };
-const LONG_DISTANCE_EXTRAS = [
-  { threshold: 200, extra: 60 },
-  { threshold: 150, extra: 40 },
-  { threshold: 100, extra: 20 },
-];
-const DOUBLE_TIME_DATES = ['12-24','12-25','12-26','12-31','01-01'];
-const VEHICLE_LABELS = { car: 'Car (1–3 pax)', mpv: 'MPV (4–5 pax)', '8seat': '8 Seater (6–8 pax)' };
-const VEHICLE_SHORT = { car: 'Car', mpv: 'MPV', '8seat': '8 Seater' };
-const VEHICLE_RANK = { car: 0, mpv: 1, '8seat': 2 };
-
-function getAutoVehicle(pax) {
-  if (pax <= 3) return 'car';
-  if (pax <= 5) return 'mpv';
-  return '8seat';
-}
-
-function calculateCarPrice(miles) {
-  let price = BASE_FARE_CAR;
-  if (miles <= 10) return price;
-  for (const band of MILEAGE_BANDS) {
-    if (miles < band.from) break;
-    const top = band.to === 9999 ? miles : band.to;
-    price += (Math.min(miles, top) - band.from + 1) * band.rate;
-  }
-  return price;
-}
-
-function getLongDistExtra(miles) {
-  for (const ld of LONG_DISTANCE_EXTRAS) { if (miles > ld.threshold) return ld.extra; }
-  return 0;
-}
-
-function isDoubleTime(dateStr) {
-  if (!dateStr) return false;
-  const d = new Date(dateStr + 'T00:00:00');
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return DOUBLE_TIME_DATES.includes(mm + '-' + dd);
-}
-
-function getHolidayMult(dateStr, bankHols) {
-  if (!dateStr) return 1;
-  if (isDoubleTime(dateStr)) return 2;
-  if (bankHols && bankHols.includes(dateStr)) return 1.5;
-  return 1;
-}
-
-function buildQuote({ airport, vehicle, tripType, dates, bankHols }) {
-  const fixed = FIXED_FARES[airport];
-  if (!fixed) return null;
-  const base = fixed[vehicle];
-  if (base == null) return null;
-
-  const legs = [];
-  if (tripType === 'return') {
-    const om = getHolidayMult(dates.outDate, bankHols);
-    const rm = getHolidayMult(dates.retDate, bankHols);
-    legs.push({ label: 'Outbound', base, mult: om, price: Math.ceil(base * om * 100) / 100 });
-    legs.push({ label: 'Return',   base, mult: rm, price: Math.ceil(base * rm * 100) / 100 });
-  } else {
-    const m = getHolidayMult(dates.legDate, bankHols);
-    legs.push({ label: 'One way', base, mult: m, price: Math.ceil(base * m * 100) / 100 });
-  }
-  const total = legs.reduce((s, l) => s + l.price, 0);
-  return {
-    vehicle, vehicleLabel: VEHICLE_SHORT[vehicle],
-    legs, total: Math.round(total * 100) / 100,
-    fixedFare: true,
-    hasHoliday: legs.some(l => l.mult > 1),
-  };
-}
-
-/* ---------- QUOTE PANEL ---------- */
-function QuotePanel({ quote }) {
-  if (!quote) return null;
-  return (
-    <div className="quote-panel">
-      <div className="quote-hdr">
-        <div className="quote-vehicle-badge">
-          <Icon name="shield" size={16} />
-          <span>{quote.vehicleLabel}</span>
-        </div>
-        <span className="quote-fixed-tag">Fixed price</span>
-      </div>
-      <div className="quote-rows">
-        {quote.legs.map((leg, i) => (
-          <div className="quote-row" key={i}>
-            <span className="quote-leg-lbl">{leg.label}</span>
-            {leg.mult > 1 && (
-              <span className="quote-surcharge">{leg.mult === 2 ? 'Double time' : 'Bank hol.'} ×{leg.mult}</span>
-            )}
-            <span className="quote-leg-price">£{leg.price.toFixed(2)}</span>
-          </div>
-        ))}
-      </div>
-      <div className="quote-total-row">
-        <span>Total</span>
-        <span className="quote-total">£{quote.total.toFixed(2)}</span>
-      </div>
-      <div className="quote-trust-line">
-        <Icon name="check" size={14} /> Includes parking, tolls &amp; VAT — no hidden fees
-      </div>
-      {quote.hasHoliday && (
-        <div className="quote-hol-note">Holiday rate applied. Standard pricing on regular days.</div>
-      )}
-    </div>
-  );
-}
-
 function Icon({ name, size = 20, color = "currentColor" }) {
   const props = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: color, strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round" };
   const paths = {
@@ -204,111 +81,20 @@ function AuroraBackground({ children, showRadialGradient = true, className = "" 
 /* ---------- HERO ---------- */
 function Hero({ headline }) {
   const h = HEADLINES[headline] || HEADLINES.quiet;
-  const videoRef = useRef(null);
-
-  // React renders `muted` as a property, not as an HTML attribute. Some
-  // Chrome builds (especially with Energy Saver enabled) make their
-  // autoplay-allowed decision against the *attribute* before the
-  // property is applied — and reject autoplay on a "non-muted" video.
-  // Set it as a real attribute via a callback ref so it's there from
-  // the moment the element exists in the DOM.
-  const setVideoRef = (el) => {
-    videoRef.current = el;
-    if (el) {
-      el.muted = true;
-      el.defaultMuted = true;
-      el.setAttribute('muted', '');
-      el.setAttribute('autoplay', '');
-      el.setAttribute('playsinline', '');
-    }
-  };
-
-  // Belt-and-braces autoplay. Force a play() on mount, retry on the
-  // first user interaction, and swallow the promise rejection so a
-  // blocked autoplay doesn't show up as an unhandled rejection in the
-  // console / Clarity / Sentry.
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v) return;
-
-    const tryPlay = () => {
-      v.muted = true;
-      const p = v.play();
-      if (p && typeof p.catch === 'function') p.catch(() => {});
-    };
-
-    tryPlay();
-
-    // Stall recovery: some Chrome installs (especially with hardware
-    // acceleration) decode a few frames then stall. If the playhead
-    // hasn't advanced for ~750ms, force a load() + play() — the cheap
-    // re-arm fixes most decoder hiccups.
-    let lastTime = v.currentTime;
-    let lastTick = performance.now();
-    const stallCheck = setInterval(() => {
-      if (v.paused || v.ended) return;
-      if (v.currentTime !== lastTime) {
-        lastTime = v.currentTime;
-        lastTick = performance.now();
-        return;
-      }
-      if (performance.now() - lastTick > 750) {
-        try { v.load(); } catch {}
-        tryPlay();
-        lastTick = performance.now();
-      }
-    }, 500);
-
-    const onError = () => { try { v.load(); } catch {} tryPlay(); };
-    v.addEventListener('error', onError);
-    v.addEventListener('stalled', onError);
-    v.addEventListener('suspend', tryPlay);
-    v.addEventListener('pause', () => { if (!v.ended) tryPlay(); });
-
-    const onFirstInteraction = () => {
-      tryPlay();
-      window.removeEventListener('pointerdown', onFirstInteraction);
-      window.removeEventListener('keydown', onFirstInteraction);
-      window.removeEventListener('touchstart', onFirstInteraction);
-    };
-    window.addEventListener('pointerdown', onFirstInteraction, { once: true });
-    window.addEventListener('keydown', onFirstInteraction, { once: true });
-    window.addEventListener('touchstart', onFirstInteraction, { once: true });
-
-    // Some mobile browsers pause video when the tab is backgrounded and
-    // don't restart on return — kick it again on visibility change.
-    const onVisible = () => { if (!document.hidden) tryPlay(); };
-    document.addEventListener('visibilitychange', onVisible);
-
-    return () => {
-      clearInterval(stallCheck);
-      v.removeEventListener('error', onError);
-      v.removeEventListener('stalled', onError);
-      v.removeEventListener('suspend', tryPlay);
-      window.removeEventListener('pointerdown', onFirstInteraction);
-      window.removeEventListener('keydown', onFirstInteraction);
-      window.removeEventListener('touchstart', onFirstInteraction);
-      document.removeEventListener('visibilitychange', onVisible);
-    };
-  }, []);
-
   return (
     <header className="hero hero-video">
       {/* Video background */}
       <video
-        ref={setVideoRef}
         className="hero-video-bg"
         autoPlay
         muted
         loop
         playsInline
         preload="auto"
-        disablePictureInPicture
-        disableRemotePlayback
-        poster="./assets/airport-transfers-fleet.jpg"
-        src="./assets/hero-bg.mp4"
         style={{ background: '#0E2747' }}
-      />
+      >
+        <source src="./assets/hero-bg.mp4" type="video/mp4" />
+      </video>
       <div className="hero-video-overlay"></div>
 
       <div className="wrap hero-video-content">
@@ -704,29 +490,6 @@ function BookingForm() {
   const [submitError, setSubmitError] = useState(null);
   const [bookingRef, setBookingRef] = useState("");
   const [errors, setErrors] = useState({});
-  const [vehicleOverride, setVehicleOverride] = useState(null);
-  const [bankHols, setBankHols] = useState([]);
-
-  // Auto-determine vehicle from passenger count
-  const autoVehicle = getAutoVehicle(pax);
-  const vehicle = vehicleOverride && VEHICLE_RANK[vehicleOverride] >= VEHICLE_RANK[autoVehicle]
-    ? vehicleOverride : autoVehicle;
-
-  // Reset override if pax increases past it
-  useEffect(() => {
-    if (vehicleOverride && VEHICLE_RANK[vehicleOverride] < VEHICLE_RANK[getAutoVehicle(pax)]) {
-      setVehicleOverride(null);
-    }
-  }, [pax]);
-
-  // Fetch UK bank holidays once
-  useEffect(() => {
-    fetch('https://www.gov.uk/bank-holidays.json')
-      .then(r => r.json())
-      .then(data => setBankHols((data['england-and-wales']?.events || []).map(e => e.date)))
-      .catch(() => {});
-  }, []);
-
   const [form, setForm] = useState({
     name: "", phone: "", email: "",
     address: "",
@@ -741,14 +504,6 @@ function BookingForm() {
 
   const [addressSuggestions, setAddressSuggestions] = useState([]);
   const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
-
-  // Build live quote
-  const quote = useMemo(() => {
-    const dates = tripType === 'return'
-      ? { outDate: form.outDate, retDate: form.retDate }
-      : { legDate: form.legDate };
-    return buildQuote({ airport, vehicle, tripType, dates, bankHols });
-  }, [airport, vehicle, tripType, form.outDate, form.retDate, form.legDate, bankHols]);
   const skipSearchRef = useRef(false);
 
   useEffect(() => {
@@ -886,16 +641,7 @@ function BookingForm() {
         ? { date: form.retDate, time: form.retTime, flight: form.retFlight.trim() }
         : (onewayDir === "from" ? { date: form.legDate, time: form.legTime, flight: form.legFlight.trim() } : null),
       notes: form.notes.trim() || null,
-      pageUrl: typeof window !== "undefined" ? window.location.href : null,
-      quote: quote ? {
-        vehicleType: quote.vehicle,
-        vehicleLabel: quote.vehicleLabel,
-        perLeg: quote.legs[0].base,
-        legs: quote.legs.map(l => ({ label: l.label, price: l.price, multiplier: l.mult })),
-        totalPrice: quote.total,
-        fixedFare: quote.fixedFare,
-        hasHolidaySurcharge: quote.hasHoliday,
-      } : null
+      pageUrl: typeof window !== "undefined" ? window.location.href : null
     };
 
     console.log("[booking] POSTing payload", payload);
@@ -1106,30 +852,11 @@ function BookingForm() {
           </div>
         </div>
       </div>
-      {/* Vehicle type selector */}
-      <div className="field">
-        <label>Vehicle type</label>
-        <div className="vehicle-select">
-          {['car', 'mpv', '8seat'].map(v => {
-            const tooSmall = VEHICLE_RANK[v] < VEHICLE_RANK[autoVehicle];
-            const active = v === vehicle;
-            return (
-              <button key={v} type="button"
-                className={`vehicle-opt${active ? ' active' : ''}${tooSmall ? ' disabled' : ''}`}
-                disabled={tooSmall}
-                onClick={() => setVehicleOverride(v === autoVehicle ? null : v)}
-              >
-                <span className="vehicle-opt-name">{VEHICLE_SHORT[v]}</span>
-                <span className="vehicle-opt-pax">{v === 'car' ? '1–3 pax' : v === 'mpv' ? '4–5 pax' : '6–8 pax'}</span>
-                {v === autoVehicle && <span className="vehicle-opt-rec">Recommended</span>}
-              </button>
-            );
-          })}
+      {pax > 3 && (
+        <div className="field" style={{ marginTop: -8 }}>
+          <div className="hint" style={{ color: "var(--amber-deep)", fontWeight: 500 }}>{pax > 5 ? "6-8 passengers — we'll allocate our spacious minibus." : "4-5 passengers — we'll allocate an MPV."}</div>
         </div>
-      </div>
-
-      {/* Live quote panel */}
-      <QuotePanel quote={quote} />
+      )}
 
       <div className="row2">
         <div className={"field" + (errors.name ? " error" : "")}>
@@ -1163,7 +890,6 @@ function BookingForm() {
           <div className="lbl">{tripType === "return" ? "Return · both legs" : "One way"} · {airport === "LJLA" ? "Liverpool John Lennon" : "Manchester"}</div>
           <div className="sub-text">Includes tolls and waiting time</div>
         </div>
-        {quote && <div className="total">£{quote.total.toFixed(2)}</div>}
       </div>
 
       <button type="submit" className="form-submit" disabled={submitting}>
@@ -1171,7 +897,7 @@ function BookingForm() {
           <span>Sending…</span>
         ) : (
           <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
-            {quote ? `Book Now — £${quote.total.toFixed(2)}` : 'Get My Fixed Price'} <Icon name="arrow" size={16} />
+            Get My Fixed Price <Icon name="arrow" size={16} />
           </span>
         )}
       </button>
