@@ -136,6 +136,7 @@ function Hero({ headline }) {
         preload="auto"
         disablePictureInPicture
         disableRemotePlayback
+        poster="./assets/airport-transfers-fleet.jpg"
         style={{ background: '#0E2747' }}
       >
         <source src="./assets/hero-bg.mp4" type="video/mp4" />
