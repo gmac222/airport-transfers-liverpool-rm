@@ -19,14 +19,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       gtag('config', 'G-RXMLX8ED9H');
       gtag('config', 'AW-757671729');
     </script>
-    <!-- Microsoft Clarity -->
-    <script type="text/javascript">
-        (function(c,l,a,r,i,t,y){
-            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-        })(window, document, "clarity", "script", "wkqnzdebji");
-    </script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Airport Transfers Liverpool — Fixed-price airport transfers. Door to terminal.</title>
@@ -1897,7 +1889,204 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         /* Success state */
         .book-success {
             text-align: center;
-            padding: 20px 0
+            padding: 20px 0;
+        }
+
+        /* ---------- VEHICLE SELECTOR ---------- */
+        .vehicle-select {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .vehicle-opt {
+            appearance: none;
+            background: #fff;
+            border: 1.5px solid var(--line);
+            border-radius: 12px;
+            padding: 14px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all .15s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            position: relative;
+        }
+
+        .vehicle-opt:hover:not(.disabled) {
+            border-color: var(--navy);
+        }
+
+        .vehicle-opt.active {
+            border-color: var(--amber);
+            background: #FEF9ED;
+            box-shadow: 0 0 0 3px rgba(230, 178, 75, .18);
+        }
+
+        .vehicle-opt.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .vehicle-opt-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--navy-ink);
+        }
+
+        .vehicle-opt-pax {
+            font-size: 11px;
+            color: var(--muted);
+            font-weight: 500;
+        }
+
+        .vehicle-opt-rec {
+            position: absolute;
+            top: -8px;
+            right: -6px;
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            background: var(--navy-ink);
+            color: #fff;
+            padding: 2px 7px;
+            border-radius: 6px;
+        }
+
+        @media (max-width: 420px) {
+            .vehicle-select {
+                grid-template-columns: 1fr;
+            }
+            .vehicle-opt {
+                flex-direction: row;
+                justify-content: center;
+                gap: 10px;
+            }
+        }
+
+        /* ---------- QUOTE PANEL ---------- */
+        .quote-panel {
+            background: linear-gradient(135deg, #FEF9ED 0%, #FFF8E7 100%);
+            border: 1.5px solid rgba(230, 178, 75, .4);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 16px;
+            animation: quoteFadeIn .4s cubic-bezier(.16, 1, .3, 1) forwards;
+        }
+
+        @keyframes quoteFadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .quote-hdr {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .quote-vehicle-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--navy-ink);
+        }
+
+        .quote-fixed-tag {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: var(--ok);
+            background: rgba(31, 122, 76, .1);
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        .quote-rows {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-bottom: 12px;
+            border-bottom: 1px dashed rgba(14, 39, 71, .12);
+            margin-bottom: 12px;
+        }
+
+        .quote-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .quote-leg-lbl {
+            font-size: 14px;
+            color: var(--navy-ink);
+            font-weight: 500;
+        }
+
+        .quote-surcharge {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--amber-deep);
+            background: rgba(230, 178, 75, .15);
+            padding: 2px 8px;
+            border-radius: 6px;
+            margin-left: auto;
+            margin-right: 12px;
+        }
+
+        .quote-leg-price {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--navy-ink);
+        }
+
+        .quote-total-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .quote-total-row > span:first-child {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--navy-ink);
+        }
+
+        .quote-total {
+            font-family: 'Lexend', sans-serif;
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--navy-ink);
+            letter-spacing: -0.02em;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .quote-trust-line {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--ok);
+            font-weight: 600;
+        }
+
+        .quote-hol-note {
+            margin-top: 10px;
+            font-size: 12px;
+            color: var(--amber-deep);
+            font-weight: 500;
+            padding: 8px 10px;
+            background: rgba(230, 178, 75, .1);
+            border-radius: 8px;
         }
 
         .book-success .check {
