@@ -192,9 +192,16 @@ function Hero({ headline }) {
     window.addEventListener('pageshow', onPageShow);
     const onClick = () => tryPlay();
     window.addEventListener('pointerdown', onClick, { once: true });
+    // Chrome's "Pause video-only background media to save power"
+    // intervention pauses muted, audio-less videos when the tab
+    // becomes hidden (alt-tab, occluded window, etc.) and never
+    // resumes them. Resume manually when the tab becomes visible.
+    const onVisibility = () => { if (!document.hidden && v.paused) tryPlay(); };
+    document.addEventListener('visibilitychange', onVisibility);
     return () => {
       window.removeEventListener('pageshow', onPageShow);
       window.removeEventListener('pointerdown', onClick);
+      document.removeEventListener('visibilitychange', onVisibility);
     };
   }, []);
 
