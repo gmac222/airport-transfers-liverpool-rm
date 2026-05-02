@@ -22,6 +22,7 @@ export default async function handler(req, res) {
         tripSummary,   // e.g. "Return · Liverpool John Lennon · Car"
         vehicleType,   // e.g. "Car", "MPV", "8 Seater"
         tripType,      // "return" or "oneway"
+        promoCode,     // optional promo/coupon code entered by user
     } = req.body;
 
     // Validation
@@ -37,7 +38,6 @@ export default async function handler(req, res) {
     try {
         const sessionParams = {
             mode: 'payment',
-            allow_promotion_codes: true,
             line_items: [
                 {
                     price_data: {
@@ -65,9 +65,30 @@ export default async function handler(req, res) {
             cancel_url: `${getBaseUrl(req)}/?cancelled=true&ref=${ref}`,
         };
 
+        // If user entered a promo code, try applying it as a coupon directly.
+        // This handles both Coupon IDs and Promotion Codes.
+        if (promoCode) {
+            // First try as a promotion code (customer-facing code)
+            try {
+                const promoCodes = await stripe.promotionCodes.list({ code: promoCode, active: true, limit: 1 });
+                if (promoCodes.data.length > 0) {
+                    sessionParams.discounts = [{ promotion_code: promoCodes.data[0].id }];
+                } else {
+                    // Fall back to treating it as a coupon ID
+                    sessionParams.discounts = [{ coupon: promoCode }];
+                }
+            } catch (e) {
+                // If promotion code lookup fails, try as coupon ID
+                sessionParams.discounts = [{ coupon: promoCode }];
+            }
+        } else {
+            // No code entered — show the promo field on Stripe Checkout
+            sessionParams.allow_promotion_codes = true;
+        }
+
         const session = await stripe.checkout.sessions.create(sessionParams);
 
-        console.log(`[create-checkout] Session created: ${session.id} for ${ref} — £${amount}`);
+        console.log(`[create-checkout] Session created: ${session.id} for ${ref} — £${amount}${promoCode ? ` (promo: ${promoCode})` : ''}`);
 
         return res.status(200).json({
             url: session.url,
@@ -76,6 +97,10 @@ export default async function handler(req, res) {
 
     } catch (err) {
         console.error('[create-checkout] Stripe error:', err.message);
+        // If the coupon/promo code is invalid, return a clear error
+        if (err.type === 'StripeInvalidRequestError' && promoCode) {
+            return res.status(400).json({ error: `Invalid promo code "${promoCode}". Please check and try again.` });
+        }
         return res.status(500).json({ error: 'Failed to create checkout session' });
     }
 }

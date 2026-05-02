@@ -675,7 +675,7 @@ function BookingForm() {
     retDate: "", retTime: "", retFlight: "",
     // single-leg (oneway)
     legDate: "", legTime: "", legFlight: "",
-    notes: ""
+    notes: "", promoCode: ""
   });
 
   const [addressSuggestions, setAddressSuggestions] = useState([]);
@@ -925,6 +925,7 @@ function BookingForm() {
             tripSummary,
             vehicleType: VEHICLE_SHORT[vehicle],
             tripType,
+            promoCode: form.promoCode.trim() || null,
           })
         });
 
@@ -1245,6 +1246,11 @@ function BookingForm() {
             <div className="field-hint" style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '6px', lineHeight: 1.45 }}>
               Please mention any additional pickup or drop-off stops (e.g. collecting other passengers en route). Multi-stop journeys can affect the final price — we'll confirm the quoted fare with you before payment.
             </div>
+          </div>
+
+          <div className="field">
+            <label>Promo code <span style={{ color: "var(--muted)", fontWeight: 400 }}>(optional)</span></label>
+            <input type="text" placeholder="Enter code if you have one" value={form.promoCode} onChange={e => upd("promoCode", e.target.value.toUpperCase())} />
           </div>
 
           <div className="form-summary">
