@@ -902,7 +902,11 @@ function BookingForm() {
         body: JSON.stringify({ fields: airtableFields })
       });
       console.log("[booking] API response", res.status);
-      if (!res.ok) throw new Error("Booking API responded " + res.status);
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        console.error("[booking] API error:", errBody);
+        throw new Error("Booking API responded " + res.status + ": " + (errBody.error || "unknown"));
+      }
 
       // If we have a quote, redirect to Stripe Checkout for immediate payment.
       // No SMS fires here — the Stripe webhook handles notifications after payment.

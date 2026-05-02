@@ -155,9 +155,14 @@ module.exports = async (req, res) => {
 
             const data = await response.json();
 
+            if (!response.ok || data.error) {
+                console.error('[booking create] Airtable error:', JSON.stringify(data));
+                return res.status(400).json({ error: data.error?.message || 'Airtable rejected the record', details: data.error });
+            }
+
             return res.status(200).json({ booking: data.records[0] });
         } catch (error) {
-            console.error(error);
+            console.error('[booking create]', error);
             return res.status(500).json({ error: 'Failed to create booking' });
         }
     }
