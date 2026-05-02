@@ -305,7 +305,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 </svg>
             </div>
             <h1>Booking confirmed!</h1>
-            <p id="dynamic-text">Your payment is being processed and we're now preparing your transfer. We'll text you shortly with your driver's details.</p>
+            <p id="dynamic-text">Your payment is being processed and we're now preparing your transfer. We'll send your booking details to you soon by text message.</p>
             
             <div class="booking-details" id="booking-details" style="display: none;">
                 <div class="row">
@@ -364,13 +364,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             const price = params.get('price');
             const type = params.get('type');
             const paid = params.get('paid') === 'true';
-            
+            const hasEmail = params.get('email') === '1' || !!params.get('email_addr');
+
+            const deliveryLine = hasEmail
+                ? "We'll send your booking details to you soon by text message and email."
+                : "We'll send your booking details to you soon by text message.";
+
             // Update heading based on payment status
             if (paid) {
                 document.querySelector('h1').textContent = 'Payment received — thank you!';
                 document.getElementById('dynamic-text').innerHTML = type === 'return'
-                    ? "Your payment has been confirmed and we're now preparing your transfer for both legs. We'll text you shortly with your driver's details."
-                    : "Your payment has been confirmed and we're now preparing your transfer. We'll text you shortly with your driver's details.";
+                    ? `Your payment has been confirmed and we're now preparing your transfer for both legs. ${deliveryLine}`
+                    : `Your payment has been confirmed and we're now preparing your transfer. ${deliveryLine}`;
+            } else {
+                document.getElementById('dynamic-text').innerHTML = `Your payment is being processed and we're now preparing your transfer. ${deliveryLine}`;
             }
 
             if (ref && price) {

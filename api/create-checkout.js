@@ -61,7 +61,7 @@ export default async function handler(req, res) {
                 customer_email: customerEmail,
             }),
             // Success & cancel URLs
-            success_url: `${getBaseUrl(req)}/thank-you/?ref=${ref}&price=${amount}&type=${tripType}&paid=true&session_id={CHECKOUT_SESSION_ID}`,
+            success_url: `${getBaseUrl(req)}/thank-you/?ref=${ref}&price=${amount}&type=${tripType}&paid=true${customerEmail ? '&email=1' : ''}&session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${getBaseUrl(req)}/?cancelled=true&ref=${ref}`,
         };
 

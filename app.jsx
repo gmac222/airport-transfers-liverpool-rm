@@ -939,7 +939,8 @@ function BookingForm() {
         window.location.href = url;
       } else {
         // Fallback: no quote (shouldn't happen normally) — go to thank-you
-        window.location.href = `/thank-you/?ref=${ref}&type=${tripType}`;
+        const emailFlag = form.email && form.email.trim() ? `&email=1` : "";
+        window.location.href = `/thank-you/?ref=${ref}&type=${tripType}${emailFlag}`;
       }
     } catch (err) {
       console.error("[booking] submit error", err);
@@ -955,7 +956,7 @@ function BookingForm() {
         <div className="book-success">
           <div className="check"><Icon name="check" size={32} /></div>
           <h3>Booking confirmed!</h3>
-          <p>Your payment is being processed and we're now preparing your transfer{tripType === "return" ? " for both legs" : ""}. We'll text you shortly with your driver's details.</p>
+          <p>Your payment is being processed and we're now preparing your transfer{tripType === "return" ? " for both legs" : ""}. We'll send your booking details to you soon by text message{form.email && form.email.trim() ? " and email" : ""}.</p>
           <div className="ref" id="book-ref" tabIndex={-1}>Ref: {bookingRef} · {tripType === "return" ? "return" : "one-way"}</div>
           <div style={{ marginTop: 24, fontSize: 13, color: "var(--muted)" }}>
             Need to change something? Call us on 0151 453 3607.

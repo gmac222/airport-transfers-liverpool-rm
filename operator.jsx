@@ -618,7 +618,7 @@ function AdminApp() {
 
     const handleResendSMS = (action) => {
         if (!window.confirm(`Are you sure you want to resend the ${action === 'resend-customer' ? 'Customer' : 'Driver'} SMS?`)) return;
-        
+
         fetch('/api/sms', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -630,6 +630,27 @@ function AdminApp() {
             alert('SMS sent successfully!');
         })
         .catch(err => alert('Error sending SMS: ' + err.message));
+    };
+
+    const handleResendEmail = () => {
+        const email = editForm['Customer Email'];
+        if (!email) {
+            alert('No customer email on file for this booking.');
+            return;
+        }
+        if (!window.confirm(`Resend booking confirmation email to ${email}?`)) return;
+
+        fetch('/api/sms', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'resend-confirmation-email', fields: editForm })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) throw new Error(data.error);
+            alert('Confirmation email sent to ' + email);
+        })
+        .catch(err => alert('Error sending email: ' + err.message));
     };
 
     const handleDirectSMS = (record, action) => {
@@ -1940,12 +1961,15 @@ function AdminApp() {
                             {editingJob !== 'new' && (
                                 <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0', marginTop: '10px' }}>
                                     <h4 style={{ margin: '0 0 10px 0', color: 'var(--navy-ink)' }}>Communication</h4>
-                                    <div style={{ display: 'flex', gap: '10px' }}>
+                                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                                         <button type="button" onClick={() => handleResendSMS('resend-customer')} style={{ flex: '1 1 140px', minWidth: 0, padding: '10px', background: 'white', border: '1px solid var(--line)', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
                                             Resend Customer SMS
                                         </button>
                                         <button type="button" onClick={() => handleResendSMS('resend-driver')} style={{ flex: '1 1 140px', minWidth: 0, padding: '10px', background: 'white', border: '1px solid var(--line)', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
                                             Resend Driver SMS
+                                        </button>
+                                        <button type="button" onClick={handleResendEmail} disabled={!editForm['Customer Email']} title={editForm['Customer Email'] ? `Email to ${editForm['Customer Email']}` : 'No customer email on file'} style={{ flex: '1 1 140px', minWidth: 0, padding: '10px', background: editForm['Customer Email'] ? 'white' : '#f1f5f9', border: '1px solid var(--line)', borderRadius: '6px', cursor: editForm['Customer Email'] ? 'pointer' : 'not-allowed', fontSize: '13px', color: editForm['Customer Email'] ? 'inherit' : '#94a3b8' }}>
+                                            Resend Confirmation Email
                                         </button>
                                     </div>
                                 </div>

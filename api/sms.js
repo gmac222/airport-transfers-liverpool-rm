@@ -184,6 +184,16 @@ export default async function handler(req, res) {
         await sendConfirmationEmail();
     }
 
+    // Resend the booking-confirmation email only (no SMS). Used by the
+    // operator screen when a customer asks for their details again.
+    if (action === 'resend-confirmation-email') {
+        if (!fields['Customer Email']) {
+            return res.status(400).json({ error: 'No customer email on file' });
+        }
+        await sendConfirmationEmail();
+        return res.status(200).json({ success: true, message: 'Confirmation email resent' });
+    }
+
     if (action === 'resend-customer') {
         if (!formattedCustomerPhone) return res.status(400).json({ error: 'Missing customer phone' });
         messages.push({
