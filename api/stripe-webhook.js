@@ -105,6 +105,15 @@ export default async function handler(req, res) {
             if (bookingFields['Total Price'] == null) {
                 fieldsToUpdate['Total Price'] = paidNum;
             }
+            // Default Operator Price to whatever Customer Price ends up at
+            // when it hasn't been set yet — Profit then starts at £0 and
+            // admin only types the operator rate when it differs.
+            if (bookingFields['Operator Price'] == null) {
+                const cpForOp = bookingFields['Customer Price'] != null
+                    ? Number(bookingFields['Customer Price'])
+                    : paidNum;
+                if (Number.isFinite(cpForOp)) fieldsToUpdate['Operator Price'] = cpForOp;
+            }
 
             // Try the patch. If Airtable rejects an UNKNOWN_FIELD_NAME
             // (e.g. 'Payment Status' or 'Amount Paid' columns haven't

@@ -876,6 +876,9 @@ function BookingForm() {
         'Passengers': pax,
         'Luggage': largeBags,
         'Customer Price': quote ? quote.total : 0,
+        // Default Operator Price to the same figure so Profit starts at £0
+        // and admin only has to type the operator rate when it differs.
+        'Operator Price': quote ? quote.total : 0,
         'Notes': form.notes.trim() || '',
         'Status': 'Pending',
         'Submitted At': new Date().toISOString(),
