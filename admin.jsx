@@ -513,6 +513,42 @@ function AdminApp() {
         }
     };
 
+    // Manual "Mark as Paid" — for bookings that paid outside Stripe (cash,
+    // bank transfer, manual card link) where the webhook never fired.
+    // Flips the same Airtable fields the Stripe webhook would set so the
+    // card switches into the post-payment UI immediately. Does NOT send
+    // any SMS/email — admin uses the existing Acknowledge Payment button
+    // for that, or the operator screen's resend buttons.
+    const [markingPaidId, setMarkingPaidId] = useState(null);
+    const handleMarkAsPaid = async (record) => {
+        const f = record.fields;
+        const price = f['Customer Price'] || f['Total Price'];
+        const priceLabel = price ? `£${price}` : 'no price set';
+        if (!window.confirm(`Mark booking ${f['Booking Ref']} (${priceLabel}) as PAID?\n\nUse this for cash/bank-transfer payments that didn't come through Stripe. The card will switch to the paid view so you can assign an operator.\n\n(No SMS or email is sent — use the operator screen's resend buttons if needed.)`)) return;
+        setMarkingPaidId(record.id);
+        try {
+            const res = await fetch('/api/booking', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: record.id,
+                    fields: {
+                        'Payment Status': 'Paid',
+                        'Status': 'Accepted',
+                        'Dispatched To Operator': true,
+                    }
+                })
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            fetchBookings();
+        } catch (err) {
+            alert('Could not mark as paid: ' + err.message);
+        } finally {
+            setMarkingPaidId(null);
+        }
+    };
+
     // Payment link drafts (per booking id) — same blur-to-save pattern as prices
     const [paymentLinkDraft, setPaymentLinkDraft] = useState({});
     const [paymentLinkSavingId, setPaymentLinkSavingId] = useState(null);
@@ -1218,18 +1254,16 @@ function AdminApp() {
                                                         </div>
                                                     </div>
 
-                                                    {/* Payment link full-width — only relevant for the legacy
-                                                        manual-quote flow. Paid bookings (Stripe checkout) skip this. */}
-                                                    {!isPaid && (
-                                                        <div style={{ marginBottom: '12px' }}>
-                                                            <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--amber-deep)', textTransform: 'uppercase', marginBottom: '4px' }}>Payment Link</div>
-                                                            <input type="url" inputMode="url" placeholder="Paste payment link…" value={plValue} disabled={paymentLinkSavingId === b.id}
-                                                                onChange={e => setPaymentLinkDraft(prev => ({ ...prev, [b.id]: e.target.value }))}
-                                                                onBlur={e => { const v = e.target.value; const old = plRaw || ''; if (v !== old) commitPaymentLink(b.id, v); setPaymentLinkDraft(prev => { const n = { ...prev }; delete n[b.id]; return n; }); }}
-                                                                onKeyDown={e => { if (e.key === 'Enter') e.target.blur(); }}
-                                                                style={{ width: '100%', padding: '10px 12px', border: `2px solid ${plBorder}`, background: plBg, borderRadius: '8px', fontFamily: 'inherit', fontSize: '13px', color: 'var(--navy-ink)', outline: 'none', boxSizing: 'border-box' }} />
-                                                        </div>
-                                                    )}
+                                                    {/* Payment link full-width — kept visible on paid bookings too,
+                                                        because the SMS/email comms flow can still attach it if needed. */}
+                                                    <div style={{ marginBottom: '12px' }}>
+                                                        <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--amber-deep)', textTransform: 'uppercase', marginBottom: '4px' }}>Payment Link</div>
+                                                        <input type="url" inputMode="url" placeholder="Paste payment link…" value={plValue} disabled={paymentLinkSavingId === b.id}
+                                                            onChange={e => setPaymentLinkDraft(prev => ({ ...prev, [b.id]: e.target.value }))}
+                                                            onBlur={e => { const v = e.target.value; const old = plRaw || ''; if (v !== old) commitPaymentLink(b.id, v); setPaymentLinkDraft(prev => { const n = { ...prev }; delete n[b.id]; return n; }); }}
+                                                            onKeyDown={e => { if (e.key === 'Enter') e.target.blur(); }}
+                                                            style={{ width: '100%', padding: '10px 12px', border: `2px solid ${plBorder}`, background: plBg, borderRadius: '8px', fontFamily: 'inherit', fontSize: '13px', color: 'var(--navy-ink)', outline: 'none', boxSizing: 'border-box' }} />
+                                                    </div>
 
                                                     {isPaid && (
                                                         <div style={{ marginBottom: '12px', padding: '10px 14px', background: '#dcfce7', border: '1px solid #16a34a', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap' }}>
@@ -1269,6 +1303,15 @@ function AdminApp() {
                                                             <button onClick={() => handleSendQuote(b)} disabled={!canSend || sendingQuote}
                                                                 style={{ width: '100%', padding: '12px', background: canSend ? 'var(--amber)' : '#e5e7eb', color: canSend ? 'var(--navy-ink)' : '#6b7280', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '14px', cursor: canSend && !sendingQuote ? 'pointer' : 'not-allowed', fontFamily: 'inherit' }}>
                                                                 {sendingQuote ? 'Sending quote…' : sentAlready ? `Quote already sent (${status})` : cpRaw == null || Number(cpRaw) <= 0 ? 'Enter Customer Price first' : `Send Quote to Customer — £${Number(cpRaw).toFixed(2)}`}
+                                                            </button>
+
+                                                            {/* Mark as Paid — escape hatch for cash / bank-transfer
+                                                                payments that didn't come through Stripe. Flips
+                                                                Payment Status, Status, and Dispatched To Operator
+                                                                in one go. */}
+                                                            <button onClick={() => handleMarkAsPaid(b)} disabled={markingPaidId === b.id}
+                                                                style={{ width: '100%', padding: '10px', marginTop: '8px', background: 'white', color: '#166534', border: '1px solid #16a34a', borderRadius: '8px', fontWeight: 600, fontSize: '13px', cursor: markingPaidId === b.id ? 'wait' : 'pointer', fontFamily: 'inherit' }}>
+                                                                {markingPaidId === b.id ? 'Marking…' : '✓ Mark as Paid (cash / bank transfer)'}
                                                             </button>
 
                                                             {/* Resend buttons — shown after the first quote went out */}
