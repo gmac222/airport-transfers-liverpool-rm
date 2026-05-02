@@ -106,35 +106,49 @@ export default async function handler(req, res) {
                 fieldsToUpdate['Total Price'] = paidNum;
             }
 
-            const patchRes = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${encodeURIComponent(TABLE_NAME)}/${recordId}`, {
-                method: 'PATCH',
-                headers: {
-                    Authorization: `Bearer ${AIRTABLE_API_KEY}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ fields: fieldsToUpdate, typecast: true })
-            });
-            if (!patchRes.ok) {
-                // If Airtable rejects 'Amount Paid' (column doesn't exist yet),
-                // retry without it — the rest of the patch is more important
-                // than capturing the exact paid amount.
+            // Try the patch. If Airtable rejects an UNKNOWN_FIELD_NAME
+            // (e.g. 'Payment Status' or 'Amount Paid' columns haven't
+            // been added to the base yet) drop that field and retry — we
+            // care far more about Status / Dispatched To Operator
+            // landing than about losing one optional column. Up to a few
+            // retries in case multiple unknown fields are present.
+            const patchUrl = `https://api.airtable.com/v0/${BASE_ID}/${encodeURIComponent(TABLE_NAME)}/${recordId}`;
+            const droppedFields = [];
+            let patchOk = false;
+            for (let attempt = 0; attempt < 6; attempt++) {
+                const patchRes = await fetch(patchUrl, {
+                    method: 'PATCH',
+                    headers: {
+                        Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ fields: fieldsToUpdate, typecast: true })
+                });
+                if (patchRes.ok) { patchOk = true; break; }
                 const errBody = await patchRes.text();
-                if (/Amount Paid/i.test(errBody)) {
-                    console.warn(`[stripe-webhook] 'Amount Paid' rejected by Airtable, retrying without it.`);
-                    delete fieldsToUpdate['Amount Paid'];
-                    await fetch(`https://api.airtable.com/v0/${BASE_ID}/${encodeURIComponent(TABLE_NAME)}/${recordId}`, {
-                        method: 'PATCH',
-                        headers: {
-                            Authorization: `Bearer ${AIRTABLE_API_KEY}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ fields: fieldsToUpdate, typecast: true })
-                    });
-                } else {
-                    console.error(`[stripe-webhook] Airtable PATCH failed: ${patchRes.status} ${errBody}`);
+                const match = errBody.match(/Unknown field name:?\s*\\?"([^"\\]+)\\?"/i);
+                if (!match) {
+                    console.error(`[stripe-webhook] Airtable PATCH failed (non-recoverable): ${patchRes.status} ${errBody}`);
+                    break;
                 }
+                const badNameLower = match[1].toLowerCase();
+                const realKey = Object.keys(fieldsToUpdate).find(k => k.toLowerCase() === badNameLower);
+                if (!realKey) {
+                    console.error(`[stripe-webhook] Airtable rejected unknown field '${match[1]}' but couldn't locate it in payload — giving up.`);
+                    break;
+                }
+                droppedFields.push(realKey);
+                delete fieldsToUpdate[realKey];
+                if (Object.keys(fieldsToUpdate).length === 0) break;
             }
-            console.log(`[stripe-webhook] Airtable updated: ${recordId} → paid £${amountPaid}`);
+            if (droppedFields.length) {
+                console.warn(`[stripe-webhook] Airtable accepted PATCH after dropping unknown fields: ${droppedFields.join(', ')}`);
+            }
+            if (!patchOk) {
+                console.error(`[stripe-webhook] Airtable PATCH ultimately failed for ${recordId} — booking will stay Pending.`);
+            } else {
+                console.log(`[stripe-webhook] Airtable updated: ${recordId} → paid £${amountPaid}`);
+            }
         }
     } catch (err) {
         console.error('[stripe-webhook] Airtable update failed:', err.message);
