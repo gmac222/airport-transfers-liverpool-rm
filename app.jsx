@@ -872,7 +872,6 @@ function BookingForm() {
         'Customer Email': form.email.trim() || '',
         'Home Address': form.address.trim(),
         'Trip Type': tripType,
-        'Oneway Direction': tripType === "oneway" ? onewayDir : '',
         'Airport': airport === "LJLA" ? "Liverpool John Lennon" : "Manchester",
         'Passengers': pax,
         'Luggage': largeBags,
@@ -881,6 +880,9 @@ function BookingForm() {
         'Notes': form.notes.trim() || '',
         'Status': 'Pending',
       };
+      if (tripType === "oneway") {
+        airtableFields['Oneway Direction'] = onewayDir;
+      }
       if (outbound) {
         airtableFields['Outbound Date'] = outbound.date;
         airtableFields['Outbound Time'] = outbound.time;
@@ -895,7 +897,7 @@ function BookingForm() {
       const res = await fetch("/api/booking?action=create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fields: airtableFields })
+        body: JSON.stringify({ fields: airtableFields, typecast: true })
       });
       console.log("[booking] API response", res.status);
       if (!res.ok) {

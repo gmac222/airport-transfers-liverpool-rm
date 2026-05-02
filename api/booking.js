@@ -136,8 +136,8 @@ module.exports = async (req, res) => {
 
     // POST Request: Create Manual Booking
     if (req.method === 'POST' && req.query.action === 'create') {
-        const { fields } = req.body;
-        
+        const { fields, typecast } = req.body;
+
         if (!fields) {
             return res.status(400).json({ error: 'Missing fields' });
         }
@@ -150,7 +150,7 @@ module.exports = async (req, res) => {
                     'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ records: [{ fields }] })
+                body: JSON.stringify({ records: [{ fields }], typecast: !!typecast })
             });
 
             const data = await response.json();
