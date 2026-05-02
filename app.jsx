@@ -874,16 +874,12 @@ function BookingForm() {
         'Trip Type': tripType,
         'Oneway Direction': tripType === "oneway" ? onewayDir : '',
         'Airport': airport === "LJLA" ? "Liverpool John Lennon" : "Manchester",
-        'Airport Name': airport === "LJLA" ? "Liverpool John Lennon" : "Manchester",
         'Passengers': pax,
         'Luggage': largeBags,
         'Vehicle Type': VEHICLE_SHORT[vehicle],
-        'Quoted Price': quote ? quote.total : 0,
-        'Total Price': quote ? quote.total : 0,
+        'Customer Price': quote ? quote.total : 0,
         'Notes': form.notes.trim() || '',
         'Status': 'Pending',
-        'Submitted At': new Date().toISOString(),
-        'Source': 'website_v2',
       };
       if (outbound) {
         airtableFields['Outbound Date'] = outbound.date;
