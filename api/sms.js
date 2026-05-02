@@ -317,13 +317,31 @@ export default async function handler(req, res) {
         }
     }
 
+    // Instant customer acknowledgement — fired by the booking form straight
+    // after the n8n webhook succeeds. Lets the customer know we received
+    // their request and are preparing their quote / booking. The admin
+    // will send the payment link manually from the dashboard as usual.
+    if (action === 'send-booking-received') {
+        if (!formattedCustomerPhone) return res.status(400).json({ error: 'Missing customer phone' });
+        const firstName = (fields['Customer Name'] || 'Customer').split(' ')[0];
+        const vehicleLine = fields['Vehicle Type'] ? `\nVehicle: ${fields['Vehicle Type']}` : '';
+        const priceLine = fields['Quoted Price'] ? ` for £${fields['Quoted Price']}` : '';
+        messages.push({
+            to: formattedCustomerPhone,
+            from: 'RMTransfers',
+            body: `Hi ${firstName},\n\nThanks for choosing RM Transfers! We've received your booking request (${fields['Booking Ref']})${priceLine}.\n\nWe're now preparing everything and one of our team will send you a secure payment link shortly.\n\nIn the meantime, you can view your booking here: https://airporttaxitransfersliverpool.co.uk/portal.html?ref=${fields['Booking Ref']}${SUPPORT_LINE}\n\n(Please do not reply to this text)`
+        });
+    }
+
     if (action === 'new-booking-operator-alert') {
         const adminNumbers = ['+447398233859', '+447746899644'];
+        const quoteLine = fields['Quoted Price'] ? `\nQuoted: £${fields['Quoted Price']}` : '';
+        const vehicleLine = fields['Vehicle Type'] ? `\nVehicle: ${fields['Vehicle Type']}` : '';
         adminNumbers.forEach(num => {
             messages.push({
                 to: num,
                 from: 'RMTransfers',
-                body: `NEW BOOKING: ${fields['Booking Ref']}\nName: ${fields['Customer Name']}\nFrom: ${fields['Home Address']}\nTo: ${fields['Airport Name']}\nType: ${fields['Trip Type']}\nPassengers: ${fields['Passengers']} Bags: ${fields['Luggage']}\nPhone: ${fields['Customer Phone']}\nOpen: https://airporttaxitransfersliverpool.co.uk/admin.html?ref=${fields['Booking Ref']}`
+                body: `NEW BOOKING: ${fields['Booking Ref']}\nName: ${fields['Customer Name']}\nFrom: ${fields['Home Address']}\nTo: ${fields['Airport Name']}\nType: ${fields['Trip Type']}\nPassengers: ${fields['Passengers']} Bags: ${fields['Luggage']}${vehicleLine}${quoteLine}\nPhone: ${fields['Customer Phone']}\nOpen: https://airporttaxitransfersliverpool.co.uk/admin.html?ref=${fields['Booking Ref']}`
             });
         });
     }

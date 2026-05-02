@@ -807,7 +807,22 @@ function BookingForm() {
       console.log("[booking] webhook response", res.status);
       if (!res.ok) throw new Error("Webhook responded " + res.status);
 
-
+      // Fire customer "we're preparing your booking" SMS (non-blocking so
+      // the redirect isn't delayed). Admin alert is still sent by n8n.
+      fetch("/api/sms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "send-booking-received",
+          fields: {
+            "Booking Ref": ref,
+            "Customer Name": form.name.trim(),
+            "Customer Phone": form.phone.trim(),
+            "Quoted Price": quote ? quote.total.toFixed(2) : null,
+            "Vehicle Type": vehicle ? VEHICLE_SHORT[vehicle] : null
+          }
+        })
+      }).catch(err => console.warn("[booking] customer ack SMS failed (non-blocking):", err));
 
       window.location.href = `/thank-you/?ref=${ref}&type=${tripType}`;
     } catch (err) {
@@ -823,11 +838,11 @@ function BookingForm() {
       <div className="book-form">
         <div className="book-success">
           <div className="check"><Icon name="check" size={32} /></div>
-          <h3>Booking request received.</h3>
-          <p>We'll text you shortly with your driver's name and the minibus details{tripType === "return" ? " for both legs" : ""}. If you've booked for today, we'll call as soon as possible.</p>
+          <h3>Booking request received!</h3>
+          <p>We've just sent you a confirmation text. One of our team will review your booking and send you a secure payment link shortly{tripType === "return" ? " for both legs" : ""}.</p>
           <div className="ref" id="book-ref" tabIndex={-1}>Ref: {bookingRef} · {tripType === "return" ? "return" : "one-way"}</div>
           <div style={{ marginTop: 24, fontSize: 13, color: "var(--muted)" }}>
-            Need to change something? Reply to the text message we send you.
+            Need to change something? Call us on 0151 453 3607.
           </div>
         </div>
       </div>
@@ -837,7 +852,7 @@ function BookingForm() {
   return (
     <form className="book-form" onSubmit={submit} noValidate>
       <h3>Book your transfer</h3>
-      <p className="form-sub">Fixed price confirmed by text shortly after.</p>
+      <p className="form-sub">Get your fixed price instantly — pay securely after.</p>
 
       <div className="field">
         <label>Trip type</label>

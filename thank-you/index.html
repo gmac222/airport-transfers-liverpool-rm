@@ -304,8 +304,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     <path d="M5 12l4.5 4.5L19 7" />
                 </svg>
             </div>
-            <h1>Booking request received</h1>
-            <p id="dynamic-text">We'll text you shortly with a secure payment link. Once paid, we'll send your driver's details. If you've booked for today, we'll call as soon as possible.</p>
+            <h1>Booking request received!</h1>
+            <p id="dynamic-text">We've just sent you a confirmation text. One of our team will review your booking and send you a secure payment link shortly.</p>
             
             <div class="booking-details" id="booking-details" style="display: none;">
                 <div class="row">
@@ -328,7 +328,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             </div>
             
             <div class="support-text">
-                Need to change something? Reply to the text message we sent you.
+                Need to change something? Call us on <a href="tel:01514533607" style="font-weight: 600; text-decoration: none;">0151 453 3607</a>.
             </div>
         </div>
     </main>
@@ -370,7 +370,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 document.getElementById('price-val').textContent = '£' + price + ' fixed ' + (type === 'return' ? 'return' : 'one-way');
                 
                 if (type === 'return') {
-                    document.getElementById('dynamic-text').innerHTML = "We'll text you shortly with a secure payment link. Once paid, we'll send your driver's details for both legs. If you've booked for today, we'll call as soon as possible.";
+                    document.getElementById('dynamic-text').innerHTML = "We've just sent you a confirmation text. One of our team will review your booking and send you a secure payment link shortly for both legs.";
                 }
             }
         });
