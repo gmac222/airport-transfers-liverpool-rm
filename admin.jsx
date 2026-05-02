@@ -115,21 +115,14 @@ function FocusedJobCard({
                     <h3 style={{ margin: '0 0 12px 0', fontFamily: 'Lexend', fontSize: '16px' }}>💷 Pricing</h3>
                     <div style={{ display: 'grid', gap: '10px' }}>
                         <div>
-                            <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--amber-deep)', textTransform: 'uppercase', marginBottom: '4px' }}>Customer Price</div>
+                            <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--amber-deep)', textTransform: 'uppercase', marginBottom: '4px' }}>Customer Price {f['Payment Status'] === 'Paid' && <span style={{ color: '#16a34a', fontWeight: 600, fontSize: '11px', textTransform: 'none' }}> — Paid via Stripe</span>}</div>
                             <label className={cpClass} style={{ width: '100%' }}>
                                 <span className="currency">£</span>
                                 <input
                                     type="number" inputMode="decimal" step="0.01" min="0" placeholder="0.00"
                                     value={cpValue}
-                                    disabled={priceSavingId === booking.id}
-                                    onChange={e => setPriceDraftCustomer(prev => ({ ...prev, [booking.id]: e.target.value }))}
-                                    onBlur={e => {
-                                        const v = e.target.value;
-                                        const old = cpRaw != null ? String(cpRaw) : '';
-                                        if (v !== old) commitPrice(booking.id, 'Customer Price', v);
-                                        setPriceDraftCustomer(prev => { const n = { ...prev }; delete n[booking.id]; return n; });
-                                    }}
-                                    onKeyDown={e => { if (e.key === 'Enter') e.target.blur(); }}
+                                    readOnly
+                                    style={{ cursor: 'default', opacity: 0.85 }}
                                 />
                             </label>
                         </div>
@@ -156,114 +149,13 @@ function FocusedJobCard({
                             <span style={{ fontSize: '12px', textTransform: 'uppercase', color: 'var(--muted)', fontWeight: 700 }}>Profit</span>
                             <span className={`profit-pill ${profitCls}`}>{hasBothPrices ? `£${profit.toFixed(2)}` : '–'}</span>
                         </div>
-                        {(() => {
-                            const plRaw = f['Payment Link'];
-                            const plDraft = paymentLinkDraft[booking.id];
-                            const plValue = plDraft !== undefined ? plDraft : (plRaw || '');
-                            const plFlashed = !!paymentLinkSavedFlash[booking.id];
-                            const plFilled = plRaw && String(plRaw).trim();
-                            const plBorder = plFlashed ? '#16a34a' : (plFilled ? 'var(--amber)' : '#fca5a5');
-                            const plBg = plFlashed ? '#dcfce7' : (plFilled ? '#fffbeb' : '#fef2f2');
-                            return (
-                                <div style={{ marginTop: '4px' }}>
-                                    <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--amber-deep)', textTransform: 'uppercase', marginBottom: '4px' }}>Payment Link</div>
-                                    <input
-                                        type="url"
-                                        inputMode="url"
-                                        placeholder="Paste payment link here…"
-                                        value={plValue}
-                                        disabled={paymentLinkSavingId === booking.id}
-                                        onChange={e => setPaymentLinkDraft(prev => ({ ...prev, [booking.id]: e.target.value }))}
-                                        onBlur={e => {
-                                            const v = e.target.value;
-                                            const old = plRaw || '';
-                                            if (v !== old) commitPaymentLink(booking.id, v);
-                                            setPaymentLinkDraft(prev => { const n = { ...prev }; delete n[booking.id]; return n; });
-                                        }}
-                                        onKeyDown={e => { if (e.key === 'Enter') e.target.blur(); }}
-                                        style={{
-                                            width: '100%',
-                                            padding: '12px',
-                                            border: `2px solid ${plBorder}`,
-                                            background: plBg,
-                                            borderRadius: '8px',
-                                            fontFamily: 'inherit',
-                                            fontSize: '14px',
-                                            color: 'var(--navy-ink)',
-                                            outline: 'none',
-                                            boxSizing: 'border-box'
-                                        }}
-                                    />
-                                </div>
-                            );
-                        })()}
                     </div>
 
-                    {(() => {
-                        const sentAlready = status !== 'Pending';
-                        const canSend = !sentAlready && cpRaw != null && Number(cpRaw) > 0 && priceSavingId !== booking.id;
-                        return (
-                            <button
-                                onClick={() => handleSendQuote(booking)}
-                                disabled={!canSend || sendingQuote}
-                                style={{
-                                    marginTop: '14px',
-                                    width: '100%',
-                                    padding: '14px',
-                                    border: 'none',
-                                    borderRadius: '10px',
-                                    fontWeight: 700,
-                                    fontSize: '15px',
-                                    cursor: canSend && !sendingQuote ? 'pointer' : 'not-allowed',
-                                    background: canSend ? 'var(--amber)' : '#e5e7eb',
-                                    color: canSend ? 'var(--navy-ink)' : '#6b7280',
-                                    fontFamily: 'inherit'
-                                }}>
-                                {sendingQuote
-                                    ? 'Sending quote…'
-                                    : sentAlready
-                                        ? `Quote already sent (${status})`
-                                        : cpRaw == null || Number(cpRaw) <= 0
-                                            ? 'Enter Customer Price first'
-                                            : `Send Quote to Customer — £${Number(cpRaw).toFixed(2)}`}
-                            </button>
-                        );
-                    })()}
-
-                    {(status === 'Awaiting Confirmation' || status === 'Awaiting Payment') && (
-                        <div style={{ display: 'flex', gap: '8px', marginTop: '10px', flexWrap: 'wrap' }}>
-                            <button onClick={() => resendQuote(booking)} style={{ flex: '1 1 160px', padding: '12px', background: 'white', color: 'var(--amber-deep)', border: '1px solid var(--amber)', borderRadius: '10px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px' }}>
-                                ↻ Resend Quote SMS
-                            </button>
-                            {status === 'Awaiting Payment' && (
-                                <button onClick={() => sendPaymentNudge(booking)} style={{ flex: '1 1 180px', padding: '12px', background: 'white', color: '#a16207', border: '1px solid #facc15', borderRadius: '10px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px' }}>
-                                    ⏰ Send Payment Nudge{f['Payment Nudge Sent'] ? ' (again)' : ''}
-                                </button>
-                            )}
+                    {/* Payment status indicator */}
+                    {f['Payment Status'] === 'Paid' && (
+                        <div style={{ marginTop: '14px', padding: '12px 16px', background: '#dcfce7', border: '1px solid #16a34a', borderRadius: '10px', textAlign: 'center', fontWeight: 700, color: '#166534', fontSize: '15px' }}>
+                            ✓ Payment received — £{Number(cpRaw).toFixed(2)}
                         </div>
-                    )}
-
-                    {status === 'Awaiting Payment' && (
-                        <button
-                            onClick={() => handleAcknowledgePayment(booking)}
-                            disabled={acknowledgingId === booking.id}
-                            style={{
-                                marginTop: '10px',
-                                width: '100%',
-                                padding: '14px',
-                                border: 'none',
-                                borderRadius: '10px',
-                                fontWeight: 700,
-                                fontSize: '15px',
-                                cursor: acknowledgingId === booking.id ? 'wait' : 'pointer',
-                                background: acknowledgingId === booking.id ? '#a7f3d0' : '#10b981',
-                                color: 'white',
-                                fontFamily: 'inherit'
-                            }}>
-                            {acknowledgingId === booking.id
-                                ? 'Acknowledging…'
-                                : `✓ Acknowledge Payment & Send Driver Details${(f['Customer Price'] || f['Total Price']) ? ` (£${f['Customer Price'] || f['Total Price']})` : ''}`}
-                        </button>
                     )}
                 </div>
 

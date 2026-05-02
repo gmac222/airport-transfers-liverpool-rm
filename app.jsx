@@ -853,21 +853,59 @@ function BookingForm() {
       pageUrl: typeof window !== "undefined" ? window.location.href : null
     };
 
-    console.log("[booking] POSTing payload", payload);
+    console.log("[booking] Creating Airtable record directly", payload);
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const res = await fetch("https://gmac222.app.n8n.cloud/webhook/3c702483-e68c-428a-8c2c-429cbdf61668", {
+      // Build Airtable fields from the booking payload
+      const outbound = tripType === "return"
+        ? { date: form.outDate, time: form.outTime, flight: form.outFlight.trim() || null }
+        : (onewayDir === "to" ? { date: form.legDate, time: form.legTime, flight: form.legFlight.trim() || null } : null);
+      const returnLeg = tripType === "return"
+        ? { date: form.retDate, time: form.retTime, flight: form.retFlight.trim() }
+        : (onewayDir === "from" ? { date: form.legDate, time: form.legTime, flight: form.legFlight.trim() } : null);
+
+      const airtableFields = {
+        'Booking Ref': ref,
+        'Customer Name': form.name.trim(),
+        'Customer Phone': form.phone.trim(),
+        'Customer Email': form.email.trim() || '',
+        'Home Address': form.address.trim(),
+        'Trip Type': tripType,
+        'Oneway Direction': tripType === "oneway" ? onewayDir : '',
+        'Airport': airport === "LJLA" ? "Liverpool John Lennon" : "Manchester",
+        'Airport Name': airport === "LJLA" ? "Liverpool John Lennon" : "Manchester",
+        'Passengers': pax,
+        'Luggage': largeBags,
+        'Vehicle Type': VEHICLE_SHORT[vehicle],
+        'Quoted Price': quote ? quote.total : 0,
+        'Total Price': quote ? quote.total : 0,
+        'Notes': form.notes.trim() || '',
+        'Status': 'Pending',
+        'Submitted At': new Date().toISOString(),
+        'Source': 'website_v2',
+      };
+      if (outbound) {
+        airtableFields['Outbound Date'] = outbound.date;
+        airtableFields['Outbound Time'] = outbound.time;
+        if (outbound.flight) airtableFields['Outbound Flight'] = outbound.flight;
+      }
+      if (returnLeg) {
+        airtableFields['Return Date'] = returnLeg.date;
+        airtableFields['Return Time'] = returnLeg.time;
+        if (returnLeg.flight) airtableFields['Return Flight'] = returnLeg.flight;
+      }
+
+      const res = await fetch("/api/booking?action=create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ fields: airtableFields })
       });
-      console.log("[booking] webhook response", res.status);
-      if (!res.ok) throw new Error("Webhook responded " + res.status);
+      console.log("[booking] API response", res.status);
+      if (!res.ok) throw new Error("Booking API responded " + res.status);
 
       // If we have a quote, redirect to Stripe Checkout for immediate payment.
-      // Admin alert SMS still fires from n8n. No customer ack SMS needed
-      // since they're paying right now.
+      // No SMS fires here — the Stripe webhook handles notifications after payment.
       if (quote && quote.total > 0) {
         console.log("[booking] creating Stripe Checkout session...");
         const tripSummary = tripType === "return"
