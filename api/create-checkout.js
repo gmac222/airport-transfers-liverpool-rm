@@ -72,7 +72,7 @@ export default async function handler(req, res) {
                 let discountApplied = false;
 
                 // 1. First try as a promotion code (customer-facing code)
-                const promoCodes = await stripe.promotionCodes.list({ code: promoCode, active: true, limit: 1 });
+                const promoCodes = await stripe.promotionCodes.list({ code: promoCode, limit: 1 });
                 if (promoCodes.data.length > 0) {
                     sessionParams.discounts = [{ promotion_code: promoCodes.data[0].id }];
                     discountApplied = true;
@@ -81,8 +81,9 @@ export default async function handler(req, res) {
                 // 2. If not a promotion code, check if it matches a Coupon ID or Name
                 if (!discountApplied) {
                     const coupons = await stripe.coupons.list({ limit: 100 });
+                    const cleanPromo = promoCode.replace(/\s+/g, '').toUpperCase();
                     const matchedCoupon = coupons.data.find(c => 
-                        (c.id === promoCode || (c.name && c.name.toUpperCase() === promoCode.toUpperCase())) && c.valid
+                        c.id === promoCode || (c.name && c.name.replace(/\s+/g, '').toUpperCase() === cleanPromo)
                     );
                     
                     if (matchedCoupon) {
@@ -117,7 +118,9 @@ export default async function handler(req, res) {
         console.error('[create-checkout] Stripe error:', err.message);
         // If the coupon/promo code is invalid, return a clear error
         if (err.type === 'StripeInvalidRequestError' && promoCode) {
-            return res.status(400).json({ error: `Invalid promo code "${promoCode}". Please check and try again.` });
+            // Include Stripe's exact error message (e.g. "No such coupon" or "Coupon expired")
+            // so the user knows exactly why it was rejected.
+            return res.status(400).json({ error: `Invalid promo code "${promoCode}" — ${err.message}` });
         }
         return res.status(500).json({ error: 'Failed to create checkout session' });
     }
