@@ -948,7 +948,11 @@ function BookingForm() {
       }
     } catch (err) {
       console.error("[booking] submit error", err);
-      setSubmitError("We couldn't send that just now. Please call 0151 453 3607 or try again.");
+      if (err.message && err.message.includes("Invalid promo code")) {
+        setSubmitError(err.message);
+      } else {
+        setSubmitError("We couldn't send that just now. Please call 0151 453 3607 or try again.");
+      }
     } finally {
       setSubmitting(false);
     }

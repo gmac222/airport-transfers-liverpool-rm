@@ -66,19 +66,37 @@ export default async function handler(req, res) {
         };
 
         // If user entered a promo code, try applying it as a coupon directly.
-        // This handles both Coupon IDs and Promotion Codes.
+        // This handles Promotion Codes, Coupon IDs, and Coupon Names.
         if (promoCode) {
-            // First try as a promotion code (customer-facing code)
             try {
+                let discountApplied = false;
+
+                // 1. First try as a promotion code (customer-facing code)
                 const promoCodes = await stripe.promotionCodes.list({ code: promoCode, active: true, limit: 1 });
                 if (promoCodes.data.length > 0) {
                     sessionParams.discounts = [{ promotion_code: promoCodes.data[0].id }];
-                } else {
-                    // Fall back to treating it as a coupon ID
+                    discountApplied = true;
+                }
+
+                // 2. If not a promotion code, check if it matches a Coupon ID or Name
+                if (!discountApplied) {
+                    const coupons = await stripe.coupons.list({ limit: 100 });
+                    const matchedCoupon = coupons.data.find(c => 
+                        (c.id === promoCode || (c.name && c.name.toUpperCase() === promoCode.toUpperCase())) && c.valid
+                    );
+                    
+                    if (matchedCoupon) {
+                        sessionParams.discounts = [{ coupon: matchedCoupon.id }];
+                        discountApplied = true;
+                    }
+                }
+
+                if (!discountApplied) {
+                    // 3. Fall back to treating it as a coupon ID (this will trigger a clear invalid error from Stripe)
                     sessionParams.discounts = [{ coupon: promoCode }];
                 }
             } catch (e) {
-                // If promotion code lookup fails, try as coupon ID
+                console.error('[create-checkout] Promo code lookup error:', e.message);
                 sessionParams.discounts = [{ coupon: promoCode }];
             }
         } else {
