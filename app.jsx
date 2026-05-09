@@ -99,11 +99,26 @@ function getHolidayMult(dateStr, bankHols) {
   return 1;
 }
 
-function buildQuote({ airport, fareKey, vehicle, tripType, dates, bankHols }) {
+function buildQuote({ airport, fareKey, vehicle, tripType, dates, bankHols, stops, pickupCoords }) {
   const fixed = FIXED_FARES[fareKey || airport];
   if (!fixed) return null;
   const base = fixed[vehicle];
   if (base == null) return null;
+
+  let stopsTotalOut = 0;
+  let stopsTotalRet = 0;
+
+  if (stops && stops.length > 0 && pickupCoords) {
+    stops.forEach(s => {
+      if (!s.coords) return;
+      const d = haversine(pickupCoords.lat, pickupCoords.lon, s.coords.lat, s.coords.lon);
+      const cost = d <= 10 ? 10 : 10 + Math.ceil(d - 10) * 2;
+      
+      if (s.way === 'both' || s.way === 'outbound') stopsTotalOut += cost;
+      if (tripType === 'return' && (s.way === 'both' || s.way === 'return')) stopsTotalRet += cost;
+    });
+  }
+
   const legs = [];
   if (tripType === 'return') {
     const om = getHolidayMult(dates.outDate, bankHols);
@@ -114,8 +129,21 @@ function buildQuote({ airport, fareKey, vehicle, tripType, dates, bankHols }) {
     const m = getHolidayMult(dates.legDate, bankHols);
     legs.push({ label: 'One way', base, mult: m, price: Math.ceil(base * m * 100) / 100 });
   }
-  const total = legs.reduce((s, l) => s + l.price, 0);
-  return { vehicle, vehicleLabel: VEHICLE_SHORT[vehicle], legs, total: Math.round(total * 100) / 100, fixedFare: true, hasHoliday: legs.some(l => l.mult > 1) };
+
+  let totalStopsCharge = 0;
+  if (tripType === 'return') {
+    const om = getHolidayMult(dates.outDate, bankHols);
+    const rm = getHolidayMult(dates.retDate, bankHols);
+    totalStopsCharge = (stopsTotalOut * om) + (stopsTotalRet * rm);
+  } else {
+    const m = getHolidayMult(dates.legDate, bankHols);
+    totalStopsCharge = stopsTotalOut * m;
+  }
+  
+  const legsTotal = legs.reduce((s, l) => s + l.price, 0);
+  const total = legsTotal + totalStopsCharge;
+
+  return { vehicle, vehicleLabel: VEHICLE_SHORT[vehicle], legs, stopsTotal: totalStopsCharge, total: Math.round(total * 100) / 100, fixedFare: true, hasHoliday: legs.some(l => l.mult > 1) };
 }
 
 /* ══════════ QUOTE PANEL ══════════ */
@@ -135,10 +163,105 @@ function QuotePanel({ quote }) {
             <span className="quote-leg-price">£{leg.price.toFixed(2)}</span>
           </div>
         ))}
+        {quote.stopsTotal > 0 && (
+          <div className="quote-row">
+            <span className="quote-leg-lbl">Extra stops</span>
+            <span className="quote-leg-price">£{(Math.round(quote.stopsTotal * 100) / 100).toFixed(2)}</span>
+          </div>
+        )}
       </div>
       <div className="quote-total-row"><span>Total</span><span className="quote-total">£{quote.total.toFixed(2)}</span></div>
       <div className="quote-trust-line"><Icon name="check" size={14} /> Includes parking, tolls &amp; VAT — no hidden fees</div>
       {quote.hasHoliday && <div className="quote-hol-note">Holiday rate applied. Standard pricing on regular days.</div>}
+    </div>
+  );
+}
+
+function AddressAutocomplete({ value, onChange, onSelect, placeholder }) {
+  const [suggestions, setSuggestions] = useState([]);
+  const [show, setShow] = useState(false);
+  const skipSearch = useRef(false);
+
+  useEffect(() => {
+    if (!value || value.length < 3) {
+      setSuggestions([]);
+      return;
+    }
+    if (skipSearch.current) {
+      skipSearch.current = false;
+      return;
+    }
+    const timeoutId = setTimeout(async () => {
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(value)}&format=json&addressdetails=1&countrycodes=gb&limit=5`, {
+          headers: { "Accept-Language": "en-GB,en;q=0.9" }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setSuggestions(Array.isArray(data) ? data : []);
+          setShow(true);
+        }
+      } catch (err) {}
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [value]);
+
+  const formatAddress = (s, currentQuery) => {
+    const parts = [];
+    let houseNumber = s.address?.house_number;
+    if (!houseNumber && currentQuery) {
+      const match = currentQuery.trim().match(/^(\d+[a-zA-Z]?(-\d+[a-zA-Z]?)?)\s/);
+      if (match) houseNumber = match[1];
+    }
+    if (s.address) {
+      if (houseNumber) parts.push(houseNumber);
+      if (s.address.road) parts.push(s.address.road);
+      if (s.address.suburb) parts.push(s.address.suburb);
+      if (s.address.city || s.address.town || s.address.village) parts.push(s.address.city || s.address.town || s.address.village);
+      if (s.address.postcode) parts.push(s.address.postcode);
+    }
+    if (parts.length > 0) return parts.join(', ');
+    let display = s.display_name.replace(', United Kingdom', '');
+    if (houseNumber && !display.startsWith(houseNumber)) display = houseNumber + ' ' + display;
+    return display;
+  };
+
+  return (
+    <div style={{ position: "relative", width: "100%" }}>
+      <input type="text" placeholder={placeholder} value={value}
+        onChange={e => { onChange(e.target.value); setShow(true); }}
+        onFocus={() => setShow(true)}
+        onBlur={() => setTimeout(() => setShow(false), 200)}
+        autoComplete="off"
+      />
+      {show && suggestions.length > 0 && (
+        <div className="autocomplete-suggestions" style={{
+          position: "absolute", top: "100%", left: 0, right: 0, 
+          background: "#fff", border: "1px solid var(--line)", borderRadius: "6px",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.1)", zIndex: 10, overflow: "hidden", marginTop: "4px"
+        }}>
+          {suggestions.map((s, i) => {
+            const formatted = formatAddress(s, value);
+            return (
+              <div key={i} style={{ padding: "10px 12px", cursor: "pointer", borderBottom: i < suggestions.length - 1 ? "1px solid var(--line)" : "none", fontSize: "14px", color: "var(--ink)", transition: "background 0.2s" }}
+                onMouseDown={() => {
+                  skipSearch.current = true;
+                  onChange(formatted);
+                  onSelect({ lat: parseFloat(s.lat), lon: parseFloat(s.lon) }, s.address || null);
+                  setShow(false);
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "var(--cream)"}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+              >
+                <div style={{ fontWeight: 500 }}>{formatted.split(',')[0]}</div>
+                <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "2px" }}>
+                  {formatted.split(',').slice(1).join(',')}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -655,6 +778,7 @@ function BookingForm() {
   const [errors, setErrors] = useState({});
   const [addressCoords, setAddressCoords] = useState(null); // { lat, lon }
   const [addressData, setAddressData] = useState(null);     // Nominatim address obj
+  const [stops, setStops] = useState([]); // Extra stops
 
   const autoVehicle = getAutoVehicle(pax, largeBags, cabinBags, specials);
   const vehicle = vehicleOverride && VEHICLE_RANK[vehicleOverride] >= VEHICLE_RANK[autoVehicle] ? vehicleOverride : autoVehicle;
@@ -716,8 +840,8 @@ function BookingForm() {
   const quote = useMemo(() => {
     if (showCallToBook) return null; // no quote when call-to-book is active
     const dates = tripType === 'return' ? { outDate: form.outDate, retDate: form.retDate } : { legDate: form.legDate };
-    return buildQuote({ airport, fareKey, vehicle, tripType, dates, bankHols });
-  }, [airport, fareKey, vehicle, tripType, form.outDate, form.retDate, form.legDate, bankHols, showCallToBook]);
+    return buildQuote({ airport, fareKey, vehicle, tripType, dates, bankHols, stops, pickupCoords: addressCoords });
+  }, [airport, fareKey, vehicle, tripType, form.outDate, form.retDate, form.legDate, bankHols, showCallToBook, stops, addressCoords]);
 
   useEffect(() => {
     if (!form.address || form.address.length < 3) {
@@ -865,6 +989,15 @@ function BookingForm() {
         ? { date: form.retDate, time: form.retTime, flight: form.retFlight.trim() }
         : (onewayDir === "from" ? { date: form.legDate, time: form.legTime, flight: form.legFlight.trim() } : null);
 
+      let finalNotes = form.notes.trim() || '';
+      if (stops && stops.length > 0) {
+        const validStops = stops.filter(s => s.address && s.address.trim());
+        if (validStops.length > 0) {
+          const stopsDesc = validStops.map((s, i) => `Stop ${i + 1} (${s.way === 'both' ? 'both ways' : s.way}): ${s.address}`).join('\n');
+          finalNotes = finalNotes ? `${finalNotes}\n\nExtra Stops:\n${stopsDesc}` : `Extra Stops:\n${stopsDesc}`;
+        }
+      }
+
       const airtableFields = {
         'Booking Ref': ref,
         'Customer Name': form.name.trim(),
@@ -879,7 +1012,7 @@ function BookingForm() {
         // Default Operator Price to the same figure so Profit starts at £0
         // and admin only has to type the operator rate when it differs.
         'Operator Price': quote ? quote.total : 0,
-        'Notes': form.notes.trim() || '',
+        'Notes': finalNotes,
         'Status': 'Pending',
         'Submitted At': new Date().toISOString(),
       };
@@ -1050,6 +1183,44 @@ function BookingForm() {
         )}
         <div className="hint">{tripType === "return" ? "We pick up here on the way out, drop back here on the way home." : "Where we pick you up or drop you off."}</div>
         {errors.address && <div className="err-msg">{errors.address}</div>}
+      </div>
+
+      {stops.map((stop, index) => (
+        <div key={stop.id} className="field" style={{ position: "relative", marginLeft: "20px", borderLeft: "2px solid var(--amber)", paddingLeft: "15px" }}>
+          <label>Additional Stop {index + 1}</label>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: '200px' }}>
+              <AddressAutocomplete
+                placeholder="e.g. 24 Smith St, CH60"
+                value={stop.address}
+                onChange={(val) => {
+                  setStops(stops.map(s => s.id === stop.id ? { ...s, address: val, coords: null } : s));
+                }}
+                onSelect={(coords, data) => {
+                  setStops(stops.map(s => s.id === stop.id ? { ...s, coords, data } : s));
+                }}
+              />
+            </div>
+            {tripType === 'return' && (
+              <select 
+                value={stop.way} 
+                onChange={e => setStops(stops.map(s => s.id === stop.id ? { ...s, way: e.target.value } : s))}
+                style={{ width: '130px', padding: '12px 14px', borderRadius: '10px', border: '1px solid var(--line)', background: '#fff' }}
+              >
+                <option value="both">Both ways</option>
+                <option value="outbound">Outbound only</option>
+                <option value="return">Return only</option>
+              </select>
+            )}
+            <button type="button" onClick={() => setStops(stops.filter(s => s.id !== stop.id))} className="btn btn-secondary btn-sm" style={{ padding: '0 10px', height: '46px', alignSelf: 'stretch' }}>Remove</button>
+          </div>
+          {!stop.coords && stop.address && stop.address.length >= 3 && (
+            <div className="hint" style={{ color: "var(--amber)" }}>Please select a valid address from the dropdown to calculate pricing.</div>
+          )}
+        </div>
+      ))}
+      <div className="field">
+        <button type="button" onClick={() => setStops([...stops, { id: Date.now(), address: "", coords: null, way: tripType === 'return' ? 'both' : 'outbound' }])} className="btn btn-secondary btn-sm" style={{ alignSelf: 'flex-start', background: 'transparent', border: '1px solid var(--line)', color: 'var(--ink)' }}>+ Add extra stop</button>
       </div>
 
       {tripType === "oneway" && (
