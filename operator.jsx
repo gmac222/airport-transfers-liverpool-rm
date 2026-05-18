@@ -787,19 +787,17 @@ function AdminApp() {
     // payment has been acknowledged (Accepted/Completed/Archived) — at
     // which point the operator unambiguously owns it and needs to act.
     // Pre-payment bookings stay hidden until admin clicks Dispatch.
-    const operatorBookings = useMemo(() => {
-        return bookings.filter(b => {
-            const assignedOp = b.fields['Operator'] || '';
-            const status = b.fields['Status'] || '';
-            const isPostPayment = status === 'Accepted' || status === 'Completed' || status === 'Archived';
-            
-            // Must match operator name
-            const matchesOperator = Array.isArray(assignedOp) ? assignedOp.includes(operatorName) : assignedOp === operatorName;
-            
-            // Must be dispatched to operator OR post-payment
-            return matchesOperator && (b.fields['Dispatched To Operator'] === true || isPostPayment);
-        });
-    }, [bookings, operatorName]);
+    const operatorBookings = operatorName ? bookings.filter(b => {
+        const assignedOp = b.fields['Operator'] || '';
+        const status = b.fields['Status'] || '';
+        const isPostPayment = status === 'Accepted' || status === 'Completed' || status === 'Archived';
+        
+        // Must match operator name
+        const matchesOperator = Array.isArray(assignedOp) ? assignedOp.includes(operatorName) : assignedOp === operatorName;
+        
+        // Must be dispatched to operator OR post-payment
+        return matchesOperator && (b.fields['Dispatched To Operator'] === true || isPostPayment);
+    }) : [];
 
     const filteredBookings = operatorBookings.filter(b => {
         const status = b.fields['Status'] || 'Pending';
