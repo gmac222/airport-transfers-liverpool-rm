@@ -26,7 +26,7 @@ const VEHICLE_RANK  = { car: 0, mpv: 1, '8seat': 2 };
 
 /* ── SERVICE AREA: 10-mile radius around Knowsley ── */
 const KNOWSLEY = { lat: 53.4547, lon: -2.8330 };
-const SERVICE_RADIUS_MI = 10.0;
+const SERVICE_RADIUS_MI = 7.5;
 
 function haversine(lat1, lon1, lat2, lon2) {
   const R = 3958.8; // Earth radius in miles
@@ -37,8 +37,22 @@ function haversine(lat1, lon1, lat2, lon2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-function isInServiceArea(lat, lon) {
+function isInServiceArea(lat, lon, addressStr, addressObj) {
   if (lat == null || lon == null) return true; // no coords yet = don't block
+  
+  // Explicitly block out-of-area postcodes (e.g. Skelmersdale, Wigan, Preston)
+  let postcode = addressObj?.postcode;
+  if (!postcode && addressStr) {
+    const match = addressStr.match(/\b([A-Z]{1,2}\d{1,2}[A-Z]?)\s*\d[A-Z]{2}\b/i);
+    if (match) postcode = match[0];
+  }
+  if (postcode) {
+    const pc = postcode.toUpperCase().replace(/\s/g, '');
+    if (/^(WN|PR|FY|BL|OL|SK|M|CW)\d/.test(pc)) {
+      return false;
+    }
+  }
+
   return haversine(KNOWSLEY.lat, KNOWSLEY.lon, lat, lon) <= SERVICE_RADIUS_MI;
 }
 
@@ -814,8 +828,8 @@ function BookingForm() {
 
   const inArea = useMemo(() => {
     if (!addressCoords) return true; // no selection yet = allow
-    return isInServiceArea(addressCoords.lat, addressCoords.lon);
-  }, [addressCoords]);
+    return isInServiceArea(addressCoords.lat, addressCoords.lon, form.address, addressData);
+  }, [addressCoords, form.address, addressData]);
 
   const shortNotice = useMemo(() => {
     const now = Date.now();
@@ -915,7 +929,13 @@ function BookingForm() {
     const errs = {};
     if (!form.name.trim()) errs.name = "We need a name to greet you with";
     if (!form.phone.trim()) errs.phone = "So we can text you the driver's details";
-    if (!form.address.trim()) errs.address = "Home address please — where we pick up & drop off";
+    if (!form.address.trim()) {
+      errs.address = "Home address please — where we pick up & drop off";
+    } else if (!addressCoords) {
+      errs.address = "Please select your full address from the dropdown";
+    } else if (stops && stops.some(s => s.address && s.address.trim() && !s.coords)) {
+      errs.address = "Please select all stop addresses from the dropdowns";
+    }
 
     if (tripType === "return") {
       if (!form.outDate) errs.outDate = "Outbound date";
