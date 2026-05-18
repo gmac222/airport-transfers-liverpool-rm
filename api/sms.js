@@ -174,10 +174,12 @@ export default async function handler(req, res) {
 
         // Also notify the driver that payment is confirmed and the job is locked in
         if (formattedDriverPhone) {
+            const isFromAirport = fields['Oneway Direction'] === 'from';
+            const pickup = isFromAirport ? fields['Airport Name'] : fields['Home Address'];
             messages.push({
                 to: formattedDriverPhone,
                 from: 'RMTransfers',
-                body: `CONFIRMED JOB: Payment received for ${fields['Customer Name']}\nRef: ${fields['Booking Ref']}\nPickup: ${fields['Home Address']}\nDate: ${fmtUKDate(fields['Outbound Date'])} @ ${fields['Outbound Time']}\nFlight: ${fields['Outbound Flight'] || 'N/A'}\nPassengers: ${fields['Passengers'] || '?'} Bags: ${fields['Luggage'] || '?'}\nCustomer: ${fields['Customer Phone']}\nPrice: £${fields['Total Price']}\n\nDriver Portal: https://airporttaxitransfersliverpool.co.uk/driver-action.html?ref=${fields['Booking Ref']}`
+                body: `CONFIRMED JOB: Payment received for ${fields['Customer Name']}\nRef: ${fields['Booking Ref']}\nPickup: ${pickup}\nDate: ${fmtUKDate(fields['Outbound Date'])} @ ${fields['Outbound Time']}\nFlight: ${fields['Outbound Flight'] || 'N/A'}\nPassengers: ${fields['Passengers'] || '?'} Bags: ${fields['Luggage'] || '?'}\nCustomer: ${fields['Customer Phone']}\nPrice: £${fields['Total Price']}\n\nDriver Portal: https://airporttaxitransfersliverpool.co.uk/driver-action.html?ref=${fields['Booking Ref']}`
             });
         }
 
@@ -205,10 +207,12 @@ export default async function handler(req, res) {
 
     if (action === 'resend-driver') {
         if (!formattedDriverPhone) return res.status(400).json({ error: 'Missing driver phone' });
+        const isFromAirport = fields['Oneway Direction'] === 'from';
+        const pickup = isFromAirport ? fields['Airport Name'] : fields['Home Address'];
         messages.push({
             to: formattedDriverPhone,
             from: 'RMTransfers',
-            body: `RESEND JOB: ${fields['Trip Type'] === 'return' ? 'RETURN' : 'ONE WAY'} for ${fields['Customer Name']}\nPickup: ${fields['Home Address']}\nDate: ${fmtUKDate(fields['Outbound Date'])} @ ${fields['Outbound Time']}\nFlight: ${fields['Outbound Flight'] || 'N/A'}\nCustomer: ${fields['Customer Phone']}\nPrice: £${fields['Total Price']}\nPortal: https://airporttaxitransfersliverpool.co.uk/driver-action.html?ref=${fields['Booking Ref']}`
+            body: `RESEND JOB: ${fields['Trip Type'] === 'return' ? 'RETURN' : 'ONE WAY'} for ${fields['Customer Name']}\nPickup: ${pickup}\nDate: ${fmtUKDate(fields['Outbound Date'])} @ ${fields['Outbound Time']}\nFlight: ${fields['Outbound Flight'] || 'N/A'}\nCustomer: ${fields['Customer Phone']}\nPrice: £${fields['Total Price']}\nPortal: https://airporttaxitransfersliverpool.co.uk/driver-action.html?ref=${fields['Booking Ref']}`
         });
     }
 
@@ -269,10 +273,13 @@ export default async function handler(req, res) {
 
     if (action === 'driver-reminder') {
         if (!formattedDriverPhone) return res.status(400).json({ error: 'Missing driver phone' });
+        const isFromAirport = fields['Oneway Direction'] === 'from';
+        const pickup = isFromAirport ? fields['Airport Name'] : fields['Home Address'];
+        const destination = isFromAirport ? fields['Home Address'] : fields['Airport Name'];
         messages.push({
             to: formattedDriverPhone,
             from: 'RMTransfers',
-            body: `REMINDER: Job tomorrow for ${fields['Customer Name']}\nRef: ${fields['Booking Ref']}\nPickup: ${fields['Home Address']}\nDestination: ${fields['Airport Name'] || 'See booking'}\nDate: ${fmtUKDate(fields['Outbound Date'])} @ ${fields['Outbound Time']}\nFlight: ${fields['Outbound Flight'] || 'N/A'}\nPassengers: ${fields['Passengers'] || '?'} Bags: ${fields['Luggage'] || '?'}\nCustomer: ${fields['Customer Phone']}\n\nDriver Portal: https://airporttaxitransfersliverpool.co.uk/driver-action.html?ref=${fields['Booking Ref']}`
+            body: `REMINDER: Job tomorrow for ${fields['Customer Name']}\nRef: ${fields['Booking Ref']}\nPickup: ${pickup}\nDestination: ${destination || 'See booking'}\nDate: ${fmtUKDate(fields['Outbound Date'])} @ ${fields['Outbound Time']}\nFlight: ${fields['Outbound Flight'] || 'N/A'}\nPassengers: ${fields['Passengers'] || '?'} Bags: ${fields['Luggage'] || '?'}\nCustomer: ${fields['Customer Phone']}\n\nDriver Portal: https://airporttaxitransfersliverpool.co.uk/driver-action.html?ref=${fields['Booking Ref']}`
         });
     }
 
@@ -286,10 +293,13 @@ export default async function handler(req, res) {
             });
         }
         if (formattedDriverPhone) {
+            const isFromAirport = fields['Oneway Direction'] === 'from';
+            const pickup = isFromAirport ? fields['Airport Name'] : fields['Home Address'];
+            const destination = isFromAirport ? fields['Home Address'] : fields['Airport Name'];
             messages.push({
                 to: formattedDriverPhone,
                 from: 'RMTransfers',
-                body: `REMINDER: Job tomorrow for ${fields['Customer Name']}\nRef: ${fields['Booking Ref']}\nPickup: ${fields['Home Address']}\nDestination: ${fields['Airport Name'] || 'See booking'}\nDate: ${fmtUKDate(fields['Outbound Date'])} @ ${fields['Outbound Time']}\nFlight: ${fields['Outbound Flight'] || 'N/A'}\nPassengers: ${fields['Passengers'] || '?'} Bags: ${fields['Luggage'] || '?'}\nCustomer: ${fields['Customer Phone']}\n\nDriver Portal: https://airporttaxitransfersliverpool.co.uk/driver-action.html?ref=${fields['Booking Ref']}`
+                body: `REMINDER: Job tomorrow for ${fields['Customer Name']}\nRef: ${fields['Booking Ref']}\nPickup: ${pickup}\nDestination: ${destination || 'See booking'}\nDate: ${fmtUKDate(fields['Outbound Date'])} @ ${fields['Outbound Time']}\nFlight: ${fields['Outbound Flight'] || 'N/A'}\nPassengers: ${fields['Passengers'] || '?'} Bags: ${fields['Luggage'] || '?'}\nCustomer: ${fields['Customer Phone']}\n\nDriver Portal: https://airporttaxitransfersliverpool.co.uk/driver-action.html?ref=${fields['Booking Ref']}`
             });
         }
     }

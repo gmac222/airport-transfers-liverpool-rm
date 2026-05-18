@@ -72,91 +72,86 @@ export default async function handler(req, res) {
     let bookingFields = {};
 
     try {
-        const searchUrl = `https://api.airtable.com/v0/${BASE_ID}/${encodeURIComponent(TABLE_NAME)}?filterByFormula={Booking Ref}="${ref}"&maxRecords=1`;
+        const searchUrl = `https://api.airtable.com/v0/${BASE_ID}/${encodeURIComponent(TABLE_NAME)}?filterByFormula=OR({Booking Ref}="${ref}", {Booking Ref}="${ref}-OUT", {Booking Ref}="${ref}-RET")`;
         const atRes = await fetch(searchUrl, {
             headers: { Authorization: `Bearer ${AIRTABLE_API_KEY}` }
         });
         const atData = await atRes.json();
+        
         if (atData.records?.length) {
-            recordId = atData.records[0].id;
-            bookingFields = atData.records[0].fields;
+            // Reconstruct bookingFields to reflect a combined booking for sms.js
+            const outRecord = atData.records.find(r => r.fields['Booking Ref'].endsWith('-OUT')) || atData.records[0];
+            const retRecord = atData.records.find(r => r.fields['Booking Ref'].endsWith('-RET'));
+            
+            bookingFields = { ...outRecord.fields };
+            
+            if (outRecord && retRecord) {
+                // Combine details for return trips so SMS can see both outbound and return dates
+                bookingFields['Trip Type'] = 'return';
+                if (retRecord.fields['Outbound Date']) bookingFields['Return Date'] = retRecord.fields['Outbound Date'];
+                if (retRecord.fields['Outbound Time']) bookingFields['Return Time'] = retRecord.fields['Outbound Time'];
+                if (retRecord.fields['Outbound Flight']) bookingFields['Return Flight'] = retRecord.fields['Outbound Flight'];
+            }
+            
+            const numRecords = atData.records.length;
+            const paidNum = parseFloat(amountPaid) / numRecords;
 
-            // Build the patch. We DO NOT overwrite Customer Price with the
-            // amount actually charged — a 100% promo would zero it out and
-            // lose the original quote. Keep the original Customer Price and
-            // store what Stripe actually collected in 'Amount Paid' instead.
-            const paidNum = parseFloat(amountPaid);
-            const fieldsToUpdate = {
-                'Payment Status': 'Paid',
-                'Stripe Session ID': session.id,
-                // Customer paid directly via Stripe checkout — auto-advance
-                // the booking so the operator can allocate a driver without
-                // waiting for an admin to click "Acknowledge Payment".
-                'Status': 'Accepted',
-                'Dispatched To Operator': true,
-                'Amount Paid': paidNum,
-            };
-            // Only set Customer Price / Total Price from the payment if
-            // they're missing — this protects the quoted price when a
-            // discount/promo was applied at checkout.
-            if (bookingFields['Customer Price'] == null) {
-                fieldsToUpdate['Customer Price'] = paidNum;
-            }
-            if (bookingFields['Total Price'] == null) {
-                fieldsToUpdate['Total Price'] = paidNum;
-            }
-            // Default Operator Price to whatever Customer Price ends up at
-            // when it hasn't been set yet — Profit then starts at £0 and
-            // admin only types the operator rate when it differs.
-            if (bookingFields['Operator Price'] == null) {
-                const cpForOp = bookingFields['Customer Price'] != null
-                    ? Number(bookingFields['Customer Price'])
-                    : paidNum;
-                if (Number.isFinite(cpForOp)) fieldsToUpdate['Operator Price'] = cpForOp;
-            }
+            for (const record of atData.records) {
+                const recId = record.id;
+                const recFields = record.fields;
 
-            // Try the patch. If Airtable rejects an UNKNOWN_FIELD_NAME
-            // (e.g. 'Payment Status' or 'Amount Paid' columns haven't
-            // been added to the base yet) drop that field and retry — we
-            // care far more about Status / Dispatched To Operator
-            // landing than about losing one optional column. Up to a few
-            // retries in case multiple unknown fields are present.
-            const patchUrl = `https://api.airtable.com/v0/${BASE_ID}/${encodeURIComponent(TABLE_NAME)}/${recordId}`;
-            const droppedFields = [];
-            let patchOk = false;
-            for (let attempt = 0; attempt < 6; attempt++) {
-                const patchRes = await fetch(patchUrl, {
-                    method: 'PATCH',
-                    headers: {
-                        Authorization: `Bearer ${AIRTABLE_API_KEY}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ fields: fieldsToUpdate, typecast: true })
-                });
-                if (patchRes.ok) { patchOk = true; break; }
-                const errBody = await patchRes.text();
-                const match = errBody.match(/Unknown field name:?\s*\\?"([^"\\]+)\\?"/i);
-                if (!match) {
-                    console.error(`[stripe-webhook] Airtable PATCH failed (non-recoverable): ${patchRes.status} ${errBody}`);
-                    break;
+                // Build the patch. Keep the original Customer Price and store what Stripe actually collected in 'Amount Paid'.
+                const fieldsToUpdate = {
+                    'Payment Status': 'Paid',
+                    'Stripe Session ID': session.id,
+                    'Status': 'Accepted',
+                    'Dispatched To Operator': true,
+                    'Amount Paid': paidNum,
+                };
+                
+                if (recFields['Customer Price'] == null) fieldsToUpdate['Customer Price'] = paidNum;
+                if (recFields['Total Price'] == null) fieldsToUpdate['Total Price'] = paidNum;
+                
+                if (recFields['Operator Price'] == null) {
+                    const cpForOp = recFields['Customer Price'] != null ? Number(recFields['Customer Price']) : paidNum;
+                    if (Number.isFinite(cpForOp)) fieldsToUpdate['Operator Price'] = cpForOp;
                 }
-                const badNameLower = match[1].toLowerCase();
-                const realKey = Object.keys(fieldsToUpdate).find(k => k.toLowerCase() === badNameLower);
-                if (!realKey) {
-                    console.error(`[stripe-webhook] Airtable rejected unknown field '${match[1]}' but couldn't locate it in payload — giving up.`);
-                    break;
+
+                // Try the patch
+                const patchUrl = `https://api.airtable.com/v0/${BASE_ID}/${encodeURIComponent(TABLE_NAME)}/${recId}`;
+                const droppedFields = [];
+                let patchOk = false;
+                
+                for (let attempt = 0; attempt < 6; attempt++) {
+                    const patchRes = await fetch(patchUrl, {
+                        method: 'PATCH',
+                        headers: {
+                            Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ fields: fieldsToUpdate, typecast: true })
+                    });
+                    if (patchRes.ok) { patchOk = true; break; }
+                    const errBody = await patchRes.text();
+                    const match = errBody.match(/Unknown field name:?\s*\\?"([^"\\]+)\\?"/i);
+                    if (!match) {
+                        console.error(`[stripe-webhook] Airtable PATCH failed (non-recoverable): ${patchRes.status} ${errBody}`);
+                        break;
+                    }
+                    const badNameLower = match[1].toLowerCase();
+                    const realKey = Object.keys(fieldsToUpdate).find(k => k.toLowerCase() === badNameLower);
+                    if (!realKey) {
+                        console.error(`[stripe-webhook] Airtable rejected unknown field '${match[1]}' but couldn't locate it in payload — giving up.`);
+                        break;
+                    }
+                    droppedFields.push(realKey);
+                    delete fieldsToUpdate[realKey];
+                    if (Object.keys(fieldsToUpdate).length === 0) break;
                 }
-                droppedFields.push(realKey);
-                delete fieldsToUpdate[realKey];
-                if (Object.keys(fieldsToUpdate).length === 0) break;
-            }
-            if (droppedFields.length) {
-                console.warn(`[stripe-webhook] Airtable accepted PATCH after dropping unknown fields: ${droppedFields.join(', ')}`);
-            }
-            if (!patchOk) {
-                console.error(`[stripe-webhook] Airtable PATCH ultimately failed for ${recordId} — booking will stay Pending.`);
-            } else {
-                console.log(`[stripe-webhook] Airtable updated: ${recordId} → paid £${amountPaid}`);
+                
+                if (droppedFields.length) console.warn(`[stripe-webhook] Airtable accepted PATCH after dropping unknown fields: ${droppedFields.join(', ')}`);
+                if (!patchOk) console.error(`[stripe-webhook] Airtable PATCH ultimately failed for ${recId} — booking will stay Pending.`);
+                else console.log(`[stripe-webhook] Airtable updated: ${recId} → paid £${paidNum.toFixed(2)}`);
             }
         }
     } catch (err) {

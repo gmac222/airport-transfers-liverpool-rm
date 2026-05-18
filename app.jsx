@@ -1004,10 +1004,10 @@ function BookingForm() {
       // Build Airtable fields from the booking payload
       const outbound = tripType === "return"
         ? { date: form.outDate, time: form.outTime, flight: form.outFlight.trim() || null }
-        : (onewayDir === "to" ? { date: form.legDate, time: form.legTime, flight: form.legFlight.trim() || null } : null);
+        : { date: form.legDate, time: form.legTime, flight: form.legFlight.trim() || null };
       const returnLeg = tripType === "return"
         ? { date: form.retDate, time: form.retTime, flight: form.retFlight.trim() }
-        : (onewayDir === "from" ? { date: form.legDate, time: form.legTime, flight: form.legFlight.trim() } : null);
+        : null;
 
       let finalNotes = form.notes.trim() || '';
       if (stops && stops.length > 0) {
@@ -1018,48 +1018,92 @@ function BookingForm() {
         }
       }
 
-      const airtableFields = {
-        'Booking Ref': ref,
+      const baseFields = {
         'Customer Name': form.name.trim(),
         'Customer Phone': form.phone.trim(),
         'Customer Email': form.email.trim() || '',
         'Home Address': form.address.trim(),
-        'Trip Type': tripType,
         'Airport': airport === "LJLA" ? "Liverpool John Lennon" : "Manchester",
         'Passengers': pax,
         'Luggage': largeBags,
-        'Customer Price': quote ? quote.total : 0,
-        // Default Operator Price to the same figure so Profit starts at £0
-        // and admin only has to type the operator rate when it differs.
-        'Operator Price': quote ? quote.total : 0,
-        'Notes': finalNotes,
         'Status': 'Pending',
         'Submitted At': new Date().toISOString(),
       };
-      if (tripType === "oneway") {
-        airtableFields['Oneway Direction'] = onewayDir;
-      }
-      if (outbound) {
-        airtableFields['Outbound Date'] = outbound.date;
-        airtableFields['Outbound Time'] = outbound.time;
-        if (outbound.flight) airtableFields['Outbound Flight'] = outbound.flight;
-      }
-      if (returnLeg) {
-        airtableFields['Return Date'] = returnLeg.date;
-        airtableFields['Return Time'] = returnLeg.time;
-        if (returnLeg.flight) airtableFields['Return Flight'] = returnLeg.flight;
+
+      const recordsToCreate = [];
+
+      if (tripType === "return") {
+        // Leg 1 (Outbound)
+        const outFields = {
+          ...baseFields,
+          'Booking Ref': ref + '-OUT',
+          'Trip Type': 'oneway',
+          'Oneway Direction': 'to',
+          'Customer Price': quote ? quote.total / 2 : 0,
+          'Operator Price': quote ? quote.total / 2 : 0,
+          'Notes': finalNotes ? `[LEG 1 OF RETURN]\n${finalNotes}` : `[LEG 1 OF RETURN]`,
+        };
+        if (outbound) {
+          outFields['Outbound Date'] = outbound.date;
+          outFields['Outbound Time'] = outbound.time;
+          if (outbound.flight) outFields['Outbound Flight'] = outbound.flight;
+        }
+        recordsToCreate.push(outFields);
+
+        // Leg 2 (Return)
+        const retFields = {
+          ...baseFields,
+          'Booking Ref': ref + '-RET',
+          'Trip Type': 'oneway',
+          'Oneway Direction': 'from',
+          'Customer Price': quote ? quote.total / 2 : 0,
+          'Operator Price': quote ? quote.total / 2 : 0,
+          'Notes': finalNotes ? `[LEG 2 OF RETURN]\n${finalNotes}` : `[LEG 2 OF RETURN]`,
+        };
+        if (returnLeg) {
+          retFields['Outbound Date'] = returnLeg.date;
+          retFields['Outbound Time'] = returnLeg.time;
+          if (returnLeg.flight) retFields['Outbound Flight'] = returnLeg.flight;
+        }
+        recordsToCreate.push(retFields);
+
+      } else {
+        // One-way
+        const airtableFields = {
+          ...baseFields,
+          'Booking Ref': ref,
+          'Trip Type': tripType,
+          'Oneway Direction': onewayDir,
+          'Customer Price': quote ? quote.total : 0,
+          'Operator Price': quote ? quote.total : 0,
+          'Notes': finalNotes,
+        };
+        if (outbound) {
+          airtableFields['Outbound Date'] = outbound.date;
+          airtableFields['Outbound Time'] = outbound.time;
+          if (outbound.flight) airtableFields['Outbound Flight'] = outbound.flight;
+        }
+        if (returnLeg) {
+          airtableFields['Return Date'] = returnLeg.date;
+          airtableFields['Return Time'] = returnLeg.time;
+          if (returnLeg.flight) airtableFields['Return Flight'] = returnLeg.flight;
+        }
+        recordsToCreate.push(airtableFields);
       }
 
-      const res = await fetch("/api/booking?action=create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fields: airtableFields, typecast: true })
-      });
-      console.log("[booking] API response", res.status);
-      if (!res.ok) {
-        const errBody = await res.json().catch(() => ({}));
-        console.error("[booking] API error:", errBody);
-        throw new Error("Booking API responded " + res.status + ": " + (errBody.error || "unknown"));
+      // Submit all records
+      for (const fields of recordsToCreate) {
+        const res = await fetch("/api/booking?action=create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fields, typecast: true })
+        });
+        console.log(`[booking] API response for ${fields['Booking Ref']}`, res.status);
+        if (!res.ok) {
+          const errBody = await res.json().catch(() => ({}));
+          console.error(`[booking] API error for ${fields['Booking Ref']}:`, errBody);
+          throw new Error("Booking API responded " + res.status + ": " + (errBody.error || "unknown"));
+        }
       }
 
       // If we have a quote, redirect to Stripe Checkout for immediate payment.
