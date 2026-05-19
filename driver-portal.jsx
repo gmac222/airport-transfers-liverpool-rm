@@ -472,6 +472,11 @@ function DriverPortal() {
                                             <span>🧳 {f['Luggage'] || 0} bags</span>
                                             {f['Trip Type'] === 'return' && <span>🔄 Return</span>}
                                         </div>
+                                        {f['Notes'] && (
+                                            <div style={{ marginTop: '8px', padding: '6px 10px', background: '#fef3c7', color: '#92400e', borderRadius: '6px', fontSize: '13px' }}>
+                                                <strong>Notes:</strong> {f['Notes']}
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="job-actions">
                                         <span className={`job-status ${statusClass}`}>{status}</span>

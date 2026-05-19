@@ -22,6 +22,8 @@ function FocusedJobCard({
     priceSavingId, priceSavedFlash, commitPrice,
     paymentLinkDraft, setPaymentLinkDraft,
     paymentLinkSavingId, paymentLinkSavedFlash, commitPaymentLink,
+    notesDraft, setNotesDraft,
+    notesSavingId, notesSavedFlash, commitNotes,
     handleReassignDriver, handleReassignReturnDriver, handleReassignSingle,
     handleSendQuote, sendingQuote,
     isSuper, handleAcknowledgePayment, acknowledgingId,
@@ -66,6 +68,11 @@ function FocusedJobCard({
     const status = f['Status'] || 'Pending';
     const currentOp = f['Operator'] || '';
 
+    const nDraft = notesDraft[booking.id];
+    const nRaw = f['Notes'];
+    const nValue = nDraft !== undefined ? nDraft : (nRaw || '');
+    const nFlashed = !!notesSavedFlash[booking.id];
+
     const detail = (label, value) => (
         <div style={{ paddingBottom: '8px' }}>
             <div style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--muted)', fontWeight: 700, letterSpacing: '0.04em' }}>{label}</div>
@@ -108,6 +115,20 @@ function FocusedJobCard({
                 <div style={{ display: 'flex', gap: '8px' }}>
                     <button onClick={() => openEditModal(booking)} style={{ flex: 1, padding: '10px', background: 'white', color: 'var(--amber-deep)', border: '1px solid var(--amber)', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Edit Booking</button>
                     <button onClick={() => handleDeleteJob(booking)} style={{ flex: 1, padding: '10px', background: 'white', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Delete</button>
+                </div>
+
+                {/* Notes */}
+                <div style={{ marginBottom: '2px' }}>
+                    <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--amber-deep)', textTransform: 'uppercase', marginBottom: '4px' }}>Notes</div>
+                    <textarea 
+                        rows="2" 
+                        placeholder="Add any internal notes here..." 
+                        value={nValue} 
+                        disabled={notesSavingId === booking.id}
+                        onChange={e => setNotesDraft(prev => ({ ...prev, [booking.id]: e.target.value }))}
+                        onBlur={e => { const v = e.target.value; const old = nRaw || ''; if (v !== old) commitNotes(booking.id, v); setNotesDraft(prev => { const n = { ...prev }; delete n[booking.id]; return n; }); }}
+                        style={{ width: '100%', padding: '10px 12px', border: `2px solid ${nFlashed ? '#16a34a' : '#cbd5e1'}`, background: nFlashed ? '#dcfce7' : 'white', borderRadius: '8px', fontFamily: 'inherit', fontSize: '13px', color: 'var(--navy-ink)', outline: 'none', boxSizing: 'border-box', resize: 'vertical' }} 
+                    />
                 </div>
 
                 {/* Pricing — the headline action */}
@@ -171,7 +192,6 @@ function FocusedJobCard({
                         {isReturn && detail('Return', `${fmtUKDate(f['Return Date'])} ${f['Return Time'] || ''}`.trim())}
                         {detail('Pickup', f['Home Address'])}
                         {detail('Passengers / Bags', `${f['Passengers'] || 0} passengers · ${f['Luggage'] || 0} bags`)}
-                        {f['Notes'] && detail('Notes', f['Notes'])}
                     </div>
                 </div>
 
@@ -554,6 +574,31 @@ function AdminApp() {
     const [paymentLinkSavingId, setPaymentLinkSavingId] = useState(null);
     const [paymentLinkSavedFlash, setPaymentLinkSavedFlash] = useState({});
 
+    const [notesDraft, setNotesDraft] = useState({});
+    const [notesSavingId, setNotesSavingId] = useState(null);
+    const [notesSavedFlash, setNotesSavedFlash] = useState({});
+
+    const commitNotes = async (bookingId, rawValue) => {
+        const value = (rawValue ?? '').toString().trim();
+        setNotesSavingId(bookingId);
+        try {
+            const res = await fetch('/api/booking', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: bookingId, fields: { 'Notes': value } })
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            setNotesSavedFlash(prev => ({ ...prev, [bookingId]: Date.now() }));
+            setTimeout(() => setNotesSavedFlash(prev => { const n = { ...prev }; delete n[bookingId]; return n; }), 1500);
+            fetchBookings();
+        } catch (err) {
+            alert('Could not save Notes: ' + err.message);
+        } finally {
+            setNotesSavingId(null);
+        }
+    };
+
     const commitPaymentLink = async (bookingId, rawValue) => {
         const value = (rawValue ?? '').toString().trim();
         setPaymentLinkSavingId(bookingId);
@@ -914,7 +959,8 @@ function AdminApp() {
     // ─── Main admin panel ─────────────────────────────────────────
     const opNames = operators.map(o => o.name);
     const ARCHIVE_STATUSES = ['Archived', 'Completed', 'Cancelled', 'Declined'];
-    const activeBookings = bookings.filter(b => !ARCHIVE_STATUSES.includes(b.fields['Status']));
+    const abandonedBookings = bookings.filter(b => b.fields['Status'] === 'Pending');
+    const activeBookings = bookings.filter(b => !ARCHIVE_STATUSES.includes(b.fields['Status']) && b.fields['Status'] !== 'Pending');
     const archivedBookings = bookings.filter(b => ARCHIVE_STATUSES.includes(b.fields['Status']));
     const unassignedCount = activeBookings.filter(b => !b.fields['Operator']).length;
     const isSuper = (typeof localStorage !== 'undefined') && localStorage.getItem('adminIsSuper') === 'true';
@@ -973,6 +1019,11 @@ function AdminApp() {
                 paymentLinkSavingId={paymentLinkSavingId}
                 paymentLinkSavedFlash={paymentLinkSavedFlash}
                 commitPaymentLink={commitPaymentLink}
+                notesDraft={notesDraft}
+                setNotesDraft={setNotesDraft}
+                notesSavingId={notesSavingId}
+                notesSavedFlash={notesSavedFlash}
+                commitNotes={commitNotes}
                 handleReassignDriver={handleReassignDriver}
                 handleReassignReturnDriver={handleReassignReturnDriver}
                 handleReassignSingle={handleReassignSingle}
@@ -1051,6 +1102,9 @@ function AdminApp() {
                     </button>
                     <button onClick={() => setView('archive')} style={{ padding: '10px 20px', borderRadius: '8px', border: view === 'archive' ? '2px solid var(--navy)' : '1px solid var(--line)', background: view === 'archive' ? 'var(--navy)' : 'white', color: view === 'archive' ? 'white' : 'var(--ink)', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px' }}>
                         Archive ({archivedBookings.length})
+                    </button>
+                    <button onClick={() => setView('abandoned')} style={{ padding: '10px 20px', borderRadius: '8px', border: view === 'abandoned' ? '2px solid var(--navy)' : '1px solid var(--line)', background: view === 'abandoned' ? 'var(--navy)' : 'white', color: view === 'abandoned' ? 'white' : 'var(--ink)', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px' }}>
+                        Abandoned Checkouts ({abandonedBookings.length})
                     </button>
                     <button onClick={() => setView('operators')} style={{ padding: '10px 20px', borderRadius: '8px', border: view === 'operators' ? '2px solid var(--navy)' : '1px solid var(--line)', background: view === 'operators' ? 'var(--navy)' : 'white', color: view === 'operators' ? 'white' : 'var(--ink)', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px' }}>
                         Manage Operators ({operators.length})
@@ -1199,6 +1253,10 @@ function AdminApp() {
                                             const plValue = plDraft !== undefined ? plDraft : (plRaw || '');
                                             const plFlashed = !!paymentLinkSavedFlash[b.id];
                                             const plFilled = plRaw && String(plRaw).trim();
+                                            const nDraft = notesDraft[b.id];
+                                            const nRaw = f['Notes'];
+                                            const nValue = nDraft !== undefined ? nDraft : (nRaw || '');
+                                            const nFlashed = !!notesSavedFlash[b.id];
                                             const plBorder = plFlashed ? '#16a34a' : (plFilled ? 'var(--amber)' : '#fca5a5');
                                             const plBg = plFlashed ? '#dcfce7' : (plFilled ? '#fffbeb' : '#fef2f2');
                                             const status = f['Status'] || 'Pending';
@@ -1234,6 +1292,19 @@ function AdminApp() {
                                                                 {f['Dispatched To Operator'] ? '✓ Dispatched — Open' : '📤 Dispatch to Operator'}
                                                             </button>
                                                         </div>
+                                                    </div>
+
+                                                    <div style={{ marginBottom: '12px' }}>
+                                                        <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--amber-deep)', textTransform: 'uppercase', marginBottom: '4px' }}>Notes</div>
+                                                        <textarea 
+                                                            rows="2" 
+                                                            placeholder="Add any internal notes here..." 
+                                                            value={nValue} 
+                                                            disabled={notesSavingId === b.id}
+                                                            onChange={e => setNotesDraft(prev => ({ ...prev, [b.id]: e.target.value }))}
+                                                            onBlur={e => { const v = e.target.value; const old = nRaw || ''; if (v !== old) commitNotes(b.id, v); setNotesDraft(prev => { const n = { ...prev }; delete n[b.id]; return n; }); }}
+                                                            style={{ width: '100%', padding: '10px 12px', border: `2px solid ${nFlashed ? '#16a34a' : '#cbd5e1'}`, background: nFlashed ? '#dcfce7' : '#fcfcfc', borderRadius: '8px', fontFamily: 'inherit', fontSize: '13px', color: 'var(--navy-ink)', outline: 'none', boxSizing: 'border-box', resize: 'vertical' }} 
+                                                        />
                                                     </div>
 
                                                     {/* Pricing grid */}
@@ -1427,6 +1498,76 @@ function AdminApp() {
                                                         <td style={{ padding: '8px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: profitColor, fontWeight: 700 }}>{(cp || op) ? `£${profit.toFixed(2)}` : '—'}</td>
                                                         <td style={{ padding: '8px', whiteSpace: 'nowrap' }}>
                                                             <button onClick={() => unarchiveBooking(b)} title="Restore this booking to active" style={{ background: 'transparent', color: 'var(--navy)', border: '1px solid var(--line)', borderRadius: '6px', padding: '4px 10px', fontSize: '12px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit', marginRight: '6px' }}>Restore</button>
+                                                            <button onClick={() => handleDeleteJob(b)} title="Permanently delete — cannot be undone" style={{ background: 'transparent', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: '6px', padding: '4px 10px', fontSize: '12px', cursor: 'pointer', fontWeight: 700, fontFamily: 'inherit' }}>Delete</button>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            );
+                        })()}
+                    </div>
+                )}
+
+                {view === 'abandoned' && (
+                    <div className="card" style={{ overflow: 'hidden' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
+                            <h2 style={{ fontFamily: 'Lexend', fontSize: '18px', margin: 0 }}>Abandoned Checkouts ({abandonedBookings.length})</h2>
+                            <input
+                                type="search"
+                                value={jobsSearch}
+                                onChange={e => setJobsSearch(e.target.value)}
+                                placeholder="Search ref, customer, phone…"
+                                style={{ flex: '0 1 320px', padding: '8px 12px', border: '1px solid var(--line)', borderRadius: '6px', fontFamily: 'inherit', fontSize: '13px' }}
+                            />
+                        </div>
+                        {(() => {
+                            const filtered = abandonedBookings
+                                .filter(b => {
+                                    const q = jobsSearch.trim().toLowerCase();
+                                    if (!q) return true;
+                                    const f = b.fields;
+                                    return [
+                                        f['Booking Ref'], f['Customer Name'], f['Customer Phone']
+                                    ].some(v => v && String(v).toLowerCase().includes(q));
+                                })
+                                .sort((a, b) => {
+                                    const da = new Date(a.fields['Submitted At'] || 0).getTime();
+                                    const db = new Date(b.fields['Submitted At'] || 0).getTime();
+                                    return db - da; // most-recent first
+                                });
+                            if (filtered.length === 0) {
+                                return <div style={{ padding: '30px', textAlign: 'center', color: 'var(--muted)' }}>{jobsSearch.trim() ? `No abandoned checkouts match "${jobsSearch}".` : 'No abandoned checkouts found.'}</div>;
+                            }
+                            return (
+                                <div style={{ overflowX: 'auto' }}>
+                                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', minWidth: '720px' }}>
+                                        <thead>
+                                            <tr style={{ borderBottom: '2px solid var(--line)', textAlign: 'left' }}>
+                                                <th style={{ padding: '8px' }}>Ref</th>
+                                                <th style={{ padding: '8px' }}>Customer</th>
+                                                <th style={{ padding: '8px' }}>Phone</th>
+                                                <th style={{ padding: '8px' }}>Date Submitted</th>
+                                                <th style={{ padding: '8px' }}>Trip Date</th>
+                                                <th style={{ padding: '8px', textAlign: 'right' }}>Total £</th>
+                                                <th style={{ padding: '8px' }}></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {filtered.map((b, i) => {
+                                                const f = b.fields;
+                                                const cp = Number(f['Customer Price'] || f['Total Price'] || 0);
+                                                return (
+                                                    <tr key={b.id} style={{ borderBottom: '1px solid var(--line)', background: i % 2 === 0 ? 'white' : '#fafafa' }}>
+                                                        <td style={{ padding: '8px', fontWeight: 600, color: 'var(--amber-deep)' }}>{f['Booking Ref']}</td>
+                                                        <td style={{ padding: '8px' }}>{f['Customer Name'] || '—'}</td>
+                                                        <td style={{ padding: '8px' }}>{f['Customer Phone'] || '—'}</td>
+                                                        <td style={{ padding: '8px' }}>{f['Submitted At'] ? new Date(f['Submitted At']).toLocaleString('en-GB') : '—'}</td>
+                                                        <td style={{ padding: '8px' }}>{fmtUKDate(f['Outbound Date'])} {f['Outbound Time'] || ''}</td>
+                                                        <td style={{ padding: '8px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{cp ? `£${cp.toFixed(2)}` : '—'}</td>
+                                                        <td style={{ padding: '8px', whiteSpace: 'nowrap' }}>
                                                             <button onClick={() => handleDeleteJob(b)} title="Permanently delete — cannot be undone" style={{ background: 'transparent', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: '6px', padding: '4px 10px', fontSize: '12px', cursor: 'pointer', fontWeight: 700, fontFamily: 'inherit' }}>Delete</button>
                                                         </td>
                                                     </tr>

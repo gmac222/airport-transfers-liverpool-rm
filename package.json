@@ -1,6 +1,7 @@
 {
   "private": true,
   "dependencies": {
+    "dotenv": "^17.4.2",
     "stripe": "^17.0.0"
   }
 }
